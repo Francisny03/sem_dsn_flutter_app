@@ -1,6 +1,6 @@
-# sem_dsn
+# sem_dsn_flutter_app
 
-A new Flutter project.
+Application Flutter pour le projet sem_dsn.
 
 ## Getting Started
 
