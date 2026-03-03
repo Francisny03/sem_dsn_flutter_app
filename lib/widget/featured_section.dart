@@ -4,13 +4,44 @@ import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
+import 'package:sem_dsn/core/animation/selection_star_animation.dart';
+import 'package:sem_dsn/services/selection_service.dart';
 
 /// Section "Featured" (À La Une) : liste horizontale de cartes d'articles en vedette.
-class FeaturedSection extends StatelessWidget {
-  const FeaturedSection({super.key, this.onArticleTap});
+class FeaturedSection extends StatefulWidget {
+  const FeaturedSection({super.key, this.selectionService, this.onArticleTap});
 
+  final SelectionService? selectionService;
   final void Function(String title, String date, String imagePath)?
   onArticleTap;
+
+  @override
+  State<FeaturedSection> createState() => _FeaturedSectionState();
+}
+
+class _FeaturedSectionState extends State<FeaturedSection> {
+  @override
+  void initState() {
+    super.initState();
+    widget.selectionService?.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant FeaturedSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectionService != widget.selectionService) {
+      oldWidget.selectionService?.removeListener(_onSelectionChanged);
+      widget.selectionService?.addListener(_onSelectionChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.selectionService?.removeListener(_onSelectionChanged);
+    super.dispose();
+  }
+
+  void _onSelectionChanged() => setState(() {});
 
   static const List<({String image, String title, String date})> _items = [
     (
@@ -70,12 +101,26 @@ class FeaturedSection extends StatelessWidget {
             itemCount: _items.length,
             itemBuilder: (context, index) {
               final item = _items[index];
+              final article = SelectedArticle(
+                title: item.title,
+                date: item.date,
+                imagePath: item.image,
+              );
               return _FeaturedCard(
                 imagePath: item.image,
                 title: item.title,
                 date: item.date,
-                onTap: onArticleTap != null
-                    ? () => onArticleTap!(item.title, item.date, item.image)
+                isStarSelected:
+                    widget.selectionService?.contains(article) ?? false,
+                onStarTap: widget.selectionService != null
+                    ? () => widget.selectionService!.toggle(article)
+                    : null,
+                onTap: widget.onArticleTap != null
+                    ? () => widget.onArticleTap!(
+                        item.title,
+                        item.date,
+                        item.image,
+                      )
                     : null,
               );
             },
@@ -91,12 +136,16 @@ class _FeaturedCard extends StatelessWidget {
     required this.imagePath,
     required this.title,
     required this.date,
+    this.isStarSelected = false,
+    this.onStarTap,
     this.onTap,
   });
 
   final String imagePath;
   final String title;
   final String date;
+  final bool isStarSelected;
+  final VoidCallback? onStarTap;
   final VoidCallback? onTap;
 
   @override
@@ -119,6 +168,25 @@ class _FeaturedCard extends StatelessWidget {
                   gradient: AppColors.gradientFeatured,
                 ),
               ),
+              if (onStarTap != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: onStarTap,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: AnimatedSelectionStar(
+                        isSelected: isStarSelected,
+                        onTap: onStarTap!,
+                        selectedColor: AppColors.heroSelectionTag,
+                        unselectedColor: AppColors.whiteTextColor,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 left: 12,
                 right: 12,

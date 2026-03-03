@@ -5,12 +5,14 @@ import 'package:sem_dsn/core/constants/app_padding.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
+import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/congolese_flag_painter.dart';
 
 /// Section héros : grande carte avec image, dégradé, badge, titre, date et indicateurs.
 class HomeHeroSection extends StatefulWidget {
-  const HomeHeroSection({super.key, this.onCardTap});
+  const HomeHeroSection({super.key, this.selectionService, this.onCardTap});
 
+  final SelectionService? selectionService;
   final VoidCallback? onCardTap;
 
   @override
@@ -18,13 +20,37 @@ class HomeHeroSection extends StatefulWidget {
 }
 
 class _HomeHeroSectionState extends State<HomeHeroSection> {
-  bool _isStarSelected = false;
+  static final SelectedArticle _heroArticle = SelectedArticle(
+    title: AppStrings.heroTitle1,
+    date: AppStrings.heroDate1,
+    imagePath: AppAssets.hero1,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    widget.selectionService?.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeHeroSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectionService != widget.selectionService) {
+      oldWidget.selectionService?.removeListener(_onSelectionChanged);
+      widget.selectionService?.addListener(_onSelectionChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.selectionService?.removeListener(_onSelectionChanged);
+    super.dispose();
+  }
+
+  void _onSelectionChanged() => setState(() {});
 
   void _onStarTap() {
-    setState(() => _isStarSelected = !_isStarSelected);
-    if (_isStarSelected) {
-      // TODO: ajouter le contenu hero à la sélection
-    }
+    widget.selectionService?.toggle(_heroArticle);
   }
 
   @override
@@ -70,7 +96,8 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                 ),
                 alignment: Alignment.center,
                 child: AnimatedSelectionStar(
-                  isSelected: _isStarSelected,
+                  isSelected:
+                      widget.selectionService?.contains(_heroArticle) ?? false,
                   onTap: _onStarTap,
                   selectedColor: AppColors.blackIcon,
                   unselectedColor: AppColors.blackIcon,

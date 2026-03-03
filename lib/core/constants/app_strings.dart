@@ -42,7 +42,7 @@ class AppStrings {
   static const String navAccueil = 'Accueil';
   static const String navPhototheque = 'Photothèque';
   static const String navBibliographie = 'Bibliographie';
-  static const String navSelection = 'Selection';
+  static const String navSelection = 'Sélection';
   static const String selectionEmpty = 'Aucun article dans la sélection';
 
   // Bibliographie

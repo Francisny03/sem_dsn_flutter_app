@@ -51,62 +51,73 @@ class _SelectionPageContentState extends State<SelectionPageContent> {
     );
   }
 
+  Future<void> _onRefresh() async {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = _selection.items;
-    return CustomScrollView(
-      slivers: [
-        const SliverToBoxAdapter(child: SizedBox(height: 4)),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppStrings.navSelection,
-                  style: const TextStyle(
-                    color: AppColors.navBottomSelectItem,
-                    fontSize: AppFontSizes.menuTitle,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.navSelection,
+                    style: const TextStyle(
+                      color: AppColors.navBottomSelectItem,
+                      fontSize: AppFontSizes.menuTitle,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
-                ),
-                // const SizedBox(height: 4),
-                // Text(
-                //   AppStrings.sectionTitlePressArticles,
-                //   style: const TextStyle(
-                //     color: AppColors.sectionTitle,
-                //     fontSize: 16,
-                //   ),
-                // ),
-              ],
-            ),
-          ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-        if (items.isEmpty)
-          const SliverFillRemaining(
-            child: Center(
-              child: Text(
-                AppStrings.selectionEmpty,
-                style: TextStyle(color: AppColors.grayTextColor, fontSize: 15),
+                  // const SizedBox(height: 4),
+                  // Text(
+                  //   AppStrings.sectionTitlePressArticles,
+                  //   style: const TextStyle(
+                  //     color: AppColors.sectionTitle,
+                  //     fontSize: 16,
+                  //   ),
+                  // ),
+                ],
               ),
             ),
-          )
-        else
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final article = items[index];
-              return _SelectionArticleTile(
-                article: article,
-                onTap: () => _openArticle(article),
-                onRemoveFromSelection: () => _selection.remove(article),
-              );
-            }, childCount: items.length),
           ),
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-      ],
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          if (items.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  AppStrings.selectionEmpty,
+                  style: TextStyle(
+                    color: AppColors.grayTextColor,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final article = items[index];
+                return _SelectionArticleTile(
+                  article: article,
+                  onTap: () => _openArticle(article),
+                  onRemoveFromSelection: () => _selection.remove(article),
+                );
+              }, childCount: items.length),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
     );
   }
 }

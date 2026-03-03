@@ -4,7 +4,9 @@ import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
+import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
+import 'package:sem_dsn/services/selection_service.dart';
 
 /// Index des filtres : Actualités, Campagne, Réalisations, Discours, Projets, Interviews, Archives.
 const int kFilterActualites = 0;
@@ -20,10 +22,12 @@ class HomeFilterContent extends StatelessWidget {
   const HomeFilterContent({
     super.key,
     required this.filterIndex,
+    this.selectionService,
     this.onArticleTap,
   });
 
   final int filterIndex;
+  final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
 
   static String _tagForFilter(int index) {
@@ -57,6 +61,7 @@ class HomeFilterContent extends StatelessWidget {
       return _OverlayCardList(
         items: _overlayItems,
         tag: _tagForFilter(filterIndex),
+        selectionService: selectionService,
         onArticleTap: onArticleTap,
       );
     }
@@ -64,6 +69,7 @@ class HomeFilterContent extends StatelessWidget {
       return _ImageBelowCardList(
         items: _achievementItems,
         tag: _tagForFilter(filterIndex),
+        selectionService: selectionService,
         onArticleTap: onArticleTap,
       );
     }
@@ -72,6 +78,7 @@ class HomeFilterContent extends StatelessWidget {
         items: _projectItems,
         showDate: false,
         tag: _tagForFilter(filterIndex),
+        selectionService: selectionService,
         onArticleTap: onArticleTap,
       );
     }
@@ -137,11 +144,13 @@ class _OverlayCardList extends StatelessWidget {
   const _OverlayCardList({
     required this.items,
     required this.tag,
+    this.selectionService,
     this.onArticleTap,
   });
 
   final List<({String image, String title, String date, bool isVideo})> items;
   final String tag;
+  final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
 
   @override
@@ -154,11 +163,20 @@ class _OverlayCardList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final item = items[index];
+        final article = SelectedArticle(
+          title: item.title,
+          date: item.date,
+          imagePath: item.image,
+        );
         return _OverlayCard(
           imagePath: item.image,
           title: item.title,
           date: item.date,
           showPlayButton: item.isVideo,
+          isStarSelected: selectionService?.contains(article) ?? false,
+          onStarTap: selectionService != null
+              ? () => selectionService!.toggle(article)
+              : null,
           onTap: onArticleTap != null
               ? () => onArticleTap!(
                   ArticleDetailArgs(
@@ -184,6 +202,8 @@ class _OverlayCard extends StatelessWidget {
     required this.title,
     required this.date,
     required this.showPlayButton,
+    this.isStarSelected = false,
+    this.onStarTap,
     this.onTap,
   });
 
@@ -191,6 +211,8 @@ class _OverlayCard extends StatelessWidget {
   final String title;
   final String date;
   final bool showPlayButton;
+  final bool isStarSelected;
+  final VoidCallback? onStarTap;
   final VoidCallback? onTap;
 
   @override
@@ -228,6 +250,25 @@ class _OverlayCard extends StatelessWidget {
                   Icons.play_arrow,
                   color: AppColors.whiteTextColor,
                   size: 40,
+                ),
+              ),
+            if (onStarTap != null)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: onStarTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: AnimatedSelectionStar(
+                      isSelected: isStarSelected,
+                      onTap: onStarTap!,
+                      selectedColor: AppColors.heroSelectionTag,
+                      unselectedColor: AppColors.whiteTextColor,
+                      size: 22,
+                    ),
+                  ),
                 ),
               ),
             Positioned(
@@ -273,12 +314,14 @@ class _ImageBelowCardList extends StatelessWidget {
     required this.items,
     this.showDate = true,
     required this.tag,
+    this.selectionService,
     this.onArticleTap,
   });
 
   final List<({String image, String title, String date})> items;
   final bool showDate;
   final String tag;
+  final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
 
   @override
@@ -291,10 +334,19 @@ class _ImageBelowCardList extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final item = items[index];
+        final article = SelectedArticle(
+          title: item.title,
+          date: item.date,
+          imagePath: item.image,
+        );
         return _ImageBelowCard(
           imagePath: item.image,
           title: item.title,
           date: showDate ? item.date : null,
+          isStarSelected: selectionService?.contains(article) ?? false,
+          onStarTap: selectionService != null
+              ? () => selectionService!.toggle(article)
+              : null,
           onTap: onArticleTap != null
               ? () => onArticleTap!(
                   ArticleDetailArgs(
@@ -319,12 +371,16 @@ class _ImageBelowCard extends StatelessWidget {
     required this.imagePath,
     required this.title,
     this.date,
+    this.isStarSelected = false,
+    this.onStarTap,
     this.onTap,
   });
 
   final String imagePath;
   final String title;
   final String? date;
+  final bool isStarSelected;
+  final VoidCallback? onStarTap;
   final VoidCallback? onTap;
 
   @override
@@ -334,14 +390,37 @@ class _ImageBelowCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: AppBorderRadius.r12,
-
-            child: SizedBox(
-              height: 180,
-              width: double.infinity,
-              child: Image.asset(imagePath, fit: BoxFit.cover),
-            ),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              ClipRRect(
+                borderRadius: AppBorderRadius.r12,
+                child: SizedBox(
+                  height: 180,
+                  width: double.infinity,
+                  child: Image.asset(imagePath, fit: BoxFit.cover),
+                ),
+              ),
+              if (onStarTap != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: onStarTap,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: AnimatedSelectionStar(
+                        isSelected: isStarSelected,
+                        onTap: onStarTap!,
+                        selectedColor: AppColors.heroSelectionTag,
+                        unselectedColor: AppColors.grayTextColor,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),

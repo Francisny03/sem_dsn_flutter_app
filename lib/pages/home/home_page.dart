@@ -70,86 +70,101 @@ class _HomePageState extends State<HomePage> {
         child: IndexedStack(
           index: _selectedNavIndex,
           children: [
-            CustomScrollView(
-              slivers: [
-                const SliverToBoxAdapter(child: SizedBox(height: 4)),
-                SliverToBoxAdapter(
-                  child: HomeHeroSection(
-                    onCardTap: () => _openArticle(
-                      ArticleDetailArgs(
-                        title: AppStrings.heroTitle1,
-                        date: AppStrings.heroDate1,
-                        tag: AppStrings.news,
-                        body: AppStrings.articleBodySample,
-                        imagePath: AppAssets.hero1,
-                        isVideo: false,
-                        isHeroOrFeatured: true,
+            RefreshIndicator(
+              onRefresh: () async => setState(() {}),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                  SliverToBoxAdapter(
+                    child: HomeHeroSection(
+                      selectionService: _selectionService,
+                      onCardTap: () => _openArticle(
+                        ArticleDetailArgs(
+                          title: AppStrings.heroTitle1,
+                          date: AppStrings.heroDate1,
+                          tag: AppStrings.news,
+                          body: AppStrings.articleBodySample,
+                          imagePath: AppAssets.hero1,
+                          isVideo: false,
+                          isHeroOrFeatured: true,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _StickyFilterDelegate(
-                    child: HomeFilterSection(
-                      selectedIndex: _selectedFilterIndex,
-                      onSelected: (index) =>
-                          setState(() => _selectedFilterIndex = index),
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _StickyFilterDelegate(
+                      child: HomeFilterSection(
+                        selectedIndex: _selectedFilterIndex,
+                        onSelected: (index) =>
+                            setState(() => _selectedFilterIndex = index),
+                      ),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 24),
-                    child: isActualites
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              FeaturedSection(
-                                onArticleTap: (title, date, imagePath) =>
-                                    _openArticle(
-                                      ArticleDetailArgs(
-                                        title: title,
-                                        date: date,
-                                        tag: AppStrings.news,
-                                        body: AppStrings.articleBodySample,
-                                        imagePath: imagePath,
-                                        isVideo: false,
-                                        isHeroOrFeatured: true,
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 24),
+                      child: isActualites
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                FeaturedSection(
+                                  selectionService: _selectionService,
+                                  onArticleTap: (title, date, imagePath) =>
+                                      _openArticle(
+                                        ArticleDetailArgs(
+                                          title: title,
+                                          date: date,
+                                          tag: AppStrings.news,
+                                          body: AppStrings.articleBodySample,
+                                          imagePath: imagePath,
+                                          isVideo: false,
+                                          isHeroOrFeatured: true,
+                                        ),
                                       ),
-                                    ),
-                              ),
-                              const SizedBox(height: 24),
-                              PressArticlesSection(
-                                selectionService: _selectionService,
-                                onArticleTap: (title, date, imagePath) =>
-                                    _openArticle(
-                                      ArticleDetailArgs(
-                                        title: title,
-                                        date: date,
-                                        tag: AppStrings.news,
-                                        body: AppStrings.articleBodySample,
-                                        imagePath: imagePath,
-                                        isVideo: false,
-                                        isHeroOrFeatured: false,
+                                ),
+                                const SizedBox(height: 24),
+                                PressArticlesSection(
+                                  selectionService: _selectionService,
+                                  onArticleTap: (title, date, imagePath) =>
+                                      _openArticle(
+                                        ArticleDetailArgs(
+                                          title: title,
+                                          date: date,
+                                          tag: AppStrings.news,
+                                          body: AppStrings.articleBodySample,
+                                          imagePath: imagePath,
+                                          isVideo: false,
+                                          isHeroOrFeatured: false,
+                                        ),
                                       ),
-                                    ),
-                              ),
-                            ],
-                          )
-                        : HomeFilterContent(
-                            filterIndex: _selectedFilterIndex,
-                            onArticleTap: _openArticle,
-                          ),
+                                ),
+                              ],
+                            )
+                          : HomeFilterContent(
+                              filterIndex: _selectedFilterIndex,
+                              selectionService: _selectionService,
+                              onArticleTap: _openArticle,
+                            ),
+                    ),
                   ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 100)),
-              ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                ],
+              ),
             ),
-            const PhotothequePage(),
-            const BibliographiePage(),
-            const SelectionPageContent(),
+            RefreshIndicator(
+              onRefresh: () async => setState(() {}),
+              child: const PhotothequePage(),
+            ),
+            RefreshIndicator(
+              onRefresh: () async => setState(() {}),
+              child: const BibliographiePage(),
+            ),
+            SelectionPageContent(
+              key: ValueKey('selection_${_selectionService.items.length}'),
+            ),
           ],
         ),
       ),
