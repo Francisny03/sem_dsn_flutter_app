@@ -58,4 +58,7 @@ class AppColors {
   // Bouton blanc (ex: Continuer sur welcome)
   static const Color whiteButtonBg = Color(0xFFFFFFFF);
   static const Color onWhiteButton = Color(0xFF121212);
+
+  /// Bordure des couvertures livre / revue dans la Bibliographie (#2B271B).
+  static const Color bibliographyBorderColor = Color(0xFF2B271B);
 }

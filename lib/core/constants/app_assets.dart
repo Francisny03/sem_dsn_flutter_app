@@ -7,6 +7,7 @@ class AppAssets {
   static const String live = 'assets/icons/live.svg';
   static const String selection = 'assets/icons/selection.svg';
   static const String threeDots = 'assets/icons/three_dots.svg';
+  static const String search = 'assets/icons/search.svg';
 
   static const String dsn = 'assets/icons/dsn.svg';
 
@@ -21,4 +22,14 @@ class AppAssets {
   static const String news1 = 'assets/images/news1.png';
   static const String news2 = 'assets/images/news2.png';
   static const String news3 = 'assets/images/news3.png';
+
+  static const String biblio1 = 'assets/images/biblio1.png';
+  static const String biblio2 = 'assets/images/biblio2.png';
+  static const String biblio3 = 'assets/images/biblio3.png';
+  static const String biblio4 = 'assets/images/biblio4.png';
+  static const String biblio5 = 'assets/images/biblio5.png';
+
+  static const String revue1 = 'assets/images/revue1.png';
+  static const String revue2 = 'assets/images/revue2.png';
+  static const String revue3 = 'assets/images/revue3.png';
 }

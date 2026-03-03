@@ -10,6 +10,11 @@ import 'package:sem_dsn/widget/home_filter_content.dart';
 import 'package:sem_dsn/widget/home_filter_section.dart';
 import 'package:sem_dsn/widget/home_hero_section.dart';
 import 'package:sem_dsn/widget/press_articles_section.dart';
+import 'package:sem_dsn/pages/selection/selection_page_content.dart';
+import 'package:sem_dsn/services/selection_service.dart';
+import 'package:sem_dsn/pages/phototheque/phototheque_page.dart';
+import 'package:sem_dsn/pages/phototheque/phototheque_search_page.dart';
+import 'package:sem_dsn/pages/bibliographie/bibliographie_page.dart';
 
 /// Page d'accueil : header, filtres, contenu selon filtre (Actualités = À la une + Articles de presse, sinon listes Campagne/Réalisations/Projets/etc.), bottom nav.
 class HomePage extends StatefulWidget {
@@ -22,6 +27,21 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedFilterIndex = 0;
   int _selectedNavIndex = 0;
+  final SelectionService _selectionService = SelectionService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectionService.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void dispose() {
+    _selectionService.removeListener(_onSelectionChanged);
+    super.dispose();
+  }
+
+  void _onSelectionChanged() => setState(() {});
 
   void _openArticle(ArticleDetailArgs args) {
     Navigator.of(context).push(
@@ -35,82 +55,101 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: const AppHeader(),
+      appBar: AppHeader(
+        onSearchPressed: _selectedNavIndex == 1
+            ? () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PhotothequeSearchPage(),
+                  ),
+                );
+              }
+            : null,
+      ),
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 4)),
-            SliverToBoxAdapter(
-              child: HomeHeroSection(
-                onCardTap: () => _openArticle(
-                  ArticleDetailArgs(
-                    title: AppStrings.heroTitle1,
-                    date: AppStrings.heroDate1,
-                    tag: AppStrings.news,
-                    body: AppStrings.articleBodySample,
-                    imagePath: AppAssets.hero1,
-                    isVideo: false,
-                    isHeroOrFeatured: true,
+        child: IndexedStack(
+          index: _selectedNavIndex,
+          children: [
+            CustomScrollView(
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                SliverToBoxAdapter(
+                  child: HomeHeroSection(
+                    onCardTap: () => _openArticle(
+                      ArticleDetailArgs(
+                        title: AppStrings.heroTitle1,
+                        date: AppStrings.heroDate1,
+                        tag: AppStrings.news,
+                        body: AppStrings.articleBodySample,
+                        imagePath: AppAssets.hero1,
+                        isVideo: false,
+                        isHeroOrFeatured: true,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _StickyFilterDelegate(
-                child: HomeFilterSection(
-                  selectedIndex: _selectedFilterIndex,
-                  onSelected: (index) =>
-                      setState(() => _selectedFilterIndex = index),
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickyFilterDelegate(
+                    child: HomeFilterSection(
+                      selectedIndex: _selectedFilterIndex,
+                      onSelected: (index) =>
+                          setState(() => _selectedFilterIndex = index),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: isActualites
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FeaturedSection(
-                            onArticleTap: (title, date, imagePath) =>
-                                _openArticle(
-                                  ArticleDetailArgs(
-                                    title: title,
-                                    date: date,
-                                    tag: AppStrings.news,
-                                    body: AppStrings.articleBodySample,
-                                    imagePath: imagePath,
-                                    isVideo: false,
-                                    isHeroOrFeatured: true,
-                                  ),
-                                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 24),
+                    child: isActualites
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              FeaturedSection(
+                                onArticleTap: (title, date, imagePath) =>
+                                    _openArticle(
+                                      ArticleDetailArgs(
+                                        title: title,
+                                        date: date,
+                                        tag: AppStrings.news,
+                                        body: AppStrings.articleBodySample,
+                                        imagePath: imagePath,
+                                        isVideo: false,
+                                        isHeroOrFeatured: true,
+                                      ),
+                                    ),
+                              ),
+                              const SizedBox(height: 24),
+                              PressArticlesSection(
+                                selectionService: _selectionService,
+                                onArticleTap: (title, date, imagePath) =>
+                                    _openArticle(
+                                      ArticleDetailArgs(
+                                        title: title,
+                                        date: date,
+                                        tag: AppStrings.news,
+                                        body: AppStrings.articleBodySample,
+                                        imagePath: imagePath,
+                                        isVideo: false,
+                                        isHeroOrFeatured: false,
+                                      ),
+                                    ),
+                              ),
+                            ],
+                          )
+                        : HomeFilterContent(
+                            filterIndex: _selectedFilterIndex,
+                            onArticleTap: _openArticle,
                           ),
-                          const SizedBox(height: 24),
-                          PressArticlesSection(
-                            onArticleTap: (title, date, imagePath) =>
-                                _openArticle(
-                                  ArticleDetailArgs(
-                                    title: title,
-                                    date: date,
-                                    tag: AppStrings.news,
-                                    body: AppStrings.articleBodySample,
-                                    imagePath: imagePath,
-                                    isVideo: false,
-                                    isHeroOrFeatured: false,
-                                  ),
-                                ),
-                          ),
-                        ],
-                      )
-                    : HomeFilterContent(
-                        filterIndex: _selectedFilterIndex,
-                        onArticleTap: _openArticle,
-                      ),
-              ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            const PhotothequePage(),
+            const BibliographiePage(),
+            const SelectionPageContent(),
           ],
         ),
       ),

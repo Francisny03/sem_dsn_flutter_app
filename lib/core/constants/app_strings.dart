@@ -43,6 +43,25 @@ class AppStrings {
   static const String navPhototheque = 'Photothèque';
   static const String navBibliographie = 'Bibliographie';
   static const String navSelection = 'Selection';
+  static const String selectionEmpty = 'Aucun article dans la sélection';
+
+  // Bibliographie
+  static const String bibSectionLivres = 'Livres';
+  static const String bibSectionRevuesPresse = 'Revues de Presse';
+  static const String bibButtonLirePlus = 'Lire plus';
+
+  // Photothèque
+  static const String photothequeSearchTitle = 'Recherche Photothèque';
+  static const String photothequeSearchHint =
+      'Rechercher dans la photothèque...';
+  static const String photothequeImagesCount = 'Images';
+  static const String photothequeCategoryElections = 'Elections';
+  static const String photothequeCategoryArmee = "L'armée";
+  static const String photothequeCategoryPct = 'PCT';
+  static const String photothequeCategoryFamille = 'Famille';
+  static const String photothequeCategoryInternational = 'International';
+  static const String photothequeCategoryMrMmeDsn = 'Mr & Mme DSN';
+  static const String photothequeNoResults = 'Aucun résultat';
 
   // Menu 3 points (header)
   static const String menuTitle = 'Menu';

@@ -21,4 +21,6 @@ class AppFontSizes {
 
   static const double projectTitle = 15;
   static const double projectDate = 12;
+
+  static const double menuTitle = 35;
 }

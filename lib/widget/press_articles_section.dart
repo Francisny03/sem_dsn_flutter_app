@@ -5,15 +5,23 @@ import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
+import 'package:sem_dsn/services/selection_service.dart';
 
 /// Section "Press Articles" : liste verticale d'articles (image + titre + date + favori).
 class PressArticlesSection extends StatelessWidget {
-  const PressArticlesSection({super.key, this.onArticleTap});
+  const PressArticlesSection({
+    super.key,
+    this.selectionService,
+    this.onArticleTap,
+  });
 
+  final SelectionService? selectionService;
   final void Function(String title, String date, String imagePath)?
   onArticleTap;
 
-  static const List<({String image, String title, String date})> _articles = [
+  /// Liste des articles de presse (partagée avec "Autres Actualités").
+  static const List<({String image, String title, String date})>
+  pressArticles = [
     (
       image: AppAssets.news1,
       title:
@@ -54,14 +62,24 @@ class PressArticlesSection extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: _articles.length,
+          itemCount: pressArticles.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
-            final article = _articles[index];
+            final article = pressArticles[index];
+            final selectedArticle = SelectedArticle(
+              title: article.title,
+              date: article.date,
+              imagePath: article.image,
+            );
             return _PressArticleTile(
               imagePath: article.image,
               title: article.title,
               date: article.date,
+              isStarSelected:
+                  selectionService?.contains(selectedArticle) ?? false,
+              onStarTap: selectionService != null
+                  ? () => selectionService!.toggle(selectedArticle)
+                  : null,
               onTap: onArticleTap != null
                   ? () => onArticleTap!(
                       article.title,
@@ -77,39 +95,29 @@ class PressArticlesSection extends StatelessWidget {
   }
 }
 
-class _PressArticleTile extends StatefulWidget {
+class _PressArticleTile extends StatelessWidget {
   const _PressArticleTile({
     required this.imagePath,
     required this.title,
     required this.date,
+    this.isStarSelected = false,
+    this.onStarTap,
     this.onTap,
   });
 
   final String imagePath;
   final String title;
   final String date;
+  final bool isStarSelected;
+  final VoidCallback? onStarTap;
   final VoidCallback? onTap;
-
-  @override
-  State<_PressArticleTile> createState() => _PressArticleTileState();
-}
-
-class _PressArticleTileState extends State<_PressArticleTile> {
-  bool _isStarSelected = false;
-
-  void _onStarTap() {
-    setState(() => _isStarSelected = !_isStarSelected);
-    if (_isStarSelected) {
-      // TODO: ajouter l'article à la sélection
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: widget.onTap,
+        onTap: onTap,
         borderRadius: AppBorderRadius.r10,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -120,7 +128,7 @@ class _PressArticleTileState extends State<_PressArticleTile> {
               ClipRRect(
                 borderRadius: AppBorderRadius.r10,
                 child: Image.asset(
-                  widget.imagePath,
+                  imagePath,
                   width: 90,
                   height: 90,
                   fit: BoxFit.cover,
@@ -139,7 +147,7 @@ class _PressArticleTileState extends State<_PressArticleTile> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      widget.title,
+                      title,
                       style: const TextStyle(
                         color: AppColors.newsTitle,
                         fontSize: AppFontSizes.pressArticleTitle,
@@ -153,22 +161,23 @@ class _PressArticleTileState extends State<_PressArticleTile> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          widget.date,
+                          date,
                           style: const TextStyle(
                             color: AppColors.newsDate,
                             fontSize: AppFontSizes.pressArticleDate,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: AnimatedSelectionStar(
-                            isSelected: _isStarSelected,
-                            onTap: _onStarTap,
-                            selectedColor: AppColors.heroSelectionTag,
-                            unselectedColor: AppColors.grayTextColor,
-                            size: 24,
+                        if (onStarTap != null)
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: AnimatedSelectionStar(
+                              isSelected: isStarSelected,
+                              onTap: onStarTap!,
+                              selectedColor: AppColors.heroSelectionTag,
+                              unselectedColor: AppColors.grayTextColor,
+                              size: 24,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ],
