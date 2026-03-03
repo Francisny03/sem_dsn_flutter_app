@@ -16,6 +16,15 @@ class AppStrings {
   static const String heroTitle2 =
       "Denis Sassou-Nguesso annonce sa candidature à l'élection présidentielle";
   static const String heroDate2 = '11 Février 2026';
+  static const String heroTitle3 =
+      'Congo : première visite du Président sénégalais Diomaye Faye';
+  static const String heroDate3 = '4 Février 2026';
+  static const String heroTitle4 =
+      '6ème congrès ordinaire du Parti congolais du travail (PCT)';
+  static const String heroDate4 = '27 Décembre 2025';
+  static const String heroTitle5 =
+      'Présidentielle 2026: Denis Sassou-Nguesso investi candidat';
+  static const String heroDate5 = '29 Janvier 2026';
 
   static const String news = 'Actualités';
   static const String campaign = 'Campagne 2026';

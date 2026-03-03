@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
@@ -79,17 +78,7 @@ class _HomePageState extends State<HomePage> {
                   SliverToBoxAdapter(
                     child: HomeHeroSection(
                       selectionService: _selectionService,
-                      onCardTap: () => _openArticle(
-                        ArticleDetailArgs(
-                          title: AppStrings.heroTitle1,
-                          date: AppStrings.heroDate1,
-                          tag: AppStrings.news,
-                          body: AppStrings.articleBodySample,
-                          imagePath: AppAssets.hero1,
-                          isVideo: false,
-                          isHeroOrFeatured: true,
-                        ),
-                      ),
+                      onCardTap: (args) => _openArticle(args),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 20)),

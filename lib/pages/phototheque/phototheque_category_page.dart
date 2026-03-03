@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
+import 'package:sem_dsn/pages/phototheque/phototheque_fullscreen_page.dart';
 
 /// Page détail d'une catégorie Photothèque : titre dans l'AppBar + grille d'images.
 class PhotothequeCategoryPage extends StatelessWidget {
@@ -50,7 +51,14 @@ class PhotothequeCategoryPage extends StatelessWidget {
             return _PhotoGridTile(
               imagePath: imagePaths[index],
               onTap: () {
-                // TODO: ouvrir en plein écran ou galerie
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => PhotothequeFullscreenPage(
+                      imagePaths: imagePaths,
+                      initialIndex: index,
+                    ),
+                  ),
+                );
               },
             );
           },

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
@@ -6,30 +8,181 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/services/selection_service.dart';
+import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/congolese_flag_painter.dart';
 
-/// Section héros : grande carte avec image, dégradé, badge, titre, date et indicateurs.
+/// Données d'une slide du hero (titre, date, image).
+class _HeroSlide {
+  const _HeroSlide({
+    required this.title,
+    required this.date,
+    required this.imagePath,
+  });
+
+  final String title;
+  final String date;
+  final String imagePath;
+}
+
+const List<_HeroSlide> _heroSlides = [
+  _HeroSlide(
+    title: AppStrings.heroTitle1,
+    date: AppStrings.heroDate1,
+    imagePath: AppAssets.hero1,
+  ),
+  _HeroSlide(
+    title: AppStrings.heroTitle2,
+    date: AppStrings.heroDate2,
+    imagePath: AppAssets.hero2,
+  ),
+  _HeroSlide(
+    title: AppStrings.heroTitle3,
+    date: AppStrings.heroDate3,
+    imagePath: AppAssets.alaune1,
+  ),
+  _HeroSlide(
+    title: AppStrings.heroTitle4,
+    date: AppStrings.heroDate4,
+    imagePath: AppAssets.news1,
+  ),
+  _HeroSlide(
+    title: AppStrings.heroTitle5,
+    date: AppStrings.heroDate5,
+    imagePath: AppAssets.news2,
+  ),
+];
+
+const Duration _kAutoScrollDuration = Duration(seconds: 3);
+
+const Duration _kSlideContentAnimationDuration = Duration(milliseconds: 450);
+const Curve _kSlideContentAnimationCurve = Curves.easeOutCubic;
+
+/// Contenu animé d'une slide (fade + slide up à l'apparition).
+class _AnimatedHeroSlideContent extends StatefulWidget {
+  const _AnimatedHeroSlideContent({required this.slide});
+
+  final _HeroSlide slide;
+
+  @override
+  State<_AnimatedHeroSlideContent> createState() =>
+      _AnimatedHeroSlideContentState();
+}
+
+class _AnimatedHeroSlideContentState extends State<_AnimatedHeroSlideContent>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _slideOffset;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: _kSlideContentAnimationDuration,
+      vsync: this,
+    );
+    _opacity = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: _kSlideContentAnimationCurve),
+    );
+    _slideOffset = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: _kSlideContentAnimationCurve,
+          ),
+        );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(
+        position: _slideOffset,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.heroTag,
+                borderRadius: AppBorderRadius.rtotal,
+              ),
+              child: const Text(
+                AppStrings.news,
+                style: TextStyle(
+                  color: AppColors.whiteTextColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.slide.title,
+              maxLines: 3,
+              style: const TextStyle(
+                color: AppColors.whiteTextColor,
+                fontSize: 25,
+                fontWeight: FontWeight.w900,
+                height: 1.2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.slide.date,
+              style: TextStyle(
+                color: AppColors.whiteTextColor.withValues(alpha: 0.9),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              child: SizedBox(
+                width: 120,
+                height: 5,
+                child: CustomPaint(painter: CongoleseFlagPainter()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Section héros : carousel de 5 actualités avec image, dégradé, badge, titre, date.
+/// Défilement automatique toutes les 5 s + défilement manuel par scroll.
 class HomeHeroSection extends StatefulWidget {
   const HomeHeroSection({super.key, this.selectionService, this.onCardTap});
 
   final SelectionService? selectionService;
-  final VoidCallback? onCardTap;
+  final void Function(ArticleDetailArgs args)? onCardTap;
 
   @override
   State<HomeHeroSection> createState() => _HomeHeroSectionState();
 }
 
 class _HomeHeroSectionState extends State<HomeHeroSection> {
-  static final SelectedArticle _heroArticle = SelectedArticle(
-    title: AppStrings.heroTitle1,
-    date: AppStrings.heroDate1,
-    imagePath: AppAssets.hero1,
-  );
+  late PageController _pageController;
+  int _currentIndex = 0;
+  Timer? _autoScrollTimer;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     widget.selectionService?.addListener(_onSelectionChanged);
+    _startAutoScroll();
   }
 
   @override
@@ -43,14 +196,30 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
 
   @override
   void dispose() {
+    _autoScrollTimer?.cancel();
+    _pageController.dispose();
     widget.selectionService?.removeListener(_onSelectionChanged);
     super.dispose();
   }
 
   void _onSelectionChanged() => setState(() {});
 
-  void _onStarTap() {
-    widget.selectionService?.toggle(_heroArticle);
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = Timer.periodic(_kAutoScrollDuration, (_) {
+      if (!mounted) return;
+      final next = (_currentIndex + 1) % _heroSlides.length;
+      _pageController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  void _onPageChanged(int index) {
+    setState(() => _currentIndex = index);
+    _startAutoScroll(); // reset timer after manual scroll
   }
 
   @override
@@ -59,128 +228,103 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
       padding: AppPadding.horizontalPadding20,
       child: ClipRRect(
         borderRadius: AppBorderRadius.r16,
-        child: Stack(
-          children: [
-            GestureDetector(
-              onTap: widget.onCardTap,
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                height: 360,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(AppAssets.hero1, fit: BoxFit.cover),
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: AppColors.gradientHero,
+        child: SizedBox(
+          height: 360,
+          width: double.infinity,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: _heroSlides.length,
+                onPageChanged: _onPageChanged,
+                itemBuilder: (context, index) {
+                  final slide = _heroSlides[index];
+                  return GestureDetector(
+                    onTap: () {
+                      widget.onCardTap?.call(
+                        ArticleDetailArgs(
+                          title: slide.title,
+                          date: slide.date,
+                          tag: AppStrings.news,
+                          body: AppStrings.articleBodySample,
+                          imagePath: slide.imagePath,
+                          isVideo: false,
+                          isHeroOrFeatured: true,
+                        ),
+                      );
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(slide.imagePath, fit: BoxFit.cover),
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: AppColors.gradientHero,
+                          ),
+                        ),
+                        Positioned(
+                          left: 16,
+                          right: 50,
+                          bottom: 40,
+                          child: _AnimatedHeroSlideContent(slide: slide),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              Positioned(
+                top: 0,
+                right: 16,
+                child: Builder(
+                  builder: (context) {
+                    final slide = _heroSlides[_currentIndex];
+                    final article = SelectedArticle(
+                      title: slide.title,
+                      date: slide.date,
+                      imagePath: slide.imagePath,
+                    );
+                    return Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: AppColors.heroSelectionTag,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(10),
+                          bottomRight: Radius.circular(10),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            Positioned(
-              top: 0,
-              right: 16,
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.heroSelectionTag,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: AnimatedSelectionStar(
-                  isSelected:
-                      widget.selectionService?.contains(_heroArticle) ?? false,
-                  onTap: _onStarTap,
-                  selectedColor: AppColors.blackIcon,
-                  unselectedColor: AppColors.blackIcon,
-                  size: 24,
-                ),
-              ),
-            ),
-            Positioned(
-              left: 16,
-              right: 50,
-              bottom: 40,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.heroTag,
-                      borderRadius: AppBorderRadius.rtotal,
-                    ),
-                    child: const Text(
-                      AppStrings.news,
-                      style: TextStyle(
-                        color: AppColors.whiteTextColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w300,
+                      alignment: Alignment.center,
+                      child: AnimatedSelectionStar(
+                        isSelected:
+                            widget.selectionService?.contains(article) ?? false,
+                        onTap: () => widget.selectionService?.toggle(article),
+                        selectedColor: AppColors.blackIcon,
+                        unselectedColor: AppColors.blackIcon,
+                        size: 24,
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppStrings.heroTitle1,
-                    maxLines: 3,
-                    style: TextStyle(
-                      color: AppColors.whiteTextColor,
-                      fontSize: 25,
-                      fontWeight: FontWeight.w900,
-                      height: 1.2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppStrings.heroDate1,
-                    style: TextStyle(
-                      color: AppColors.whiteTextColor.withValues(alpha: 0.9),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    child: SizedBox(
-                      width: 120,
-                      height: 5,
-                      child: CustomPaint(painter: CongoleseFlagPainter()),
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 12,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _dot(active: true),
-                  const SizedBox(width: 6),
-                  _dot(active: false),
-                  const SizedBox(width: 6),
-                  _dot(active: false),
-                  const SizedBox(width: 6),
-                  _dot(active: false),
-                  const SizedBox(width: 6),
-                  _dot(active: false),
-                ],
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 12,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _heroSlides.length,
+                    (i) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: _dot(active: i == _currentIndex),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
