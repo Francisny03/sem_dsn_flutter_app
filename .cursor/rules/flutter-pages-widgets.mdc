@@ -1,0 +1,50 @@
+---
+description: Structure pages et widgets Flutter — pages légères, widgets dans widget/
+globs: "**/*.dart"
+alwaysApply: false
+---
+
+# Pages et widgets (SEM DSN)
+
+- **Pages** : une page = un fichier dans `lib/pages/`. Code court : la page se contente d’organiser le layout et d’appeler des widgets.
+- **Widgets réutilisables** : tout ce qui est réutilisable ou un bloc d’UI cohérent va dans `lib/widget/`. Les pages les importent et les utilisent.
+- **Règle** : si un widget dépasse ~30 lignes ou est réutilisable, l’extraire dans `lib/widget/` (ex. `lib/widget/header_section.dart`).
+- **Textes** : tous les textes affichés dans l’app doivent venir de `lib/core/constants/app_strings.dart`. Aucun texte en dur dans les pages ni les widgets (pas de chaîne brute type `'Continuer'`, `'DSN'`, etc.).
+
+## Exemple
+
+```dart
+// lib/pages/home_page.dart — court
+import 'package:flutter/material.dart';
+import 'package:sem_dsn/widget/app_title.dart';
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const AppTitle()),
+      body: const Center(child: AppTitle()),
+    );
+  }
+}
+```
+
+```dart
+// lib/widget/app_title.dart — widget réutilisable
+import 'package:flutter/material.dart';
+import 'package:sem_dsn/core/constants/app_strings.dart';
+
+class AppTitle extends StatelessWidget {
+  const AppTitle({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Text(AppStrings.appTitle, style: const TextStyle(fontSize: 20));
+  }
+}
+```
+
+## Imports
+
+- Pages : `import 'package:sem_dsn/widget/nom_widget.dart';`
+- Depuis main : `import 'package:sem_dsn/pages/nom_page.dart';`

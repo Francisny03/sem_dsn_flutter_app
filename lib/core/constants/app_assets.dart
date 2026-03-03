@@ -1,0 +1,24 @@
+class AppAssets {
+  static const String logoApp = 'assets/icons/logo_app.svg';
+  static const String logoSplashscreen = 'assets/icons/logo_splashscreen.svg';
+  static const String bibliography = 'assets/icons/bibliography.svg';
+  static const String gallery = 'assets/icons/gallery.svg';
+  static const String home = 'assets/icons/home.svg';
+  static const String live = 'assets/icons/live.svg';
+  static const String selection = 'assets/icons/selection.svg';
+  static const String threeDots = 'assets/icons/three_dots.svg';
+
+  static const String dsn = 'assets/icons/dsn.svg';
+
+  static const String welcome1 = 'assets/images/welcome1.png';
+  static const String welcome2 = 'assets/images/welcome2.png';
+  static const String welcome3 = 'assets/images/welcome3.png';
+
+  static const String alaune1 = 'assets/images/alaune1.png';
+  static const String alaune2 = 'assets/images/alaune2.png';
+  static const String hero1 = 'assets/images/hero1.png';
+  static const String hero2 = 'assets/images/hero2.png';
+  static const String news1 = 'assets/images/news1.png';
+  static const String news2 = 'assets/images/news2.png';
+  static const String news3 = 'assets/images/news3.png';
+}
