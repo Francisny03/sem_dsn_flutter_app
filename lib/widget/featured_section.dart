@@ -6,14 +6,14 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/services/selection_service.dart';
+import 'package:sem_dsn/widget/article_detail_args.dart';
 
 /// Section "Featured" (À La Une) : liste horizontale de cartes d'articles en vedette.
 class FeaturedSection extends StatefulWidget {
   const FeaturedSection({super.key, this.selectionService, this.onArticleTap});
 
   final SelectionService? selectionService;
-  final void Function(String title, String date, String imagePath)?
-  onArticleTap;
+  final void Function(ArticleDetailArgs args)? onArticleTap;
 
   @override
   State<FeaturedSection> createState() => _FeaturedSectionState();
@@ -106,10 +106,18 @@ class _FeaturedSectionState extends State<FeaturedSection> {
                 date: item.date,
                 imagePath: item.image,
               );
+              final heroTag = ArticleDetailArgs.heroTagFor(
+                imagePath: item.image,
+                title: item.title,
+                date: item.date,
+                sourceId: 'featured',
+                index: index,
+              );
               return _FeaturedCard(
                 imagePath: item.image,
                 title: item.title,
                 date: item.date,
+                heroTag: heroTag,
                 isStarSelected:
                     widget.selectionService?.contains(article) ?? false,
                 onStarTap: widget.selectionService != null
@@ -117,10 +125,17 @@ class _FeaturedSectionState extends State<FeaturedSection> {
                     : null,
                 onTap: widget.onArticleTap != null
                     ? () => widget.onArticleTap!(
-                        item.title,
-                        item.date,
-                        item.image,
-                      )
+                          ArticleDetailArgs(
+                            title: item.title,
+                            date: item.date,
+                            tag: AppStrings.news,
+                            body: AppStrings.articleBodySample,
+                            imagePath: item.image,
+                            isVideo: false,
+                            isHeroOrFeatured: true,
+                            heroTagOverride: heroTag,
+                          ),
+                        )
                     : null,
               );
             },
@@ -136,6 +151,7 @@ class _FeaturedCard extends StatelessWidget {
     required this.imagePath,
     required this.title,
     required this.date,
+    required this.heroTag,
     this.isStarSelected = false,
     this.onStarTap,
     this.onTap,
@@ -144,6 +160,7 @@ class _FeaturedCard extends StatelessWidget {
   final String imagePath;
   final String title;
   final String date;
+  final Object heroTag;
   final bool isStarSelected;
   final VoidCallback? onStarTap;
   final VoidCallback? onTap;
@@ -162,7 +179,15 @@ class _FeaturedCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Image.asset(imagePath, fit: BoxFit.cover),
+              Hero(
+                tag: heroTag,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
               Container(
                 decoration: const BoxDecoration(
                   gradient: AppColors.gradientFeatured,

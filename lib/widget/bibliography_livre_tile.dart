@@ -28,7 +28,7 @@ class BibliographyLivreTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 100,
+            width: 120,
             height: 140,
             decoration: BoxDecoration(
               borderRadius: AppBorderRadius.r8,
@@ -42,7 +42,7 @@ class BibliographyLivreTile extends StatelessWidget {
               borderRadius: AppBorderRadius.r8,
               child: Image.asset(
                 imagePath,
-                width: 100,
+                width: 120,
                 height: 140,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(

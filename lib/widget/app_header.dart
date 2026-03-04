@@ -6,10 +6,17 @@ import 'package:sem_dsn/widget/header_menu.dart';
 
 /// En-tête de l'application : logo DSN (Hero) + texte animé gauche→droite + icônes.
 class AppHeader extends StatefulWidget implements PreferredSizeWidget {
-  const AppHeader({super.key, this.onSearchPressed});
+  const AppHeader({
+    super.key,
+    this.onSearchPressed,
+    this.onNotificationsPressed,
+  });
 
   /// Appelé au tap sur l'icône recherche (ex: ouvre la page recherche Photothèque).
   final VoidCallback? onSearchPressed;
+
+  /// Appelé au tap sur l'icône cloche (ex: ouvre la page Notifications).
+  final VoidCallback? onNotificationsPressed;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -136,7 +143,7 @@ class _AppHeaderState extends State<AppHeader>
                 _HeaderIcon(icon: Icons.cell_tower, onPressed: () {}),
                 _HeaderIcon(
                   icon: Icons.notifications_outlined,
-                  onPressed: () {},
+                  onPressed: widget.onNotificationsPressed ?? () {},
                 ),
                 _HeaderIcon(
                   icon: Icons.search,

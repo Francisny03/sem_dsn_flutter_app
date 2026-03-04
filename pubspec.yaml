@@ -37,6 +37,10 @@ dependencies:
   google_fonts: ^8.0.2
   flutter_svg: ^2.0.10+1
   share_plus: ^10.1.4
+  flutter_launcher_icons: ^0.14.3
+  video_player: ^2.9.2
+  chewie: ^1.8.5
+  provider: ^6.1.2
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +68,14 @@ flutter:
   assets:
     - assets/icons/
     - assets/images/
+    - assets/videos/
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon_dsn.png"
+  remove_alpha_ios: true
 
 
 

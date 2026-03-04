@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/article_content_card.dart';
+import 'package:sem_dsn/widget/article_video_player.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/detail_app_bar_star.dart';
 import 'package:sem_dsn/widget/other_news_section.dart';
@@ -27,8 +29,7 @@ class ArticleDetailPresseLayout extends StatelessWidget {
   final bool isStarSelected;
   final VoidCallback onStarTap;
   final void Function(BuildContext buttonContext) onShare;
-  final void Function(String title, String date, String imagePath)?
-  onOtherNewsArticleTap;
+  final void Function(ArticleDetailArgs args)? onOtherNewsArticleTap;
 
   static const double _imageHeight = 280;
 
@@ -93,31 +94,25 @@ class ArticleDetailPresseLayout extends StatelessWidget {
           controller: scrollController,
           slivers: [
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: _imageHeight,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(args.imagePath, fit: BoxFit.cover),
-                    if (args.isVideo)
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.black.withValues(alpha: 0.5),
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow,
-                            color: Colors.white,
-                            size: 48,
-                          ),
+              child: args.isVideo
+                  ? ArticleVideoPlayer(
+                      videoPath: args.videoPath ?? AppAssets.videotest,
+                      height: _imageHeight,
+                      heroTagForPlay: args.heroTagVideoPlay,
+                    )
+                  : SizedBox(
+                      height: _imageHeight,
+                      width: double.infinity,
+                      child: Hero(
+                        tag: args.heroTag,
+                        child: Image.asset(
+                          args.imagePath,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
                         ),
                       ),
-                  ],
-                ),
-              ),
+                    ),
             ),
             SliverToBoxAdapter(
               child: ArticleContentCard(

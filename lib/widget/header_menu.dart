@@ -15,11 +15,12 @@ void showHeaderMenu(BuildContext context) {
 class _HeaderMenuContent extends StatelessWidget {
   const _HeaderMenuContent();
 
-  static const List<({String flag, String label})> _languages = [
-    (flag: '🇫🇷', label: AppStrings.languageFrench),
-    (flag: '🇬🇧', label: AppStrings.languageEnglish),
-    (flag: '🇨🇬', label: AppStrings.languageLingala),
-    (flag: '🇨🇬', label: AppStrings.languageKituba),
+  /// Français actif ; Anglais, Lingala, Kituba affichés en grisé (désactivés).
+  static const List<({String flag, String label, bool enabled})> _languages = [
+    (flag: '🇫🇷', label: AppStrings.languageFrench, enabled: true),
+    (flag: '🇬🇧', label: AppStrings.languageEnglish, enabled: false),
+    (flag: '🇨🇬', label: AppStrings.languageLingala, enabled: false),
+    (flag: '🇨🇬', label: AppStrings.languageKituba, enabled: false),
   ];
 
   @override
@@ -65,20 +66,26 @@ class _HeaderMenuContent extends StatelessWidget {
           ),
           ..._languages.map(
             (e) => ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppColors.filterUnselected,
-                radius: 20,
-                child: Text(e.flag, style: const TextStyle(fontSize: 22)),
+              enabled: e.enabled,
+              leading: Opacity(
+                opacity: e.enabled ? 1 : 0.5,
+                child: CircleAvatar(
+                  backgroundColor: AppColors.filterUnselected,
+                  radius: 20,
+                  child: Text(e.flag, style: const TextStyle(fontSize: 22)),
+                ),
               ),
               title: Text(
                 e.label,
-                style: const TextStyle(
-                  color: AppColors.newsTitle,
+                style: TextStyle(
+                  color: e.enabled
+                      ? AppColors.newsTitle
+                      : AppColors.grayTextColor,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              onTap: () => Navigator.of(context).pop(),
+              onTap: e.enabled ? () => Navigator.of(context).pop() : null,
             ),
           ),
           const Divider(height: 1),

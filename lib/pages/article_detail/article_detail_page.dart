@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/article_detail_hero_layout.dart';
@@ -59,21 +58,11 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
     }
   }
 
-  void _openOtherNewsArticle(String title, String date, String imagePath) {
+  void _openOtherNewsArticle(ArticleDetailArgs args) {
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ArticleDetailPage(
-          args: ArticleDetailArgs(
-            title: title,
-            date: date,
-            tag: AppStrings.news,
-            body: AppStrings.articleBodySample,
-            imagePath: imagePath,
-            isVideo: false,
-            isHeroOrFeatured: false,
-          ),
-        ),
+        builder: (_) => ArticleDetailPage(args: args),
       ),
     );
   }

@@ -54,6 +54,12 @@ class AppStrings {
   static const String navSelection = 'Sélection';
   static const String selectionEmpty = 'Aucun article dans la sélection';
 
+  // Notifications
+  static const String notificationsTitle = 'Notifications';
+  static const String notificationsToday = 'Aujourd\'hui';
+  static const String notificationsYesterday = 'Hier';
+  static const String notificationsNewArticleIn = 'Nouvel article dans';
+
   // Bibliographie
   static const String bibSectionLivres = 'Livres';
   static const String bibSectionRevuesPresse = 'Revues de Presse';
@@ -63,6 +69,15 @@ class AppStrings {
   static const String photothequeSearchTitle = 'Recherche Photothèque';
   static const String photothequeSearchHint =
       'Rechercher dans la photothèque...';
+
+  // Recherche articles (hors Photothèque)
+  static const String articleSearchTitle = 'Recherche';
+  static const String articleSearchHint =
+      'Rechercher par titre, description, date...';
+  static const String articleSearchRecents = 'Articles récents';
+  static const String articleSearchResults = 'Résultats';
+  static const String articleSearchResultsCount = 'article(s) trouvé(s)';
+  static const String articleSearchNoResults = 'Aucun article trouvé';
   static const String photothequeImagesCount = 'Images';
   static const String photothequeCategoryElections = 'Elections';
   static const String photothequeCategoryArmee = "L'armée";

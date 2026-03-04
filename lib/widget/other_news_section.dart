@@ -5,6 +5,7 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/services/selection_service.dart';
+import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/press_articles_section.dart';
 
 /// Nombre max d’articles affichés dans "Autres Actualités" (les N derniers de la liste presse).
@@ -22,7 +23,7 @@ List<({String image, String title, String date})> get otherNewsItems {
 /// Chaque tuile a la sélection (étoile) comme en section presse.
 List<Widget> buildOtherNewsSlivers({
   SelectionService? selectionService,
-  void Function(String title, String date, String imagePath)? onArticleTap,
+  void Function(ArticleDetailArgs args)? onArticleTap,
 }) {
   final items = otherNewsItems;
   return [
@@ -43,19 +44,36 @@ List<Widget> buildOtherNewsSlivers({
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
         delegate: SliverChildListDelegate(
-          items
-              .map(
-                (e) => OtherNewsTile(
-                  imagePath: e.image,
-                  title: e.title,
-                  date: e.date,
-                  selectionService: selectionService,
-                  onTap: onArticleTap != null
-                      ? () => onArticleTap(e.title, e.date, e.image)
-                      : null,
-                ),
-              )
-              .toList(),
+          items.asMap().entries.map((entry) {
+            final index = entry.key;
+            final e = entry.value;
+            final heroTag = ArticleDetailArgs.heroTagFor(
+              imagePath: e.image,
+              title: e.title,
+              date: e.date,
+              sourceId: 'other_news',
+              index: index,
+            );
+            return OtherNewsTile(
+              imagePath: e.image,
+              title: e.title,
+              date: e.date,
+              heroTag: heroTag,
+              selectionService: selectionService,
+              onTap: onArticleTap != null
+                  ? () => onArticleTap(ArticleDetailArgs(
+                        title: e.title,
+                        date: e.date,
+                        tag: AppStrings.news,
+                        body: AppStrings.articleBodySample,
+                        imagePath: e.image,
+                        isVideo: false,
+                        isHeroOrFeatured: false,
+                        heroTagOverride: heroTag,
+                      ))
+                  : null,
+            );
+          }).toList(),
         ),
       ),
     ),
@@ -70,6 +88,7 @@ class OtherNewsTile extends StatefulWidget {
     required this.imagePath,
     required this.title,
     required this.date,
+    required this.heroTag,
     this.selectionService,
     this.onTap,
   });
@@ -77,6 +96,7 @@ class OtherNewsTile extends StatefulWidget {
   final String imagePath;
   final String title;
   final String date;
+  final Object heroTag;
   final SelectionService? selectionService;
   final VoidCallback? onTap;
 
@@ -130,18 +150,21 @@ class _OtherNewsTileState extends State<OtherNewsTile> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ClipRRect(
-                borderRadius: AppBorderRadius.r10,
-                child: Image.asset(
-                  widget.imagePath,
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+              Hero(
+                tag: widget.heroTag,
+                child: ClipRRect(
+                  borderRadius: AppBorderRadius.r10,
+                  child: Image.asset(
+                    widget.imagePath,
                     width: 90,
                     height: 90,
-                    color: AppColors.filterUnselected,
-                    child: const Icon(Icons.image_not_supported),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 90,
+                      height: 90,
+                      color: AppColors.filterUnselected,
+                      child: const Icon(Icons.image_not_supported),
+                    ),
                   ),
                 ),
               ),

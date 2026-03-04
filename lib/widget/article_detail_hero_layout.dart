@@ -28,8 +28,7 @@ class ArticleDetailHeroLayout extends StatelessWidget {
   final bool isStarSelected;
   final VoidCallback onStarTap;
   final void Function(BuildContext buttonContext) onShare;
-  final void Function(String title, String date, String imagePath)?
-  onOtherNewsArticleTap;
+  final void Function(ArticleDetailArgs args)? onOtherNewsArticleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -127,19 +126,30 @@ class ArticleDetailHeroLayout extends StatelessWidget {
                     return Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.asset(args.imagePath, fit: BoxFit.cover),
+                        Hero(
+                          tag: args.heroTag,
+                          child: Image.asset(
+                            args.imagePath,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        ),
                         if (args.isVideo)
                           Center(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.5),
-                              ),
-                              child: const Icon(
-                                Icons.play_arrow,
-                                color: Colors.white,
-                                size: 48,
+                            child: Hero(
+                              tag: args.heroTagVideoPlay,
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.black.withValues(alpha: 0.5),
+                                ),
+                                child: const Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white,
+                                  size: 48,
+                                ),
                               ),
                             ),
                           ),

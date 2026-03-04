@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
 import 'package:sem_dsn/widget/app_bottom_nav_bar.dart';
@@ -14,6 +13,8 @@ import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_page.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_search_page.dart';
 import 'package:sem_dsn/pages/bibliographie/bibliographie_page.dart';
+import 'package:sem_dsn/pages/notifications/notifications_page.dart';
+import 'package:sem_dsn/pages/search/article_search_page.dart';
 
 /// Page d'accueil : header, filtres, contenu selon filtre (Actualités = À la une + Articles de presse, sinon listes Campagne/Réalisations/Projets/etc.), bottom nav.
 class HomePage extends StatefulWidget {
@@ -55,15 +56,26 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppHeader(
-        onSearchPressed: _selectedNavIndex == 1
-            ? () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const PhotothequeSearchPage(),
-                  ),
-                );
-              }
-            : null,
+        onNotificationsPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const NotificationsPage()),
+          );
+        },
+        onSearchPressed: () {
+          if (_selectedNavIndex == 1) {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const PhotothequeSearchPage(),
+              ),
+            );
+          } else {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ArticleSearchPage(),
+              ),
+            );
+          }
+        },
       ),
       body: SafeArea(
         child: IndexedStack(
@@ -95,48 +107,52 @@ class _HomePageState extends State<HomePage> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.only(top: 24),
-                      child: isActualites
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                FeaturedSection(
-                                  selectionService: _selectionService,
-                                  onArticleTap: (title, date, imagePath) =>
-                                      _openArticle(
-                                        ArticleDetailArgs(
-                                          title: title,
-                                          date: date,
-                                          tag: AppStrings.news,
-                                          body: AppStrings.articleBodySample,
-                                          imagePath: imagePath,
-                                          isVideo: false,
-                                          isHeroOrFeatured: true,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position:
+                                      Tween<Offset>(
+                                        begin: const Offset(0, 0.03),
+                                        end: Offset.zero,
+                                      ).animate(
+                                        CurvedAnimation(
+                                          parent: animation,
+                                          curve: Curves.easeOut,
                                         ),
                                       ),
+                                  child: child,
                                 ),
-                                const SizedBox(height: 24),
-                                PressArticlesSection(
-                                  selectionService: _selectionService,
-                                  onArticleTap: (title, date, imagePath) =>
-                                      _openArticle(
-                                        ArticleDetailArgs(
-                                          title: title,
-                                          date: date,
-                                          tag: AppStrings.news,
-                                          body: AppStrings.articleBodySample,
-                                          imagePath: imagePath,
-                                          isVideo: false,
-                                          isHeroOrFeatured: false,
-                                        ),
-                                      ),
-                                ),
-                              ],
-                            )
-                          : HomeFilterContent(
-                              filterIndex: _selectedFilterIndex,
-                              selectionService: _selectionService,
-                              onArticleTap: _openArticle,
-                            ),
+                              );
+                            },
+                        child: isActualites
+                            ? Column(
+                                key: const ValueKey<bool>(true),
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  FeaturedSection(
+                                    selectionService: _selectionService,
+                                    onArticleTap: (args) => _openArticle(args),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  PressArticlesSection(
+                                    selectionService: _selectionService,
+                                    onArticleTap: (args) => _openArticle(args),
+                                  ),
+                                ],
+                              )
+                            : HomeFilterContent(
+                                key: ValueKey<int>(_selectedFilterIndex),
+                                filterIndex: _selectedFilterIndex,
+                                selectionService: _selectionService,
+                                onArticleTap: _openArticle,
+                              ),
+                      ),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),

@@ -52,7 +52,7 @@ const List<_HeroSlide> _heroSlides = [
   ),
 ];
 
-const Duration _kAutoScrollDuration = Duration(seconds: 3);
+const Duration _kAutoScrollDuration = Duration(seconds: 5);
 
 const Duration _kSlideContentAnimationDuration = Duration(milliseconds: 450);
 const Curve _kSlideContentAnimationCurve = Curves.easeOutCubic;
@@ -239,6 +239,13 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                 onPageChanged: _onPageChanged,
                 itemBuilder: (context, index) {
                   final slide = _heroSlides[index];
+                  final heroTag = ArticleDetailArgs.heroTagFor(
+                    imagePath: slide.imagePath,
+                    title: slide.title,
+                    date: slide.date,
+                    sourceId: 'hero',
+                    index: index,
+                  );
                   return GestureDetector(
                     onTap: () {
                       widget.onCardTap?.call(
@@ -250,6 +257,7 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                           imagePath: slide.imagePath,
                           isVideo: false,
                           isHeroOrFeatured: true,
+                          heroTagOverride: heroTag,
                         ),
                       );
                     },
@@ -257,7 +265,15 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.asset(slide.imagePath, fit: BoxFit.cover),
+                        Hero(
+                          tag: heroTag,
+                          child: Image.asset(
+                            slide.imagePath,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        ),
                         Container(
                           decoration: const BoxDecoration(
                             gradient: AppColors.gradientHero,

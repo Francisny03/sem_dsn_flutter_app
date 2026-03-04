@@ -6,6 +6,7 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/services/selection_service.dart';
+import 'package:sem_dsn/widget/article_detail_args.dart';
 
 /// Section "Press Articles" : liste verticale d'articles (image + titre + date + favori).
 class PressArticlesSection extends StatelessWidget {
@@ -16,8 +17,7 @@ class PressArticlesSection extends StatelessWidget {
   });
 
   final SelectionService? selectionService;
-  final void Function(String title, String date, String imagePath)?
-  onArticleTap;
+  final void Function(ArticleDetailArgs args)? onArticleTap;
 
   /// Liste des articles de presse (partagée avec "Autres Actualités").
   static const List<({String image, String title, String date})>
@@ -71,10 +71,18 @@ class PressArticlesSection extends StatelessWidget {
               date: article.date,
               imagePath: article.image,
             );
+            final heroTag = ArticleDetailArgs.heroTagFor(
+              imagePath: article.image,
+              title: article.title,
+              date: article.date,
+              sourceId: 'press',
+              index: index,
+            );
             return _PressArticleTile(
               imagePath: article.image,
               title: article.title,
               date: article.date,
+              heroTag: heroTag,
               isStarSelected:
                   selectionService?.contains(selectedArticle) ?? false,
               onStarTap: selectionService != null
@@ -82,10 +90,17 @@ class PressArticlesSection extends StatelessWidget {
                   : null,
               onTap: onArticleTap != null
                   ? () => onArticleTap!(
-                      article.title,
-                      article.date,
-                      article.image,
-                    )
+                        ArticleDetailArgs(
+                          title: article.title,
+                          date: article.date,
+                          tag: AppStrings.news,
+                          body: AppStrings.articleBodySample,
+                          imagePath: article.image,
+                          isVideo: false,
+                          isHeroOrFeatured: false,
+                          heroTagOverride: heroTag,
+                        ),
+                      )
                   : null,
             );
           },
@@ -100,6 +115,7 @@ class _PressArticleTile extends StatelessWidget {
     required this.imagePath,
     required this.title,
     required this.date,
+    required this.heroTag,
     this.isStarSelected = false,
     this.onStarTap,
     this.onTap,
@@ -108,6 +124,7 @@ class _PressArticleTile extends StatelessWidget {
   final String imagePath;
   final String title;
   final String date;
+  final Object heroTag;
   final bool isStarSelected;
   final VoidCallback? onStarTap;
   final VoidCallback? onTap;
@@ -125,18 +142,21 @@ class _PressArticleTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ClipRRect(
-                borderRadius: AppBorderRadius.r10,
-                child: Image.asset(
-                  imagePath,
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+              Hero(
+                tag: heroTag,
+                child: ClipRRect(
+                  borderRadius: AppBorderRadius.r10,
+                  child: Image.asset(
+                    imagePath,
                     width: 90,
                     height: 90,
-                    color: AppColors.filterUnselected,
-                    child: const Icon(Icons.image_not_supported),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 90,
+                      height: 90,
+                      color: AppColors.filterUnselected,
+                      child: const Icon(Icons.image_not_supported),
+                    ),
                   ),
                 ),
               ),

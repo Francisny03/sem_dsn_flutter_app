@@ -168,11 +168,19 @@ class _OverlayCardList extends StatelessWidget {
           date: item.date,
           imagePath: item.image,
         );
+        final heroTag = ArticleDetailArgs.heroTagFor(
+          imagePath: item.image,
+          title: item.title,
+          date: item.date,
+          sourceId: tag,
+          index: index,
+        );
         return _OverlayCard(
           imagePath: item.image,
           title: item.title,
           date: item.date,
           showPlayButton: item.isVideo,
+          heroTag: heroTag,
           isStarSelected: selectionService?.contains(article) ?? false,
           onStarTap: selectionService != null
               ? () => selectionService!.toggle(article)
@@ -186,7 +194,9 @@ class _OverlayCardList extends StatelessWidget {
                     body: AppStrings.articleBodySample,
                     imagePath: item.image,
                     isVideo: item.isVideo,
+                    videoPath: item.isVideo ? AppAssets.videotest : null,
                     isHeroOrFeatured: false,
+                    heroTagOverride: heroTag,
                   ),
                 )
               : null,
@@ -202,6 +212,7 @@ class _OverlayCard extends StatelessWidget {
     required this.title,
     required this.date,
     required this.showPlayButton,
+    required this.heroTag,
     this.isStarSelected = false,
     this.onStarTap,
     this.onTap,
@@ -211,6 +222,7 @@ class _OverlayCard extends StatelessWidget {
   final String title;
   final String date;
   final bool showPlayButton;
+  final Object heroTag;
   final bool isStarSelected;
   final VoidCallback? onStarTap;
   final VoidCallback? onTap;
@@ -230,7 +242,15 @@ class _OverlayCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(imagePath, fit: BoxFit.cover),
+                  Hero(
+                    tag: heroTag,
+                    child: Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
                   Container(
                     decoration: const BoxDecoration(
                       gradient: AppColors.gradientFeatured,
@@ -240,16 +260,19 @@ class _OverlayCard extends StatelessWidget {
               ),
             ),
             if (showPlayButton)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 0.5),
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: AppColors.whiteTextColor,
-                  size: 40,
+              Hero(
+                tag: ArticleDetailArgs.heroTagForVideoPlay(heroTag),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow,
+                    color: AppColors.whiteTextColor,
+                    size: 40,
+                  ),
                 ),
               ),
             if (onStarTap != null)
@@ -339,10 +362,18 @@ class _ImageBelowCardList extends StatelessWidget {
           date: item.date,
           imagePath: item.image,
         );
+        final heroTag = ArticleDetailArgs.heroTagFor(
+          imagePath: item.image,
+          title: item.title,
+          date: item.date,
+          sourceId: tag,
+          index: index,
+        );
         return _ImageBelowCard(
           imagePath: item.image,
           title: item.title,
           date: showDate ? item.date : null,
+          heroTag: heroTag,
           isStarSelected: selectionService?.contains(article) ?? false,
           onStarTap: selectionService != null
               ? () => selectionService!.toggle(article)
@@ -357,6 +388,7 @@ class _ImageBelowCardList extends StatelessWidget {
                     imagePath: item.image,
                     isVideo: false,
                     isHeroOrFeatured: false,
+                    heroTagOverride: heroTag,
                   ),
                 )
               : null,
@@ -370,6 +402,7 @@ class _ImageBelowCard extends StatelessWidget {
   const _ImageBelowCard({
     required this.imagePath,
     required this.title,
+    required this.heroTag,
     this.date,
     this.isStarSelected = false,
     this.onStarTap,
@@ -378,6 +411,7 @@ class _ImageBelowCard extends StatelessWidget {
 
   final String imagePath;
   final String title;
+  final Object heroTag;
   final String? date;
   final bool isStarSelected;
   final VoidCallback? onStarTap;
@@ -393,12 +427,20 @@ class _ImageBelowCard extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              ClipRRect(
-                borderRadius: AppBorderRadius.r12,
-                child: SizedBox(
-                  height: 180,
-                  width: double.infinity,
-                  child: Image.asset(imagePath, fit: BoxFit.cover),
+              Hero(
+                tag: heroTag,
+                child: ClipRRect(
+                  borderRadius: AppBorderRadius.r12,
+                  child: SizedBox(
+                    height: 180,
+                    width: double.infinity,
+                    child: Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
                 ),
               ),
               if (onStarTap != null)
