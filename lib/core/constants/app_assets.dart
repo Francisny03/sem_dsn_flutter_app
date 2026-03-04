@@ -33,5 +33,5 @@ class AppAssets {
   static const String revue2 = 'assets/images/revue2.png';
   static const String revue3 = 'assets/images/revue3.png';
 
-  static const String videotest = 'assets/videos/videotest.mp4';
+  // static const String videotest = 'assets/videos/videotest.mp4';
 }
