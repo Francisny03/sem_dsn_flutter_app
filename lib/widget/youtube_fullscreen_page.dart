@@ -11,10 +11,14 @@ class YoutubeFullscreenPage extends StatefulWidget {
     super.key,
     required this.videoId,
     this.startAtSeconds = 0,
+    this.isRecap = false,
   });
 
   final String videoId;
   final int startAtSeconds;
+
+  /// true = recap (bouton X, quitter = retour home). false = depuis article (fullscreen_exit, quitter = retour article, lecture en réduit).
+  final bool isRecap;
 
   @override
   State<YoutubeFullscreenPage> createState() => _YoutubeFullscreenPageState();
@@ -56,12 +60,27 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
   }
 
+  /// Recap : coupe la vidéo et retour home.
   void _closeAndPop() {
     _exitFullscreen();
     _controller.pause();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Navigator.of(context).pop();
+    });
+  }
+
+  /// Article : ferme le fullscreen, retour article avec position + play state pour continuer en lecteur réduit.
+  void _exitFullscreenAndPop() {
+    _exitFullscreen();
+    final position = _controller.value.position;
+    final isPlaying = _controller.value.playerState == PlayerState.playing;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop(<String, dynamic>{
+        'position': position.inSeconds,
+        'isPlaying': isPlaying,
+      });
     });
   }
 
@@ -126,8 +145,14 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
             child: Align(
               alignment: Alignment.topRight,
               child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                onPressed: _closeAndPop,
+                icon: Icon(
+                  widget.isRecap ? Icons.close : Icons.fullscreen_exit,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                onPressed: widget.isRecap
+                    ? _closeAndPop
+                    : _exitFullscreenAndPop,
               ),
             ),
           ),

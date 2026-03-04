@@ -72,6 +72,7 @@ class _HomePageState extends State<HomePage> {
             builder: (_) => YoutubeFullscreenPage(
               videoId: videoId,
               startAtSeconds: startAt,
+              isRecap: true,
             ),
           ),
         );

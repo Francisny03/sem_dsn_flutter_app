@@ -205,15 +205,27 @@ class _YoutubeFullscreenVideoButtonState
       icon: const Icon(Icons.fullscreen, color: Colors.white, size: 22),
       onPressed: () {
         final startAt = controller.value.position.inSeconds;
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            fullscreenDialog: true,
-            builder: (context) => YoutubeFullscreenPage(
-              videoId: videoId,
-              startAtSeconds: startAt,
-            ),
-          ),
-        );
+        Navigator.of(context)
+            .push<Map<String, dynamic>>(
+              MaterialPageRoute<Map<String, dynamic>>(
+                fullscreenDialog: true,
+                builder: (context) => YoutubeFullscreenPage(
+                  videoId: videoId,
+                  startAtSeconds: startAt,
+                ),
+              ),
+            )
+            .then((result) {
+              if (result == null || !context.mounted) return;
+              final c = YoutubePlayerController.of(context);
+              if (c == null) return;
+              final pos = result['position'] as int?;
+              final isPlaying = result['isPlaying'] as bool? ?? true;
+              if (pos != null) {
+                c.seekTo(Duration(seconds: pos));
+                if (!isPlaying) c.pause();
+              }
+            });
       },
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
