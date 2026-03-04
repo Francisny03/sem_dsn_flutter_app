@@ -31,8 +31,8 @@ class SemDsnApp extends StatelessWidget {
         useMaterial3: true,
         textTheme: GoogleFonts.latoTextTheme(ThemeData.light().textTheme),
       ),
-      //home: const SplashScreen(),
-      home: const HomePage(),
+      home: const SplashScreen(),
+      //home: const HomePage(),
     );
   }
 }
