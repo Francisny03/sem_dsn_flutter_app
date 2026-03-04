@@ -49,6 +49,16 @@ class _LiveFullscreenPageState extends State<LiveFullscreenPage> {
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
   }
 
+  Future<void> _closeAndPop() async {
+    _exitFullscreen();
+    await _controller.pause();
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    });
+  }
+
   @override
   void dispose() {
     _exitFullscreen();
@@ -73,12 +83,8 @@ class _LiveFullscreenPageState extends State<LiveFullscreenPage> {
             child: Align(
               alignment: Alignment.topRight,
               child: IconButton(
-                icon: const Icon(
-                  Icons.fullscreen_exit,
-                  color: Colors.white,
-                  size: 28,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: _closeAndPop,
               ),
             ),
           ),

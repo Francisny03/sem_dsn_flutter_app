@@ -56,6 +56,15 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
   }
 
+  void _closeAndPop() {
+    _exitFullscreen();
+    _controller.pause();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    });
+  }
+
   @override
   void dispose() {
     _controller.removeListener(_onControllerUpdate);
@@ -105,9 +114,7 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       YoutubeSeekBackButton(controller: _controller),
-                      IgnorePointer(
-                        child: SizedBox(width: 100, height: 80),
-                      ),
+                      IgnorePointer(child: SizedBox(width: 100, height: 80)),
                       YoutubeSeekForwardButton(controller: _controller),
                     ],
                   ),
@@ -119,8 +126,8 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
             child: Align(
               alignment: Alignment.topRight,
               child: IconButton(
-                icon: const Icon(Icons.fullscreen_exit, color: Colors.white, size: 28),
-                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: _closeAndPop,
               ),
             ),
           ),
