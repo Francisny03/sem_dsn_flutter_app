@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
-import 'package:sem_dsn/widget/app_bottom_nav_bar.dart';
-import 'package:sem_dsn/widget/app_header.dart';
-import 'package:sem_dsn/widget/featured_section.dart';
-import 'package:sem_dsn/widget/home_filter_content.dart';
-import 'package:sem_dsn/widget/home_filter_section.dart';
-import 'package:sem_dsn/widget/home_hero_section.dart';
-import 'package:sem_dsn/widget/press_articles_section.dart';
+import 'package:sem_dsn/pages/live/live_fullscreen_page.dart';
 import 'package:sem_dsn/pages/selection/selection_page_content.dart';
-import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_page.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_search_page.dart';
 import 'package:sem_dsn/pages/bibliographie/bibliographie_page.dart';
 import 'package:sem_dsn/pages/notifications/notifications_page.dart';
 import 'package:sem_dsn/pages/search/article_search_page.dart';
+import 'package:sem_dsn/services/selection_service.dart';
+import 'package:sem_dsn/widget/app_bottom_nav_bar.dart';
+import 'package:sem_dsn/widget/app_header.dart';
+import 'package:sem_dsn/widget/article_video_player.dart';
+import 'package:sem_dsn/widget/featured_section.dart';
+import 'package:sem_dsn/widget/home_filter_content.dart';
+import 'package:sem_dsn/widget/home_filter_section.dart';
+import 'package:sem_dsn/widget/home_hero_section.dart';
+import 'package:sem_dsn/widget/press_articles_section.dart';
+import 'package:sem_dsn/widget/youtube_fullscreen_page.dart';
 
 /// Page d'accueil : header, filtres, contenu selon filtre (Actualités = À la une + Articles de presse, sinon listes Campagne/Réalisations/Projets/etc.), bottom nav.
 class HomePage extends StatefulWidget {
@@ -49,6 +53,32 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _onLivePressed() {
+    if (LiveConfig.isLiveInProgress && LiveConfig.liveStreamUrl.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) =>
+              LiveFullscreenPage(streamUrl: LiveConfig.liveStreamUrl),
+        ),
+      );
+    } else if (LiveConfig.recapVideoUrl.isNotEmpty) {
+      final videoId = getYoutubeVideoId(LiveConfig.recapVideoUrl);
+      if (videoId != null) {
+        final startAt = getYoutubeStartSeconds(LiveConfig.recapVideoUrl) ?? 0;
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            fullscreenDialog: true,
+            builder: (_) => YoutubeFullscreenPage(
+              videoId: videoId,
+              startAtSeconds: startAt,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isActualites = _selectedFilterIndex == kFilterActualites;
@@ -56,6 +86,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppHeader(
+        onLivePressed: _onLivePressed,
         onNotificationsPressed: () {
           Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const NotificationsPage()),

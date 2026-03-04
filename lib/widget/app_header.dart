@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
+import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/header_menu.dart';
 
@@ -10,6 +11,7 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
     super.key,
     this.onSearchPressed,
     this.onNotificationsPressed,
+    this.onLivePressed,
   });
 
   /// Appelé au tap sur l'icône recherche (ex: ouvre la page recherche Photothèque).
@@ -18,6 +20,9 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   /// Appelé au tap sur l'icône cloche (ex: ouvre la page Notifications).
   final VoidCallback? onNotificationsPressed;
 
+  /// Appelé au tap sur l'icône live (ouvre live HLS ou recap YouTube selon config).
+  final VoidCallback? onLivePressed;
+
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
@@ -25,10 +30,15 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   State<AppHeader> createState() => _AppHeaderState();
 }
 
-class _AppHeaderState extends State<AppHeader>
-    with SingleTickerProviderStateMixin {
+class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
   late final AnimationController _textController;
   late final Animation<Offset> _textSlide;
+  late final AnimationController _liveBlinkController;
+  late final Animation<double> _liveBlinkAnimation;
+
+  static bool get _showLiveIcon =>
+      LiveConfig.liveStreamUrl.isNotEmpty ||
+      LiveConfig.recapVideoUrl.isNotEmpty;
 
   @override
   void initState() {
@@ -41,6 +51,13 @@ class _AppHeaderState extends State<AppHeader>
         .animate(
           CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
         );
+    _liveBlinkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+    _liveBlinkAnimation = Tween<double>(begin: 0.2, end: 1.0).animate(
+      CurvedAnimation(parent: _liveBlinkController, curve: Curves.easeInOut),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 700), () {
         if (mounted) _textController.forward();
@@ -51,6 +68,7 @@ class _AppHeaderState extends State<AppHeader>
   @override
   void dispose() {
     _textController.dispose();
+    _liveBlinkController.dispose();
     super.dispose();
   }
 
@@ -140,7 +158,14 @@ class _AppHeaderState extends State<AppHeader>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _HeaderIcon(icon: Icons.cell_tower, onPressed: () {}),
+                if (_showLiveIcon && widget.onLivePressed != null)
+                  _LiveHeaderIcon(
+                    isLiveInProgress: LiveConfig.isLiveInProgress,
+                    blinkAnimation: LiveConfig.isLiveInProgress
+                        ? _liveBlinkAnimation
+                        : null,
+                    onPressed: widget.onLivePressed!,
+                  ),
                 _HeaderIcon(
                   icon: Icons.notifications_outlined,
                   onPressed: widget.onNotificationsPressed ?? () {},
@@ -157,6 +182,65 @@ class _AppHeaderState extends State<AppHeader>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LiveHeaderIcon extends StatelessWidget {
+  const _LiveHeaderIcon({
+    required this.isLiveInProgress,
+    this.blinkAnimation,
+    required this.onPressed,
+  });
+
+  final bool isLiveInProgress;
+  final Animation<double>? blinkAnimation;
+  final VoidCallback onPressed;
+
+  static const double _iconSize = 22;
+
+  @override
+  Widget build(BuildContext context) {
+    final useBlink = blinkAnimation != null;
+    final baseColor = isLiveInProgress ? Colors.red : AppColors.blackIcon;
+
+    Widget iconWidget;
+    if (useBlink) {
+      iconWidget = AnimatedBuilder(
+        animation: blinkAnimation!,
+        builder: (context, child) {
+          final opacity = blinkAnimation!.value;
+          final color = Color.lerp(
+            Colors.red.withValues(alpha: 0.1),
+            Colors.red,
+            opacity,
+          )!;
+          return SvgPicture.asset(
+            AppAssets.live,
+            width: _iconSize,
+            height: _iconSize,
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          );
+        },
+      );
+    } else {
+      iconWidget = SvgPicture.asset(
+        AppAssets.live,
+        width: _iconSize,
+        height: _iconSize,
+        colorFilter: ColorFilter.mode(baseColor, BlendMode.srcIn),
+      );
+    }
+
+    return IconButton(
+      icon: iconWidget,
+      onPressed: onPressed,
+      style: IconButton.styleFrom(
+        padding: const EdgeInsets.all(0),
+        minimumSize: const Size(36, 36),
+        maximumSize: const Size(36, 36),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
