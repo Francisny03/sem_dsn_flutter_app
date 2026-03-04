@@ -6,6 +6,7 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
+import 'package:sem_dsn/widget/article_video_player.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 
 /// Index des filtres : Actualités, Campagne, Réalisations, Discours, Projets, Interviews, Archives.
@@ -194,7 +195,7 @@ class _OverlayCardList extends StatelessWidget {
                     body: AppStrings.articleBodySample,
                     imagePath: item.image,
                     isVideo: item.isVideo,
-                    videoPath: item.isVideo ? AppAssets.videotest : null,
+                    videoPath: item.isVideo ? kYoutubeTestUrl : null,
                     isHeroOrFeatured: false,
                     heroTagOverride: heroTag,
                   ),

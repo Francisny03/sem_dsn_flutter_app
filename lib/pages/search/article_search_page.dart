@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
-import 'package:sem_dsn/core/constants/app_assets.dart';
+import 'package:sem_dsn/widget/article_video_player.dart';
 import 'package:sem_dsn/core/constants/article_search_data.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
@@ -51,7 +51,7 @@ class _ArticleSearchPageState extends State<ArticleSearchPage> {
             imagePath: article.imagePath,
             isVideo: article.isVideo,
             isHeroOrFeatured: article.isHeroOrFeatured,
-            videoPath: article.isVideo ? AppAssets.videotest : null,
+            videoPath: article.isVideo ? kYoutubeTestUrl : null,
           ),
         ),
       ),

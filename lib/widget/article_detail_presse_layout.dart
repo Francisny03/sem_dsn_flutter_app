@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/article_content_card.dart';
@@ -96,7 +95,7 @@ class ArticleDetailPresseLayout extends StatelessWidget {
             SliverToBoxAdapter(
               child: args.isVideo
                   ? ArticleVideoPlayer(
-                      videoPath: args.videoPath ?? AppAssets.videotest,
+                      videoPath: args.videoPath ?? kYoutubeTestUrl,
                       height: _imageHeight,
                       heroTagForPlay: args.heroTagVideoPlay,
                     )
