@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
+import 'package:sem_dsn/widget/image_from_path.dart';
 
-/// Tuile pour un livre dans la section Bibliographie : couverture, titre, résumé, année, bouton "Lire plus".
+/// Tuile pour un livre dans la section Bibliographie : couverture, titre, résumé (optionnel), année, bouton "Lire plus".
+/// Si [onTap] est fourni, tout le container est cliquable (même action que le bouton).
 class BibliographyLivreTile extends StatelessWidget {
   const BibliographyLivreTile({
     super.key,
     required this.imagePath,
     required this.title,
-    required this.description,
-    required this.year,
+    this.description = '',
+    this.year = '',
+    this.onTap,
     this.onLirePlus,
   });
 
@@ -18,13 +21,15 @@ class BibliographyLivreTile extends StatelessWidget {
   final String title;
   final String description;
   final String year;
+  /// Tap sur tout le container (prioritaire ; le bouton "Lire plus" appelle aussi [onTap] si présent).
+  final VoidCallback? onTap;
   final VoidCallback? onLirePlus;
+
+  VoidCallback? get _effectiveOnLirePlus => onTap ?? onLirePlus;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
+    final content = Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
@@ -40,17 +45,11 @@ class BibliographyLivreTile extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: ClipRRect(
               borderRadius: AppBorderRadius.r8,
-              child: Image.asset(
-                imagePath,
+              child: ImageFromPath(
+                path: imagePath,
                 width: 120,
                 height: 140,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  width: 100,
-                  height: 140,
-                  color: AppColors.filterUnselected,
-                  child: const Icon(Icons.menu_book),
-                ),
               ),
             ),
           ),
@@ -69,17 +68,19 @@ class BibliographyLivreTile extends StatelessWidget {
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    color: AppColors.grayTextColor,
-                    fontSize: 13,
-                    height: 1.4,
+                if (description.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      color: AppColors.grayTextColor,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ],
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -92,9 +93,9 @@ class BibliographyLivreTile extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
-                    if (onLirePlus != null)
+                    if (_effectiveOnLirePlus != null)
                       TextButton(
-                        onPressed: onLirePlus,
+                        onPressed: _effectiveOnLirePlus,
                         style: TextButton.styleFrom(
                           backgroundColor: AppColors.primaryColor,
                           foregroundColor: AppColors.whiteTextColor,
@@ -122,7 +123,19 @@ class BibliographyLivreTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: onTap != null
+          ? Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: AppBorderRadius.r8,
+                child: content,
+              ),
+            )
+          : content,
     );
   }
 }

@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
+import 'package:sem_dsn/models/article.dart';
+import 'package:sem_dsn/providers/press_articles_cache_provider.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
-import 'package:sem_dsn/widget/press_articles_section.dart';
+import 'package:sem_dsn/widget/image_from_path.dart';
 
 /// Nombre max d’articles affichés dans "Autres Actualités" (les N derniers de la liste presse).
 const int kOtherNewsMaxCount = 10;
 
-/// Derniers articles de la section articles de presse, pour "Autres Actualités".
-List<({String image, String title, String date})> get otherNewsItems {
-  final list = PressArticlesSection.pressArticles;
-  if (list.length <= kOtherNewsMaxCount) return list;
-  return list.sublist(list.length - kOtherNewsMaxCount);
-}
-
 /// Section "Autres Actualités" en bas de la page détail (slivers à insérer dans un CustomScrollView).
-/// Même contenu que les articles de presse, limité aux 10 derniers. Titre "Autres Actualités".
+/// Contenu = derniers articles de presse (cache du provider), limités à 10. Titre "Autres Actualités".
 /// Chaque tuile a la sélection (étoile) comme en section presse.
-List<Widget> buildOtherNewsSlivers({
+List<Widget> buildOtherNewsSlivers(
+  BuildContext context, {
   SelectionService? selectionService,
   void Function(ArticleDetailArgs args)? onArticleTap,
 }) {
-  final items = otherNewsItems;
+  final cache = context.read<PressArticlesCacheProvider>().pressArticles;
+  final list = cache.length <= kOtherNewsMaxCount
+      ? cache
+      : cache.sublist(cache.length - kOtherNewsMaxCount);
+
   return [
     SliverToBoxAdapter(
       child: Padding(
@@ -44,31 +45,28 @@ List<Widget> buildOtherNewsSlivers({
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList(
         delegate: SliverChildListDelegate(
-          items.asMap().entries.map((entry) {
+          list.asMap().entries.map((entry) {
             final index = entry.key;
-            final e = entry.value;
+            final article = entry.value;
+            final imagePath = article.firstImageUrl ?? '';
+            final date = Article.formatDisplayDate(article.articleDate);
             final heroTag = ArticleDetailArgs.heroTagFor(
-              imagePath: e.image,
-              title: e.title,
-              date: e.date,
+              imagePath: imagePath,
+              title: article.title,
+              date: date,
               sourceId: 'other_news',
               index: index,
             );
             return OtherNewsTile(
-              imagePath: e.image,
-              title: e.title,
-              date: e.date,
+              imagePath: imagePath,
+              title: article.title,
+              date: date,
               heroTag: heroTag,
               selectionService: selectionService,
               onTap: onArticleTap != null
-                  ? () => onArticleTap(ArticleDetailArgs(
-                        title: e.title,
-                        date: e.date,
-                        tag: AppStrings.news,
-                        body: AppStrings.articleBodySample,
-                        imagePath: e.image,
-                        isVideo: false,
-                        isHeroOrFeatured: false,
+                  ? () => onArticleTap(ArticleDetailArgs.fromArticle(
+                        article,
+                        AppStrings.news,
                         heroTagOverride: heroTag,
                       ))
                   : null,
@@ -154,17 +152,11 @@ class _OtherNewsTileState extends State<OtherNewsTile> {
                 tag: widget.heroTag,
                 child: ClipRRect(
                   borderRadius: AppBorderRadius.r10,
-                  child: Image.asset(
-                    widget.imagePath,
+                  child: ImageFromPath(
+                    path: widget.imagePath,
                     width: 90,
                     height: 90,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 90,
-                      height: 90,
-                      color: AppColors.filterUnselected,
-                      child: const Icon(Icons.image_not_supported),
-                    ),
                   ),
                 ),
               ),

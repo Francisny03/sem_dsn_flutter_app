@@ -1,4 +1,7 @@
 import 'package:sem_dsn/core/constants/app_strings.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
+import 'package:sem_dsn/models/article.dart';
+import 'package:sem_dsn/models/article_source.dart';
 
 /// Arguments pour ouvrir la page détail (hero, à la une, campagne, presse, etc.).
 class ArticleDetailArgs {
@@ -13,6 +16,9 @@ class ArticleDetailArgs {
     this.isHeroOrFeatured = false,
     this.titleInAppBarScrollOffset,
     this.heroTagOverride,
+    this.articleId,
+    this.sources,
+    this.bodyHtml,
   });
 
   final String title;
@@ -21,6 +27,15 @@ class ArticleDetailArgs {
   final String body;
   final String imagePath;
   final bool isVideo;
+
+  /// Id API de l’article (pour chargement détail ou suivi).
+  final int? articleId;
+
+  /// Sources à afficher en fin d’article (nom + URL en colonne).
+  final List<ArticleSource>? sources;
+
+  /// Corps en HTML (si défini, utilisé à la place de [body] pour l’affichage).
+  final String? bodyHtml;
 
   /// Chemin de la vidéo (asset ou URL). Si [isVideo] est true et [videoPath] null, utiliser une vidéo par défaut côté lecteur.
   final String? videoPath;
@@ -51,6 +66,52 @@ class ArticleDetailArgs {
 
   /// Tag Hero pour l’icône play (vidéo), à utiliser sur la home et sur la page détail.
   Object get heroTagVideoPlay => ArticleDetailArgs.heroTagForVideoPlay(heroTag);
+
+  /// Construit les arguments à partir d’un [Article] API (tag = nom catégorie, image = première image ou placeholder).
+  static ArticleDetailArgs fromArticle(
+    Article article,
+    String tag, {
+    Object? heroTagOverride,
+    bool isHeroOrFeatured = false,
+  }) {
+    final date = _formatArticleDate(article.articleDate);
+    return ArticleDetailArgs(
+      title: article.title,
+      date: date,
+      tag: tag,
+      body: article.subtitle ?? article.title,
+      bodyHtml: article.description.isNotEmpty ? article.description : null,
+      imagePath: article.firstImageUrl ?? AppAssets.news1,
+      articleId: article.id,
+      sources: article.sources.isNotEmpty ? article.sources : null,
+      isHeroOrFeatured: isHeroOrFeatured,
+      heroTagOverride: heroTagOverride,
+    );
+  }
+
+  static String _formatArticleDate(String iso) {
+    if (iso.length < 10) return iso;
+    try {
+      final d = DateTime.parse(iso);
+      const months = [
+        'Jan',
+        'Fév',
+        'Mar',
+        'Avr',
+        'Mai',
+        'Juin',
+        'Juil',
+        'Août',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Déc',
+      ];
+      return '${d.day} ${months[d.month - 1]} ${d.year}';
+    } catch (_) {
+      return iso.substring(0, 10);
+    }
+  }
 
   /// Construit un tag à partir de (imagePath, title, date). Optionnellement [sourceId] et [index] pour rendre le tag unique par emplacement (évite "multiple heroes same tag").
   static Object heroTagFor({

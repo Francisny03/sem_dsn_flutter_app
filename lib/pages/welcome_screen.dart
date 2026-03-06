@@ -6,6 +6,7 @@ import 'package:sem_dsn/core/constants/app_padding.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/home/home_page.dart';
+import 'package:sem_dsn/widget/congolese_flag_painter.dart';
 import 'package:sem_dsn/widget/custom_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -81,6 +82,19 @@ class WelcomeScreen extends StatelessWidget {
                               fontSize: AppFontSizes.welcomeHeroText,
                               fontWeight: FontWeight.w600,
                               height: 1,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 50, right: 50),
+                          child: ClipRRect(
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 5,
+                              child: CustomPaint(
+                                painter: CongoleseFlagPainter(),
+                              ),
                             ),
                           ),
                         ),

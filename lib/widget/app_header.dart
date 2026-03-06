@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
+import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/header_menu.dart';
@@ -154,16 +155,11 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
               ],
             ),
 
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            _HeaderActionsRow(
               children: [
                 if (_showLiveIcon && widget.onLivePressed != null)
                   _LiveHeaderIcon(
                     isLiveInProgress: LiveConfig.isLiveInProgress,
-                    blinkAnimation: LiveConfig.isLiveInProgress
-                        ? _liveBlinkAnimation
-                        : null,
                     onPressed: widget.onLivePressed!,
                   ),
                 _HeaderIcon(
@@ -187,60 +183,133 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
   }
 }
 
-class _LiveHeaderIcon extends StatelessWidget {
+/// Ligne d’icônes à droite du header : même hauteur, centrées.
+class _HeaderActionsRow extends StatelessWidget {
+  const _HeaderActionsRow({required this.children});
+
+  final List<Widget> children;
+
+  static const double _cellSize = 38;
+  static const double _rowHeight = 44;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: _rowHeight,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: children
+            .map(
+              (c) => c is _LiveHeaderIcon
+                  ? c
+                  : SizedBox(
+                      width: _cellSize,
+                      height: _cellSize,
+                      child: Center(child: c),
+                    ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _LiveHeaderIcon extends StatefulWidget {
   const _LiveHeaderIcon({
     required this.isLiveInProgress,
-    this.blinkAnimation,
     required this.onPressed,
   });
 
   final bool isLiveInProgress;
-  final Animation<double>? blinkAnimation;
   final VoidCallback onPressed;
 
-  static const double _iconSize = 22;
+  @override
+  State<_LiveHeaderIcon> createState() => _LiveHeaderIconState();
+}
+
+class _LiveHeaderIconState extends State<_LiveHeaderIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _blinkController;
+  late Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _blinkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+
+    _opacity = Tween<double>(begin: 0.3, end: 1).animate(
+      CurvedAnimation(parent: _blinkController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _blinkController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final useBlink = blinkAnimation != null;
-    final baseColor = isLiveInProgress ? Colors.red : AppColors.blackIcon;
-
-    Widget iconWidget;
-    if (useBlink) {
-      iconWidget = AnimatedBuilder(
-        animation: blinkAnimation!,
-        builder: (context, child) {
-          final opacity = blinkAnimation!.value;
-          final color = Color.lerp(
-            Colors.red.withValues(alpha: 0.1),
-            Colors.red,
-            opacity,
-          )!;
-          return SvgPicture.asset(
-            AppAssets.live,
-            width: _iconSize,
-            height: _iconSize,
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          );
-        },
-      );
-    } else {
-      iconWidget = SvgPicture.asset(
-        AppAssets.live,
-        width: _iconSize,
-        height: _iconSize,
-        colorFilter: ColorFilter.mode(baseColor, BlendMode.srcIn),
+    if (!widget.isLiveInProgress) {
+      return IconButton(
+        icon: SvgPicture.asset(
+          AppAssets.live,
+          width: 28,
+          height: 28,
+          colorFilter: const ColorFilter.mode(
+            AppColors.blackIcon,
+            BlendMode.srcIn,
+          ),
+        ),
+        onPressed: widget.onPressed,
+        style: IconButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(36, 36),
+          maximumSize: const Size(36, 36),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
       );
     }
 
-    return IconButton(
-      icon: iconWidget,
-      onPressed: onPressed,
-      style: IconButton.styleFrom(
-        padding: const EdgeInsets.all(0),
-        minimumSize: const Size(36, 36),
-        maximumSize: const Size(36, 36),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    return GestureDetector(
+      onTap: widget.onPressed,
+      child: SizedBox(
+        height: 36,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedBuilder(
+              animation: _opacity,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _opacity.value,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 4),
+            const Text(
+              AppStrings.liveTitle,
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -252,10 +321,12 @@ class _HeaderIcon extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
+  static const double _iconSize = 28;
+
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(icon, color: AppColors.blackIcon, size: 22),
+      icon: Icon(icon, color: AppColors.blackIcon, size: _iconSize),
       onPressed: onPressed,
       style: IconButton.styleFrom(
         padding: const EdgeInsets.all(0),

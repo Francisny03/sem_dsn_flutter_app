@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 
@@ -11,6 +12,7 @@ class ArticleContentCard extends StatelessWidget {
     required this.date,
     required this.tag,
     required this.body,
+    this.bodyHtml,
     this.showTagTitleDate = true,
     this.heroCapDrawnAbove = false,
   });
@@ -19,6 +21,9 @@ class ArticleContentCard extends StatelessWidget {
   final String date;
   final String tag;
   final String body;
+
+  /// Si défini, affiché à la place de [body] (HTML rendu).
+  final String? bodyHtml;
 
   /// false = Hero/À la une : afficher uniquement le corps (sans tag, titre, date).
   final bool showTagTitleDate;
@@ -92,14 +97,31 @@ class ArticleContentCard extends StatelessWidget {
             ],
             const SizedBox(height: 20),
           ],
-          Text(
-            body,
-            style: const TextStyle(
-              color: AppColors.newsTitle,
-              fontSize: 15,
-              height: 1.5,
+          if (bodyHtml != null && bodyHtml!.isNotEmpty)
+            Html(
+              data: bodyHtml!.replaceAll('&nbsp;', ' '),
+              shrinkWrap: true,
+              style: {
+                'body': Style(
+                  margin: Margins.zero,
+                  padding: HtmlPaddings.zero,
+                  color: AppColors.newsTitle,
+                  fontSize: FontSize(15),
+                  lineHeight: const LineHeight(1.5),
+                ),
+                'p': Style(margin: Margins.only(bottom: 12)),
+                'strong': Style(fontWeight: FontWeight.w700),
+              },
+            )
+          else
+            Text(
+              body,
+              style: const TextStyle(
+                color: AppColors.newsTitle,
+                fontSize: 15,
+                height: 1.5,
+              ),
             ),
-          ),
         ],
       ),
     );

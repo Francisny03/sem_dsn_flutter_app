@@ -47,6 +47,11 @@ class AppStrings {
   static const String sectionTitleFeatured = 'À La Une';
   static const String sectionTitlePressArticles = 'Articles de presse';
 
+  /// Message affiché quand une catégorie n’a pas encore d’articles.
+  static const String noArticlesYet = 'Pas d\'articles pour le moment';
+
+  static const String sourcesTitle = 'Sources';
+
   // Bottom navigation
   static const String navAccueil = 'Accueil';
   static const String navPhototheque = 'Photothèque';
@@ -64,6 +69,12 @@ class AppStrings {
   static const String bibSectionLivres = 'Livres';
   static const String bibSectionRevuesPresse = 'Revues de Presse';
   static const String bibButtonLirePlus = 'Lire plus';
+  static const String bibBookDetailDateLabel = 'Date de publication';
+  static const String bibBookDetailAuthorLabel = 'Auteur';
+  static const String bibBookDetailReadButton = 'Lire le livre';
+  static const String bibSearchTitle = 'Recherche Bibliographie';
+  static const String bibSearchHint =
+      'Rechercher par titre, description, date...';
 
   // Photothèque
   static const String photothequeSearchTitle = 'Recherche Photothèque';
@@ -86,6 +97,13 @@ class AppStrings {
   static const String photothequeCategoryInternational = 'International';
   static const String photothequeCategoryMrMmeDsn = 'Mr & Mme DSN';
   static const String photothequeNoResults = 'Aucun résultat';
+
+  // Discours (sous-catégories + grille)
+  static const String discoursCountLabel = 'discours';
+  static const String discoursSubcategoryPolitiques = 'Discours politiques';
+  static const String discoursSubcategoryInternational =
+      'Interventions internationales';
+  static const String discoursSubcategoryAutres = 'Autres discours';
 
   // Menu 3 points (header)
   static const String menuTitle = 'Menu';
@@ -127,4 +145,10 @@ class AppStrings {
   static const String otherNewsTitle = 'Autres Actualités';
   static const String articleBodySample =
       'Les danses folkloriques ont mis toute la foule en haleine, offrant un spectacle riche en couleurs et en traditions. Au rythme des tam-tams et des chants traditionnels, les groupes culturels ont exprimé avec fierté l’identité et le patrimoine de la région. L’ambiance était festive, vibrante, presque électrique.\n\nLe Président de la République a été accueilli par une foule en liesse à son arrivée. Femmes, hommes et jeunes, massés le long des artères principales, brandissaient des drapeaux et scandaient des messages de bienvenue. L’enthousiasme populaire témoignait de l’importance accordée à cette visite présidentielle.\n\n« Quand on a survolé la ville de Dolisie, on a vu cette foule impressionnante. C\'est très émouvant », a-t-il déclaré, visiblement touché par l’accueil chaleureux qui lui a été réservé.\n\nCette visite s\'inscrit dans le cadre des projets de développement des infrastructures régionales. Plusieurs chantiers stratégiques sont prévus afin d’améliorer les conditions de vie des populations, notamment dans les domaines des routes, de l’énergie et des équipements publics.\n\nAu-delà du caractère protocolaire, cette descente sur le terrain vise également à renforcer le dialogue entre les autorités et les citoyens. Des rencontres avec les élus locaux et les forces vives de la région sont programmées afin d’évaluer les besoins prioritaires et d’accélérer la mise en œuvre des projets en cours.\n\nLa ville de Dolisie, parée de ses plus beaux atours pour l’occasion, a ainsi vécu une journée historique, marquée par l’espoir et la promesse d’un avenir tourné vers le progrès et le développement durable.';
+
+  // Live
+  static const String liveTitle = 'En direct';
+  static const String liveDescription =
+      'Vous pouvez maintenant voir la visite du Président de la République en direct';
+  static const String liveButton = 'Voir la visite';
 }

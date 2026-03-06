@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 
 /// Durée de l'animation au clic sur l'étoile de sélection.
 const Duration kSelectionStarAnimationDuration = Duration(milliseconds: 280);
@@ -75,12 +77,18 @@ class _AnimatedSelectionStarState extends State<AnimatedSelectionStar>
       behavior: HitTestBehavior.opaque,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: Icon(
-          widget.isSelected ? Icons.star : Icons.star_border,
-          color: widget.isSelected
-              ? widget.selectedColor
-              : widget.unselectedColor,
-          size: widget.size,
+        child: SvgPicture.asset(
+          widget.isSelected
+              ? AppAssets.selection2Full
+              : AppAssets.selection2,
+          width: widget.size,
+          height: widget.size,
+          colorFilter: ColorFilter.mode(
+            widget.isSelected
+                ? widget.selectedColor
+                : widget.unselectedColor,
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );

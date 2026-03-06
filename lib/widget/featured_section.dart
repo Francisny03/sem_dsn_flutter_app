@@ -5,13 +5,25 @@ import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
+import 'package:sem_dsn/models/article.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
+import 'package:sem_dsn/widget/image_from_path.dart';
 
 /// Section "Featured" (À La Une) : liste horizontale de cartes d'articles en vedette.
+/// Si [articles] est fourni (API), affiche ces articles ; sinon données statiques.
 class FeaturedSection extends StatefulWidget {
-  const FeaturedSection({super.key, this.selectionService, this.onArticleTap});
+  const FeaturedSection({
+    super.key,
+    this.articles,
+    this.sectionTitle,
+    this.selectionService,
+    this.onArticleTap,
+  });
 
+  final List<Article>? articles;
+  /// Si fourni (ex. nom de la sous-catégorie API), remplace le titre par défaut.
+  final String? sectionTitle;
   final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
 
@@ -78,13 +90,17 @@ class _FeaturedSectionState extends State<FeaturedSection> {
 
   @override
   Widget build(BuildContext context) {
+    final apiArticles = widget.articles ?? [];
+    final useApi = apiArticles.isNotEmpty;
+    final count = useApi ? apiArticles.length : _items.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            AppStrings.sectionTitleFeatured,
+            widget.sectionTitle ?? AppStrings.sectionTitleFeatured,
             style: TextStyle(
               color: AppColors.sectionTitle,
               fontSize: 18,
@@ -98,8 +114,50 @@ class _FeaturedSectionState extends State<FeaturedSection> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _items.length,
+            itemCount: count,
             itemBuilder: (context, index) {
+              if (useApi) {
+                final article = apiArticles[index];
+                final imagePath = article.firstImageUrl ?? AppAssets.news1;
+                final date = Article.formatDisplayDate(article.articleDate);
+                final tag = article.categories.isNotEmpty
+                    ? article.categories.first.name
+                    : AppStrings.news;
+                final selectedArticle = SelectedArticle(
+                  title: article.title,
+                  date: date,
+                  imagePath: imagePath,
+                );
+                final heroTag = ArticleDetailArgs.heroTagFor(
+                  imagePath: imagePath,
+                  title: article.title,
+                  date: date,
+                  sourceId: 'featured',
+                  index: index,
+                );
+                return _FeaturedCard(
+                  imagePath: imagePath,
+                  title: article.title,
+                  date: date,
+                  heroTag: heroTag,
+                  isStarSelected:
+                      widget.selectionService?.contains(selectedArticle) ??
+                      false,
+                  onStarTap: widget.selectionService != null
+                      ? () => widget.selectionService!.toggle(selectedArticle)
+                      : null,
+                  onTap: widget.onArticleTap != null
+                      ? () => widget.onArticleTap!(
+                          ArticleDetailArgs.fromArticle(
+                            article,
+                            tag,
+                            isHeroOrFeatured: true,
+                            heroTagOverride: heroTag,
+                          ),
+                        )
+                      : null,
+                );
+              }
               final item = _items[index];
               final article = SelectedArticle(
                 title: item.title,
@@ -125,17 +183,17 @@ class _FeaturedSectionState extends State<FeaturedSection> {
                     : null,
                 onTap: widget.onArticleTap != null
                     ? () => widget.onArticleTap!(
-                          ArticleDetailArgs(
-                            title: item.title,
-                            date: item.date,
-                            tag: AppStrings.news,
-                            body: AppStrings.articleBodySample,
-                            imagePath: item.image,
-                            isVideo: false,
-                            isHeroOrFeatured: true,
-                            heroTagOverride: heroTag,
-                          ),
-                        )
+                        ArticleDetailArgs(
+                          title: item.title,
+                          date: item.date,
+                          tag: AppStrings.news,
+                          body: AppStrings.articleBodySample,
+                          imagePath: item.image,
+                          isVideo: false,
+                          isHeroOrFeatured: true,
+                          heroTagOverride: heroTag,
+                        ),
+                      )
                     : null,
               );
             },
@@ -181,8 +239,8 @@ class _FeaturedCard extends StatelessWidget {
             children: [
               Hero(
                 tag: heroTag,
-                child: Image.asset(
-                  imagePath,
+                child: ImageFromPath(
+                  path: imagePath,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
@@ -195,7 +253,7 @@ class _FeaturedCard extends StatelessWidget {
               ),
               if (onStarTap != null)
                 Positioned(
-                  top: 8,
+                  bottom: 8,
                   right: 8,
                   child: GestureDetector(
                     onTap: onStarTap,
@@ -207,7 +265,7 @@ class _FeaturedCard extends StatelessWidget {
                         onTap: onStarTap!,
                         selectedColor: AppColors.heroSelectionTag,
                         unselectedColor: AppColors.whiteTextColor,
-                        size: 22,
+                        size: 18,
                       ),
                     ),
                   ),

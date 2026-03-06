@@ -1,349 +1,207 @@
 import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
-import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
+import 'package:sem_dsn/core/constants/discours_data.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
-import 'package:sem_dsn/core/animation/selection_star_animation.dart';
+import 'package:sem_dsn/models/article.dart';
+import 'package:sem_dsn/models/category.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
-import 'package:sem_dsn/widget/article_video_player.dart';
+import 'package:sem_dsn/pages/discours/discours_subcategory_page.dart';
+import 'package:sem_dsn/widget/article_detail_args.dart';
+import 'package:sem_dsn/widget/card_discours_subcategory.dart';
+import 'package:sem_dsn/widget/card_image_below.dart';
+import 'package:sem_dsn/widget/card_overlay.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 
-/// Index des filtres : Actualités, Campagne, Réalisations, Discours, Projets, Interviews, Archives.
-const int kFilterActualites = 0;
-const int kFilterCampagne = 1;
-const int kFilterRealisations = 2;
-const int kFilterDiscours = 3;
-const int kFilterProjets = 4;
-const int kFilterInterviews = 5;
-const int kFilterArchives = 6;
+/// Retourne true si l’article appartient à la catégorie (ou à un de ses enfants).
+bool _articleBelongsToCategory(Article article, Category category) {
+  final categoryIds = {category.id, ...category.children.map((c) => c.id)};
+  return article.categories.any((c) => categoryIds.contains(c.id));
+}
 
-/// Contenu affiché selon le filtre sélectionné (liste Campagne / Réalisations / Projets etc.).
+/// Contenu affiché selon la catégorie sélectionnée (parent sans enfants : overlay, image below, ou grille Discours). Tag = [Category.name].
+/// Si [articles] est fourni, les listes utilisent les articles API filtrés par catégorie ; sinon données statiques ou vide.
 class HomeFilterContent extends StatelessWidget {
   const HomeFilterContent({
     super.key,
-    required this.filterIndex,
+    required this.parentCategories,
+    this.articles = const [],
+    required this.selectedIndex,
     this.selectionService,
     this.onArticleTap,
   });
 
-  final int filterIndex;
+  final List<Category> parentCategories;
+  final List<Article> articles;
+  final int selectedIndex;
   final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
 
-  static String _tagForFilter(int index) {
-    switch (index) {
-      case kFilterCampagne:
-        return AppStrings.campaign;
-      case kFilterRealisations:
-        return AppStrings.achievements;
-      case kFilterDiscours:
-        return AppStrings.speeches;
-      case kFilterProjets:
-        return AppStrings.projects;
-      case kFilterInterviews:
-        return AppStrings.interviews;
-      case kFilterArchives:
-        return AppStrings.archives;
-      default:
-        return AppStrings.news;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (filterIndex == kFilterActualites) {
+    if (parentCategories.isEmpty ||
+        selectedIndex < 0 ||
+        selectedIndex >= parentCategories.length) {
       return const SizedBox.shrink();
     }
-    if (filterIndex == kFilterCampagne ||
-        filterIndex == kFilterInterviews ||
-        filterIndex == kFilterArchives ||
-        filterIndex == kFilterDiscours) {
-      return _OverlayCardList(
-        items: _overlayItems,
-        tag: _tagForFilter(filterIndex),
+    final category = parentCategories[selectedIndex];
+    final tag = category.name;
+    final filteredArticles = articles
+        .where((a) => _articleBelongsToCategory(a, category))
+        .toList();
+
+    if (category.slug == 'discours') {
+      return _DiscoursGridContent(
+        category: category,
+        onArticleTap: onArticleTap,
+      );
+    }
+    if (category.slug == 'r-alisations' || category.slug == 'realisations') {
+      if (filteredArticles.isEmpty) {
+        return const _EmptyCategoryMessage();
+      }
+      return _ImageBelowCardListFromArticles(
+        articles: filteredArticles,
+        tag: tag,
+        showDate: true,
         selectionService: selectionService,
         onArticleTap: onArticleTap,
       );
     }
-    if (filterIndex == kFilterRealisations) {
-      return _ImageBelowCardList(
-        items: _achievementItems,
-        tag: _tagForFilter(filterIndex),
-        selectionService: selectionService,
-        onArticleTap: onArticleTap,
-      );
-    }
-    if (filterIndex == kFilterProjets) {
-      return _ImageBelowCardList(
-        items: _projectItems,
+    if (category.slug == 'economie') {
+      if (filteredArticles.isEmpty) {
+        return const _EmptyCategoryMessage();
+      }
+      return _ImageBelowCardListFromArticles(
+        articles: filteredArticles,
+        tag: tag,
         showDate: false,
-        tag: _tagForFilter(filterIndex),
         selectionService: selectionService,
         onArticleTap: onArticleTap,
       );
     }
-    return const SizedBox.shrink();
-  }
-}
-
-// ——— Données cartes overlay (image + gradient + texte + date + play si vidéo) ———
-
-final List<({String image, String title, String date, bool isVideo})>
-_overlayItems = [
-  (
-    image: AppAssets.news1,
-    title: AppStrings.campaignCard1Title,
-    date: AppStrings.campaignCard1Date,
-    isVideo: false,
-  ),
-  (
-    image: AppAssets.news2,
-    title: AppStrings.campaignCard2Title,
-    date: AppStrings.campaignCard2Date,
-    isVideo: true,
-  ),
-  (
-    image: AppAssets.news3,
-    title: AppStrings.campaignCard3Title,
-    date: AppStrings.campaignCard3Date,
-    isVideo: true,
-  ),
-];
-
-// ——— Données Réalisations (image + titre + date en dessous) ———
-
-final List<({String image, String title, String date})> _achievementItems = [
-  (
-    image: AppAssets.alaune1,
-    title: AppStrings.achievement1Title,
-    date: AppStrings.achievement1Date,
-  ),
-  (
-    image: AppAssets.alaune2,
-    title: AppStrings.achievement2Title,
-    date: AppStrings.achievement2Date,
-  ),
-  (
-    image: AppAssets.alaune1,
-    title: AppStrings.achievement3Title,
-    date: AppStrings.achievement3Date,
-  ),
-];
-
-// ——— Données Projets futurs (image + titre, sans date) ———
-
-final List<({String image, String title, String date})> _projectItems = [
-  (image: AppAssets.alaune1, title: AppStrings.project1Title, date: ''),
-  (image: AppAssets.alaune2, title: AppStrings.project2Title, date: ''),
-  (image: AppAssets.alaune1, title: AppStrings.project3Title, date: ''),
-];
-
-// ——— Liste de cartes avec overlay (gradient + texte + date + play si vidéo) ———
-
-class _OverlayCardList extends StatelessWidget {
-  const _OverlayCardList({
-    required this.items,
-    required this.tag,
-    this.selectionService,
-    this.onArticleTap,
-  });
-
-  final List<({String image, String title, String date, bool isVideo})> items;
-  final String tag;
-  final SelectionService? selectionService;
-  final void Function(ArticleDetailArgs args)? onArticleTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final article = SelectedArticle(
-          title: item.title,
-          date: item.date,
-          imagePath: item.image,
-        );
-        final heroTag = ArticleDetailArgs.heroTagFor(
-          imagePath: item.image,
-          title: item.title,
-          date: item.date,
-          sourceId: tag,
-          index: index,
-        );
-        return _OverlayCard(
-          imagePath: item.image,
-          title: item.title,
-          date: item.date,
-          showPlayButton: item.isVideo,
-          heroTag: heroTag,
-          isStarSelected: selectionService?.contains(article) ?? false,
-          onStarTap: selectionService != null
-              ? () => selectionService!.toggle(article)
-              : null,
-          onTap: onArticleTap != null
-              ? () => onArticleTap!(
-                  ArticleDetailArgs(
-                    title: item.title,
-                    date: item.date,
-                    tag: tag,
-                    body: AppStrings.articleBodySample,
-                    imagePath: item.image,
-                    isVideo: item.isVideo,
-                    videoPath: item.isVideo ? kYoutubeTestUrl : null,
-                    isHeroOrFeatured: false,
-                    heroTagOverride: heroTag,
-                  ),
-                )
-              : null,
-        );
-      },
+    if (filteredArticles.isEmpty) {
+      return const _EmptyCategoryMessage();
+    }
+    return OverlayCardListFromArticles(
+      articles: filteredArticles,
+      tag: tag,
+      selectionService: selectionService,
+      onArticleTap: onArticleTap,
     );
   }
 }
 
-class _OverlayCard extends StatelessWidget {
-  const _OverlayCard({
-    required this.imagePath,
-    required this.title,
-    required this.date,
-    required this.showPlayButton,
-    required this.heroTag,
-    this.isStarSelected = false,
-    this.onStarTap,
-    this.onTap,
-  });
-
-  final String imagePath;
-  final String title;
-  final String date;
-  final bool showPlayButton;
-  final Object heroTag;
-  final bool isStarSelected;
-  final VoidCallback? onStarTap;
-  final VoidCallback? onTap;
+/// Message affiché quand la catégorie n’a pas encore de contenu.
+class _EmptyCategoryMessage extends StatelessWidget {
+  const _EmptyCategoryMessage();
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: AppBorderRadius.r10,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              height: 220,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Hero(
-                    tag: heroTag,
-                    child: Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.gradientFeatured,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (showPlayButton)
-              Hero(
-                tag: ArticleDetailArgs.heroTagForVideoPlay(heroTag),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.black.withValues(alpha: 0.5),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow,
-                    color: AppColors.whiteTextColor,
-                    size: 40,
-                  ),
-                ),
-              ),
-            if (onStarTap != null)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: GestureDetector(
-                  onTap: onStarTap,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: AnimatedSelectionStar(
-                      isSelected: isStarSelected,
-                      onTap: onStarTap!,
-                      selectedColor: AppColors.heroSelectionTag,
-                      unselectedColor: AppColors.whiteTextColor,
-                      size: 22,
-                    ),
-                  ),
-                ),
-              ),
-            Positioned(
-              left: 12,
-              right: 80,
-              bottom: 12,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: AppColors.whiteTextColor,
-                      fontSize: AppFontSizes.campaignTitle,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 0),
-                  Text(
-                    date,
-                    style: TextStyle(
-                      color: AppColors.whiteTextColor.withValues(alpha: 0.9),
-                      fontSize: AppFontSizes.campaignDate,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      child: Center(
+        child: Text(
+          AppStrings.noArticlesYet,
+          style: TextStyle(
+            fontSize: AppFontSizes.sectionTitle,
+            color: AppColors.primaryColor,
+          ),
         ),
       ),
     );
   }
 }
 
-// ——— Liste image + texte (et date optionnelle) en dessous ———
+// ——— Grille Discours (sous-catégories type Photothèque) ———
 
-class _ImageBelowCardList extends StatelessWidget {
-  const _ImageBelowCardList({
-    required this.items,
-    this.showDate = true,
+class _DiscoursGridContent extends StatelessWidget {
+  const _DiscoursGridContent({required this.category, this.onArticleTap});
+
+  final Category category;
+  final void Function(ArticleDetailArgs args)? onArticleTap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (category.children.isEmpty) {
+      return const _EmptyCategoryMessage();
+    }
+    final children = category.children;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: children.length,
+        itemBuilder: (context, index) {
+          final sub = children[index];
+          return CardDiscoursSubcategory(
+            imagePath: AppAssets.news1,
+            title: sub.name,
+            count: 0,
+            onTap: () {
+              if (onArticleTap == null) return;
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => DiscoursSubcategoryPage(
+                    subcategoryTitle: sub.name,
+                    items: const <DiscoursOverlayItem>[],
+                    onArticleTap: onArticleTap!,
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+String _formatArticleDate(String iso) {
+  if (iso.length < 10) return iso;
+  try {
+    final d = DateTime.parse(iso);
+    const months = [
+      'Jan',
+      'Fév',
+      'Mar',
+      'Avr',
+      'Mai',
+      'Juin',
+      'Juil',
+      'Août',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Déc',
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  } catch (_) {
+    return iso.substring(0, 10);
+  }
+}
+
+// ——— Liste de cartes overlay à partir d’articles API ———
+
+/// Liste de cartes overlay (réutilisable depuis HomePage pour 1 enfant = overlay).
+class OverlayCardListFromArticles extends StatelessWidget {
+  const OverlayCardListFromArticles({
+    super.key,
+    required this.articles,
     required this.tag,
     this.selectionService,
     this.onArticleTap,
   });
 
-  final List<({String image, String title, String date})> items;
-  final bool showDate;
+  final List<Article> articles;
   final String tag;
   final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
@@ -354,41 +212,39 @@ class _ImageBelowCardList extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: items.length,
+      itemCount: articles.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final item = items[index];
-        final article = SelectedArticle(
-          title: item.title,
-          date: item.date,
-          imagePath: item.image,
+        final article = articles[index];
+        final imagePath = article.firstImageUrl ?? AppAssets.news1;
+        final date = _formatArticleDate(article.articleDate);
+        final selectedArticle = SelectedArticle(
+          title: article.title,
+          date: date,
+          imagePath: imagePath,
         );
         final heroTag = ArticleDetailArgs.heroTagFor(
-          imagePath: item.image,
-          title: item.title,
-          date: item.date,
+          imagePath: imagePath,
+          title: article.title,
+          date: date,
           sourceId: tag,
           index: index,
         );
-        return _ImageBelowCard(
-          imagePath: item.image,
-          title: item.title,
-          date: showDate ? item.date : null,
+        return CardOverlay(
+          imagePath: imagePath,
+          title: article.title,
+          date: date,
+          showPlayButton: false,
           heroTag: heroTag,
-          isStarSelected: selectionService?.contains(article) ?? false,
+          isStarSelected: selectionService?.contains(selectedArticle) ?? false,
           onStarTap: selectionService != null
-              ? () => selectionService!.toggle(article)
+              ? () => selectionService!.toggle(selectedArticle)
               : null,
           onTap: onArticleTap != null
               ? () => onArticleTap!(
-                  ArticleDetailArgs(
-                    title: item.title,
-                    date: item.date,
-                    tag: tag,
-                    body: AppStrings.articleBodySample,
-                    imagePath: item.image,
-                    isVideo: false,
-                    isHeroOrFeatured: false,
+                  ArticleDetailArgs.fromArticle(
+                    article,
+                    tag,
                     heroTagOverride: heroTag,
                   ),
                 )
@@ -399,102 +255,67 @@ class _ImageBelowCardList extends StatelessWidget {
   }
 }
 
-class _ImageBelowCard extends StatelessWidget {
-  const _ImageBelowCard({
-    required this.imagePath,
-    required this.title,
-    required this.heroTag,
-    this.date,
-    this.isStarSelected = false,
-    this.onStarTap,
-    this.onTap,
+// ——— Liste image + texte à partir d’articles API ———
+
+class _ImageBelowCardListFromArticles extends StatelessWidget {
+  const _ImageBelowCardListFromArticles({
+    required this.articles,
+    required this.tag,
+    this.showDate = true,
+    this.selectionService,
+    this.onArticleTap,
   });
 
-  final String imagePath;
-  final String title;
-  final Object heroTag;
-  final String? date;
-  final bool isStarSelected;
-  final VoidCallback? onStarTap;
-  final VoidCallback? onTap;
+  final List<Article> articles;
+  final String tag;
+  final bool showDate;
+  final SelectionService? selectionService;
+  final void Function(ArticleDetailArgs args)? onArticleTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Hero(
-                tag: heroTag,
-                child: ClipRRect(
-                  borderRadius: AppBorderRadius.r12,
-                  child: SizedBox(
-                    height: 180,
-                    width: double.infinity,
-                    child: Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: articles.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final article = articles[index];
+        final imagePath = article.firstImageUrl ?? AppAssets.news1;
+        final date = _formatArticleDate(article.articleDate);
+        final selectedArticle = SelectedArticle(
+          title: article.title,
+          date: date,
+          imagePath: imagePath,
+        );
+        final heroTag = ArticleDetailArgs.heroTagFor(
+          imagePath: imagePath,
+          title: article.title,
+          date: date,
+          sourceId: tag,
+          index: index,
+        );
+        return CardImageBelow(
+          imagePath: imagePath,
+          title: article.title,
+          date: showDate ? date : null,
+          heroTag: heroTag,
+          isStarSelected: selectionService?.contains(selectedArticle) ?? false,
+          onStarTap: selectionService != null
+              ? () => selectionService!.toggle(selectedArticle)
+              : null,
+          onTap: onArticleTap != null
+              ? () => onArticleTap!(
+                  ArticleDetailArgs.fromArticle(
+                    article,
+                    tag,
+                    heroTagOverride: heroTag,
                   ),
-                ),
-              ),
-              if (onStarTap != null)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: onStarTap,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: AnimatedSelectionStar(
-                        isSelected: isStarSelected,
-                        onTap: onStarTap!,
-                        selectedColor: AppColors.heroSelectionTag,
-                        unselectedColor: AppColors.grayTextColor,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 4, 0, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColors.newsTitle,
-                    fontSize: AppFontSizes.projectTitle,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (date != null && date!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    date!,
-                    style: const TextStyle(
-                      color: AppColors.newsDate,
-                      fontSize: AppFontSizes.projectDate,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
+                )
+              : null,
+        );
+      },
     );
   }
 }

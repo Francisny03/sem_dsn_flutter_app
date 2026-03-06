@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
@@ -18,22 +19,6 @@ class SelectionPageContent extends StatefulWidget {
 }
 
 class _SelectionPageContentState extends State<SelectionPageContent> {
-  final SelectionService _selection = SelectionService.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    _selection.addListener(_onSelectionChanged);
-  }
-
-  @override
-  void dispose() {
-    _selection.removeListener(_onSelectionChanged);
-    super.dispose();
-  }
-
-  void _onSelectionChanged() => setState(() {});
-
   void _openArticle(SelectedArticle article, Object heroTag) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -59,7 +44,8 @@ class _SelectionPageContentState extends State<SelectionPageContent> {
 
   @override
   Widget build(BuildContext context) {
-    final items = _selection.items;
+    final selection = context.watch<SelectionService>();
+    final items = selection.items;
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: CustomScrollView(
@@ -121,7 +107,7 @@ class _SelectionPageContentState extends State<SelectionPageContent> {
                   article: article,
                   heroTag: heroTag,
                   onTap: () => _openArticle(article, heroTag),
-                  onRemoveFromSelection: () => _selection.remove(article),
+                  onRemoveFromSelection: () => selection.remove(article),
                 );
               }, childCount: items.length),
             ),

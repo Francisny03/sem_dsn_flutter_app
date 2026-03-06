@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/article_content_card.dart';
+import 'package:sem_dsn/widget/article_sources_section.dart';
+import 'package:sem_dsn/widget/image_from_path.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/detail_app_bar_star.dart';
 import 'package:sem_dsn/widget/other_news_section.dart';
@@ -128,8 +131,8 @@ class ArticleDetailHeroLayout extends StatelessWidget {
                       children: [
                         Hero(
                           tag: args.heroTag,
-                          child: Image.asset(
-                            args.imagePath,
+                          child: ImageFromPath(
+                            path: args.imagePath,
                             fit: BoxFit.cover,
                             width: double.infinity,
                             height: double.infinity,
@@ -241,13 +244,19 @@ class ArticleDetailHeroLayout extends StatelessWidget {
                 date: args.date,
                 tag: args.tag,
                 body: args.body,
+                bodyHtml: args.bodyHtml,
                 showTagTitleDate: false,
                 heroCapDrawnAbove: false,
               ),
             ),
+            if (args.sources != null && args.sources!.isNotEmpty)
+              SliverToBoxAdapter(
+                child: ArticleSourcesSection(sources: args.sources!),
+              ),
             if (args.showOtherNews)
               ...buildOtherNewsSlivers(
-                selectionService: SelectionService.instance,
+                context,
+                selectionService: context.read<SelectionService>(),
                 onArticleTap: onOtherNewsArticleTap,
               ),
             if (!args.showOtherNews)

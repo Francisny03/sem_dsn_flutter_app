@@ -5,7 +5,7 @@ class LiveConfig {
 
   /// When true: live icon blinks red in header; tap opens HLS live fullscreen.
   /// When false: tap opens YouTube recap fullscreen (recapVideoUrl).
-  static const bool isLiveInProgress = false;
+  static const bool isLiveInProgress = true;
 
   /// HLS stream URL for the live (used when [isLiveInProgress] is true).
   static const String liveStreamUrl =

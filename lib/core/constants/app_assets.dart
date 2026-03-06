@@ -5,7 +5,12 @@ class AppAssets {
   static const String gallery = 'assets/icons/gallery.svg';
   static const String home = 'assets/icons/home.svg';
   static const String live = 'assets/icons/live.svg';
+  static const String liveOn = 'assets/icons/liveOn.svg';
+
   static const String selection = 'assets/icons/selection.svg';
+
+  static const String selection2 = 'assets/icons/selection2.svg';
+  static const String selection2Full = 'assets/icons/selection2full.svg';
   static const String threeDots = 'assets/icons/three_dots.svg';
   static const String search = 'assets/icons/search.svg';
 

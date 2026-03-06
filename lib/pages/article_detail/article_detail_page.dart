@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sem_dsn/services/read_articles_service.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/article_detail_hero_layout.dart';
@@ -20,8 +22,8 @@ class ArticleDetailPage extends StatefulWidget {
 
 class _ArticleDetailPageState extends State<ArticleDetailPage> {
   final ScrollController _scrollController = ScrollController();
-  final SelectionService _selectionService = SelectionService.instance;
   bool _showTitleInAppBar = false;
+  bool _hasMarkedAsRead = false;
   static const double _imageHeight = 260;
 
   SelectedArticle get _currentArticle => SelectedArticle(
@@ -34,18 +36,14 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _selectionService.addListener(_onSelectionChanged);
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
-    _selectionService.removeListener(_onSelectionChanged);
     _scrollController.dispose();
     super.dispose();
   }
-
-  void _onSelectionChanged() => setState(() {});
 
   void _onScroll() {
     final topPadding = MediaQuery.paddingOf(context).top;
@@ -79,14 +77,23 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isStarSelected = _selectionService.contains(_currentArticle);
+    final selectionService = context.watch<SelectionService>();
+    if (!_hasMarkedAsRead) {
+      _hasMarkedAsRead = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<ReadArticlesService>().markAsRead(_currentArticle);
+        }
+      });
+    }
+    final isStarSelected = selectionService.contains(_currentArticle);
     if (widget.args.isHeroOrFeatured) {
       return ArticleDetailHeroLayout(
         args: widget.args,
         scrollController: _scrollController,
         showTitleInAppBar: _showTitleInAppBar,
         isStarSelected: isStarSelected,
-        onStarTap: () => _selectionService.toggle(_currentArticle),
+        onStarTap: () => selectionService.toggle(_currentArticle),
         onShare: _shareArticle,
         onOtherNewsArticleTap: _openOtherNewsArticle,
       );
@@ -96,7 +103,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
       scrollController: _scrollController,
       showTitleInAppBar: _showTitleInAppBar,
       isStarSelected: isStarSelected,
-      onStarTap: () => _selectionService.toggle(_currentArticle),
+      onStarTap: () => selectionService.toggle(_currentArticle),
       onShare: _shareArticle,
       onOtherNewsArticleTap: _openOtherNewsArticle,
     );

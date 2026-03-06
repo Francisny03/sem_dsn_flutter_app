@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 
@@ -55,11 +57,24 @@ class AppBottomNavBar extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          index == 3 && isSelected ? Icons.star : item.icon,
-                          color: color,
-                          size: 26,
-                        ),
+                        if (index == 3)
+                          SvgPicture.asset(
+                            isSelected
+                                ? AppAssets.selection2Full
+                                : AppAssets.selection2,
+                            width: 26,
+                            height: 26,
+                            colorFilter: ColorFilter.mode(
+                              color,
+                              BlendMode.srcIn,
+                            ),
+                          )
+                        else
+                          Icon(
+                            item.icon,
+                            color: color,
+                            size: 26,
+                          ),
                         const SizedBox(height: 4),
                         Text(
                           item.label,
