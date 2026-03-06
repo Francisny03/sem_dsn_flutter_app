@@ -25,10 +25,10 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   static const double _imageHeight = 260;
 
   SelectedArticle get _currentArticle => SelectedArticle(
-        title: widget.args.title,
-        date: widget.args.date,
-        imagePath: widget.args.imagePath,
-      );
+    title: widget.args.title,
+    date: widget.args.date,
+    imagePath: widget.args.imagePath,
+  );
 
   @override
   void initState() {
@@ -61,9 +61,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   void _openOtherNewsArticle(ArticleDetailArgs args) {
     if (!mounted) return;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ArticleDetailPage(args: args),
-      ),
+      MaterialPageRoute<void>(builder: (_) => ArticleDetailPage(args: args)),
     );
   }
 
