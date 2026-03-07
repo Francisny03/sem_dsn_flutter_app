@@ -9,6 +9,7 @@ import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
 import 'package:sem_dsn/models/article.dart';
 import 'package:sem_dsn/providers/articles_provider.dart';
 import 'package:sem_dsn/providers/categories_provider.dart';
+import 'package:sem_dsn/providers/home_articles_provider.dart';
 import 'package:sem_dsn/providers/press_articles_cache_provider.dart';
 import 'package:sem_dsn/pages/live/live_replay_player_page.dart';
 import 'package:sem_dsn/pages/selection/selection_page_content.dart';
@@ -63,6 +64,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       context.read<CategoriesProvider>().loadIfNeeded();
       context.read<ArticlesProvider>().loadIfNeeded();
+      context.read<HomeArticlesProvider>().loadIfNeeded();
     });
   }
 
@@ -104,6 +106,7 @@ class _HomePageState extends State<HomePage> {
     final selectionService = context.watch<SelectionService>();
     final categoriesProvider = context.watch<CategoriesProvider>();
     final articlesProvider = context.watch<ArticlesProvider>();
+    final homeArticlesProvider = context.watch<HomeArticlesProvider>();
     final parentCategories = categoriesProvider.parentCategories;
     final selectedIndex = parentCategories.isEmpty
         ? 0
@@ -133,20 +136,27 @@ class _HomePageState extends State<HomePage> {
       final cat = parentCategories[selectedIndex];
       contentLayout = getDisplayLayoutForCategory(cat);
       if (contentLayout == CategoryDisplayLayout.withChildren) {
-        final firstId = cat.children.first.id;
-        final restIds = cat.children.length > 1
-            ? cat.children.sublist(1).map((c) => c.id).toSet()
-            : <int>{};
-        featuredSectionTitle = cat.children.first.name;
-        pressSectionTitle = cat.children.length > 1
-            ? cat.children[1].name
-            : null;
-        featuredArticles = articles
-            .where((a) => a.categories.any((c) => c.id == firstId))
-            .toList();
-        pressArticles = articles
-            .where((a) => a.categories.any((c) => restIds.contains(c.id)))
-            .toList();
+        if (cat.slug == 'actualites') {
+          featuredSectionTitle = 'À la une';
+          pressSectionTitle = 'Autres infos';
+          featuredArticles = homeArticlesProvider.aLaUne;
+          pressArticles = homeArticlesProvider.contenuGeneral;
+        } else {
+          final firstId = cat.children.first.id;
+          final restIds = cat.children.length > 1
+              ? cat.children.sublist(1).map((c) => c.id).toSet()
+              : <int>{};
+          featuredSectionTitle = cat.children.first.name;
+          pressSectionTitle = cat.children.length > 1
+              ? cat.children[1].name
+              : null;
+          featuredArticles = articles
+              .where((a) => a.categories.any((c) => c.id == firstId))
+              .toList();
+          pressArticles = articles
+              .where((a) => a.categories.any((c) => restIds.contains(c.id)))
+              .toList();
+        }
       } else if (contentLayout == CategoryDisplayLayout.overlay &&
           cat.children.length == 1) {
         final childId = cat.children.first.id;
@@ -205,7 +215,8 @@ class _HomePageState extends State<HomePage> {
               onRefresh: () async {
                 final cat = context.read<CategoriesProvider>();
                 final art = context.read<ArticlesProvider>();
-                await Future.wait([cat.load(), art.load()]);
+                final homeArt = context.read<HomeArticlesProvider>();
+                await Future.wait([cat.load(), art.load(), homeArt.load()]);
                 if (mounted) setState(() {});
               },
               child: CustomScrollView(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
+import 'package:sem_dsn/widget/image_from_path.dart';
 
 /// Page plein écran pour afficher une image de la photothèque.
 /// Défilement horizontal entre les images, indicateur "1/10", "2/10" en haut, légende sous l'image.
@@ -79,12 +80,9 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage> {
                       minScale: 0.5,
                       maxScale: 4,
                       child: Center(
-                        child: Image.asset(
-                          widget.imagePaths[index],
+                        child: ImageFromPath(
+                          path: widget.imagePaths[index],
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(Icons.image_not_supported, size: 48),
-                          ),
                         ),
                       ),
                     ),

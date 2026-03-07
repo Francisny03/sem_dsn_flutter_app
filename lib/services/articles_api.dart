@@ -40,3 +40,34 @@ Future<Article> fetchArticleById(int id) async {
   final map = json.decode(response.body) as Map<String, dynamic>;
   return Article.fromJson(map);
 }
+
+/// Réponse de l’endpoint articles/home (À la une + Contenu général).
+class ArticlesHomeResponse {
+  const ArticlesHomeResponse({
+    required this.aLaUne,
+    required this.contenuGeneral,
+  });
+
+  final List<Article> aLaUne;
+  final List<Article> contenuGeneral;
+}
+
+/// Récupère les articles pour la page d’accueil (À la une + contenu général).
+Future<ArticlesHomeResponse> fetchArticlesHome() async {
+  final uri = Uri.parse(ApiConfig.articlesHome());
+  final response = await http.get(uri, headers: {'accept': 'application/json'});
+  if (response.statusCode != 200) {
+    throw Exception('articles/home: ${response.statusCode}');
+  }
+  final map = json.decode(response.body) as Map<String, dynamic>;
+  final aLaUneList = map['a_la_une'] as List<dynamic>? ?? [];
+  final contenuList = map['contenu_general'] as List<dynamic>? ?? [];
+  return ArticlesHomeResponse(
+    aLaUne: aLaUneList
+        .map((e) => Article.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    contenuGeneral: contenuList
+        .map((e) => Article.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
+}

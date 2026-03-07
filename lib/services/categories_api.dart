@@ -17,10 +17,45 @@ Future<List<Category>> fetchCategoriesAll() async {
   return list.map((e) => Category.fromJson(e as Map<String, dynamic>)).toList();
 }
 
-/// Catégories affichées quand l’API échoue ou renvoie une liste vide (toujours des onglets visibles).
+/// Catégorie Actualités en dur (À la une + Autres infos), toujours en premier dans le filtre home.
+Category getActualitesCategory() {
+  const base = '2026-01-01T00:00:00.000Z';
+  return Category(
+    id: 9000,
+    parentId: null,
+    name: 'Actualités',
+    slug: 'actualites',
+    createdAt: base,
+    updatedAt: base,
+    position: 0,
+    children: [
+      Category(
+        id: 9001,
+        parentId: 9000,
+        name: 'À la une',
+        slug: 'a-la-une',
+        createdAt: base,
+        updatedAt: base,
+        children: [],
+      ),
+      Category(
+        id: 9002,
+        parentId: 9000,
+        name: 'Autres infos',
+        slug: 'autres-infos',
+        createdAt: base,
+        updatedAt: base,
+        children: [],
+      ),
+    ],
+  );
+}
+
+/// Catégories affichées quand l'API échoue ou renvoie une liste vide (toujours des onglets visibles).
 List<Category> getFallbackCategories() {
   const base = '2026-01-01T00:00:00.000Z';
   return [
+    getActualitesCategory(),
     Category(
       id: 0,
       parentId: null,

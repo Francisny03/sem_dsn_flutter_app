@@ -235,8 +235,8 @@ class _LiveHeaderIcon extends StatelessWidget {
       return IconButton(
         icon: SvgPicture.asset(
           AppAssets.livecustom,
-          width: 24,
-          height: 24,
+          width: 20,
+          height: 20,
           colorFilter: const ColorFilter.mode(
             AppColors.blackIcon,
             BlendMode.srcIn,

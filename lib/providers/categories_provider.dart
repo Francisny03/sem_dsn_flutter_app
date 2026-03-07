@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show ChangeNotifier;
 
 import 'package:sem_dsn/models/category.dart';
 import 'package:sem_dsn/services/categories_api.dart'
-    show fetchCategoriesAll, getFallbackCategories;
+    show fetchCategoriesAll, getActualitesCategory, getFallbackCategories;
 
 /// Tri des catégories : par [Category.position] si fourni par le backend, sinon par id (plus ancien au plus récent).
 List<Category> _sortParentCategories(List<Category> list) {
@@ -36,7 +36,11 @@ class CategoriesProvider extends ChangeNotifier {
     try {
       final list = await fetchCategoriesAll();
       final raw = list.isNotEmpty ? list : getFallbackCategories();
-      _parentCategories = _sortParentCategories(raw);
+      final sorted = _sortParentCategories(raw);
+      // Actualités en dur toujours en premier (éviter doublon si l’API envoie déjà une catégorie actualites).
+      final withoutActualites =
+          sorted.where((c) => c.slug != 'actualites').toList();
+      _parentCategories = [getActualitesCategory(), ...withoutActualites];
     } catch (_) {
       _parentCategories = _sortParentCategories(getFallbackCategories());
     } finally {

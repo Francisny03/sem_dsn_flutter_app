@@ -10,6 +10,10 @@ class ApiConfig {
 
   static String articles() => '$baseUrl/articles';
   static String article(int id) => '$baseUrl/articles/$id';
+  static String articlesHome() => '$baseUrl/articles/home?category_id=all';
 
   static String books() => '$baseUrl/books';
+
+  static String galleries() => '$baseUrl/galleries';
+  static String galleryImages(int galleryId) => '$baseUrl/galleries/$galleryId/images';
 }
