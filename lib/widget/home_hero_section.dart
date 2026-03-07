@@ -13,17 +13,20 @@ import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/congolese_flag_painter.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
 
-/// Données d'une slide du hero (titre, date, image).
+/// Données d'une slide du hero (titre, date, image, tag catégorie optionnel).
 class _HeroSlide {
   const _HeroSlide({
     required this.title,
     required this.date,
     required this.imagePath,
+    this.tag,
   });
 
   final String title;
   final String date;
   final String imagePath;
+  /// Nom de la catégorie à afficher sur le badge (ex. « Actualités ») ; si null, défaut AppStrings.news.
+  final String? tag;
 }
 
 const List<_HeroSlide> _heroSlides = [
@@ -118,9 +121,9 @@ class _AnimatedHeroSlideContentState extends State<_AnimatedHeroSlideContent>
                 color: AppColors.heroTag,
                 borderRadius: AppBorderRadius.rtotal,
               ),
-              child: const Text(
-                AppStrings.news,
-                style: TextStyle(
+              child: Text(
+                widget.slide.tag ?? AppStrings.news,
+                style: const TextStyle(
                   color: AppColors.whiteTextColor,
                   fontSize: 12,
                   fontWeight: FontWeight.w300,
@@ -267,10 +270,14 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                   Article? apiArticle;
                   if (useApi) {
                     apiArticle = widget.articles![index];
+                    final tag = apiArticle.categories.isNotEmpty
+                        ? apiArticle.categories.first.name
+                        : AppStrings.news;
                     slide = _HeroSlide(
                       title: apiArticle.title,
                       date: Article.formatDisplayDate(apiArticle.articleDate),
                       imagePath: apiArticle.firstImageUrl ?? AppAssets.news1,
+                      tag: tag,
                     );
                   } else {
                     slide = _heroSlides[index];

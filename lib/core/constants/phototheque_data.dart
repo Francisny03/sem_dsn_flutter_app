@@ -45,3 +45,19 @@ const List<String> photothequeCategoryImagePaths = [
   AppAssets.news2,
   AppAssets.news3,
 ];
+
+/// Légendes pour les images (même ordre que [photothequeCategoryImagePaths]).
+const List<String> photothequeCategoryImageCaptions = [
+  'Cérémonie officielle',
+  'Événement DSN',
+  'Actualités',
+  'Conférence de presse',
+  'Réunion internationale',
+  'Famille présidentielle',
+  'À la une',
+  'Cérémonie officielle',
+  'Actualités',
+  'Événement DSN',
+  'Conférence de presse',
+  'Réunion internationale',
+];

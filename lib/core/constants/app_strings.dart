@@ -50,7 +50,7 @@ class AppStrings {
   /// Message affiché quand une catégorie n’a pas encore d’articles.
   static const String noArticlesYet = 'Pas d\'articles pour le moment';
 
-  static const String sourcesTitle = 'Sources';
+  static const String sourcesTitle = 'Source(s)';
 
   // Bottom navigation
   static const String navAccueil = 'Accueil';

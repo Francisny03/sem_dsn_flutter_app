@@ -105,7 +105,7 @@ class ArticleDetailPresseLayout extends StatelessWidget {
                   : SizedBox(
                       height: _imageHeight,
                       width: double.infinity,
-                        child: Hero(
+                      child: Hero(
                         tag: args.heroTag,
                         child: ImageFromPath(
                           path: args.imagePath,

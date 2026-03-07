@@ -9,10 +9,14 @@ class PhotothequeCategoryPage extends StatelessWidget {
     super.key,
     required this.title,
     required this.imagePaths,
+    this.imageCaptions,
   });
 
   final String title;
   final List<String> imagePaths;
+
+  /// Légendes pour chaque image (même ordre que [imagePaths]).
+  final List<String>? imageCaptions;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +60,7 @@ class PhotothequeCategoryPage extends StatelessWidget {
                     builder: (_) => PhotothequeFullscreenPage(
                       imagePaths: imagePaths,
                       initialIndex: index,
+                      imageCaptions: imageCaptions,
                     ),
                   ),
                 );

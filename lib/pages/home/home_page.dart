@@ -10,7 +10,7 @@ import 'package:sem_dsn/models/article.dart';
 import 'package:sem_dsn/providers/articles_provider.dart';
 import 'package:sem_dsn/providers/categories_provider.dart';
 import 'package:sem_dsn/providers/press_articles_cache_provider.dart';
-import 'package:sem_dsn/pages/live/live_fullscreen_page.dart';
+import 'package:sem_dsn/pages/live/live_replay_player_page.dart';
 import 'package:sem_dsn/pages/selection/selection_page_content.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_page.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_search_page.dart';
@@ -27,7 +27,6 @@ import 'package:sem_dsn/widget/home_filter_content.dart';
 import 'package:sem_dsn/widget/home_filter_section.dart';
 import 'package:sem_dsn/widget/home_hero_section.dart';
 import 'package:sem_dsn/widget/press_articles_section.dart';
-import 'package:sem_dsn/widget/youtube_fullscreen_page.dart';
 
 /// Retourne les [n] derniers articles par date (article_date décroissant).
 List<Article> _lastNArticlesByDate(List<Article> articles, int n) {
@@ -77,9 +76,10 @@ class _HomePageState extends State<HomePage> {
     if (LiveConfig.isLiveInProgress && LiveConfig.liveStreamUrl.isNotEmpty) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          fullscreenDialog: true,
-          builder: (_) =>
-              LiveFullscreenPage(streamUrl: LiveConfig.liveStreamUrl),
+          builder: (_) => LiveReplayPlayerPage(
+            isLive: true,
+            streamUrl: LiveConfig.liveStreamUrl,
+          ),
         ),
       );
     } else if (LiveConfig.recapVideoUrl.isNotEmpty) {
@@ -88,11 +88,10 @@ class _HomePageState extends State<HomePage> {
         final startAt = getYoutubeStartSeconds(LiveConfig.recapVideoUrl) ?? 0;
         Navigator.of(context).push(
           MaterialPageRoute<void>(
-            fullscreenDialog: true,
-            builder: (_) => YoutubeFullscreenPage(
+            builder: (_) => LiveReplayPlayerPage(
+              isLive: false,
               videoId: videoId,
               startAtSeconds: startAt,
-              isRecap: true,
             ),
           ),
         );

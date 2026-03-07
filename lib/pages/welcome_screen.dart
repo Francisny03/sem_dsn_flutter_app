@@ -87,7 +87,11 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Padding(
-                          padding: const EdgeInsets.only(left: 50, right: 50),
+                          padding: const EdgeInsets.only(
+                            top: 16,
+                            left: 50,
+                            right: 50,
+                          ),
                           child: ClipRRect(
                             child: SizedBox(
                               width: double.infinity,

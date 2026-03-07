@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/youtube_seek_buttons.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -57,17 +58,16 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
 
   void _exitFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
-  /// Recap : coupe la vidéo et retour home.
-  void _closeAndPop() {
+  /// Recap : coupe la vidéo et retour à la page lecteur.
+  Future<void> _closeAndPop() async {
     _exitFullscreen();
     _controller.pause();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    });
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   /// Article : ferme le fullscreen, retour article avec position + play state pour continuer en lecteur réduit.
@@ -92,6 +92,9 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
     super.dispose();
   }
 
+  double get _aspectRatio =>
+      widget.isRecap && LiveConfig.recapVideoIsVertical ? 9 / 16 : 16 / 9;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,7 +103,9 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
         fit: StackFit.expand,
         children: [
           Center(
-            child: YoutubePlayer(
+            child: AspectRatio(
+              aspectRatio: _aspectRatio,
+              child: YoutubePlayer(
               controller: _controller,
               showVideoProgressIndicator: true,
               progressIndicatorColor: AppColors.heroSelectionTag,
@@ -119,6 +124,7 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
                 RemainingDuration(),
                 const SizedBox(width: 50),
               ],
+            ),
             ),
           ),
           // Même ligne que le bouton play, uniquement quand les contrôles sont visibles (tap écran)

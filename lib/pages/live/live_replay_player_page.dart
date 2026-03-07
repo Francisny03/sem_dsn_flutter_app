@@ -1,0 +1,283 @@
+import 'dart:ui';
+
+import 'package:better_player_plus/better_player_plus.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
+import 'package:sem_dsn/core/constants/app_strings.dart';
+import 'package:sem_dsn/core/constants/live_config.dart';
+import 'package:sem_dsn/core/theme/app_colors.dart';
+import 'package:sem_dsn/pages/live/live_fullscreen_page.dart';
+import 'package:sem_dsn/widget/youtube_fullscreen_page.dart';
+import 'package:sem_dsn/widget/youtube_seek_buttons.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+
+/// Page intermédiaire Live / Replay : barre (retour, partage), indicateur "En direct" ou "Replay" pulsé,
+/// lecteur avec contrôles + bouton plein écran (paysage).
+class LiveReplayPlayerPage extends StatefulWidget {
+  const LiveReplayPlayerPage({
+    super.key,
+    required this.isLive,
+    this.streamUrl,
+    this.videoId,
+    this.startAtSeconds = 0,
+  });
+
+  final bool isLive;
+  final String? streamUrl;
+  final String? videoId;
+  final int startAtSeconds;
+
+  @override
+  State<LiveReplayPlayerPage> createState() => _LiveReplayPlayerPageState();
+}
+
+class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  BetterPlayerController? _betterPlayerController;
+  YoutubePlayerController? _youtubeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.2, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    if (widget.isLive &&
+        widget.streamUrl != null &&
+        widget.streamUrl!.isNotEmpty) {
+      final ratio = LiveConfig.liveStreamIsVertical ? 9 / 16 : 16 / 9;
+      _betterPlayerController = BetterPlayerController(
+        BetterPlayerConfiguration(
+          autoPlay: true,
+          aspectRatio: ratio,
+          fit: BoxFit.contain,
+          controlsConfiguration: BetterPlayerControlsConfiguration(
+            showControls: true,
+            showControlsOnInitialize: true,
+          ),
+        ),
+      );
+      _betterPlayerController!.setupDataSource(
+        BetterPlayerDataSource.network(widget.streamUrl!, liveStream: true),
+      );
+    } else if (widget.videoId != null && widget.videoId!.isNotEmpty) {
+      _youtubeController = YoutubePlayerController(
+        initialVideoId: widget.videoId!,
+        flags: YoutubePlayerFlags(
+          autoPlay: true,
+          mute: false,
+          startAt: widget.startAtSeconds,
+        ),
+      )..addListener(_onYoutubeUpdate);
+    }
+  }
+
+  void _onYoutubeUpdate() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _betterPlayerController?.dispose();
+    _youtubeController?.removeListener(_onYoutubeUpdate);
+    _youtubeController?.dispose();
+    super.dispose();
+  }
+
+  void _share() {
+    if (widget.isLive && widget.streamUrl != null) {
+      Share.share(widget.streamUrl!, subject: AppStrings.liveTitle);
+    } else if (widget.videoId != null) {
+      Share.share(
+        'https://www.youtube.com/watch?v=${widget.videoId}',
+        subject: 'Replay',
+      );
+    }
+  }
+
+  void _openFullscreen() {
+    if (widget.isLive &&
+        widget.streamUrl != null &&
+        widget.streamUrl!.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => LiveFullscreenPage(streamUrl: widget.streamUrl!),
+        ),
+      );
+    } else if (widget.videoId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => YoutubeFullscreenPage(
+            videoId: widget.videoId!,
+            startAtSeconds:
+                _youtubeController?.value.position.inSeconds ??
+                widget.startAtSeconds,
+            isRecap: true,
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = widget.isLive
+        ? (LiveConfig.liveStreamIsVertical ? 9 / 16 : 16 / 9)
+        : (LiveConfig.recapVideoIsVertical ? 9 / 16 : 16 / 9);
+
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      appBar: AppBar(
+        backgroundColor: AppColors.bg,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 22),
+          color: AppColors.blackIcon,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: _PulsingLiveLabel(
+          isLive: widget.isLive,
+          pulseAnimation: _pulseAnimation,
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share, size: 22),
+            color: AppColors.blackIcon,
+            onPressed: _share,
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Center(
+          child: AspectRatio(aspectRatio: ratio, child: _buildPlayer()),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayer() {
+    if (_betterPlayerController != null) {
+      return BetterPlayer(controller: _betterPlayerController!);
+    }
+    if (_youtubeController != null) {
+      return ClipRect(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            YoutubePlayer(
+              controller: _youtubeController!,
+              showVideoProgressIndicator: true,
+              progressIndicatorColor: AppColors.heroSelectionTag,
+              bottomActions: [
+                const SizedBox(width: 8),
+                CurrentPosition(),
+                const SizedBox(width: 8),
+                ProgressBar(
+                  isExpanded: true,
+                  colors: ProgressBarColors(
+                    playedColor: AppColors.heroSelectionTag,
+                    handleColor: AppColors.heroSelectionTag,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                RemainingDuration(),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(
+                    Icons.fullscreen,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                  onPressed: _openFullscreen,
+                  padding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: !_youtubeController!.value.isControlsVisible,
+                child: AnimatedOpacity(
+                  opacity: _youtubeController!.value.isControlsVisible ? 1 : 0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        YoutubeSeekBackButton(controller: _youtubeController!),
+                        const IgnorePointer(
+                          child: SizedBox(width: 100, height: 80),
+                        ),
+                        YoutubeSeekForwardButton(
+                          controller: _youtubeController!,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const Center(child: CircularProgressIndicator());
+  }
+}
+
+class _PulsingLiveLabel extends StatelessWidget {
+  const _PulsingLiveLabel({required this.isLive, required this.pulseAnimation});
+
+  final bool isLive;
+  final Animation<double> pulseAnimation;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = isLive ? AppStrings.liveTitle : 'Replay';
+    final color = isLive ? Colors.red : AppColors.newsTitle;
+
+    return AnimatedBuilder(
+      animation: pulseAnimation,
+      builder: (context, _) {
+        return Opacity(
+          opacity: isLive ? pulseAnimation.value : 1,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                AppAssets.livecustom,
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}

@@ -133,6 +133,7 @@ class _PhotothequeSearchPageState extends State<PhotothequeSearchPage> {
                                 builder: (_) => PhotothequeCategoryPage(
                                   title: cat.title,
                                   imagePaths: photothequeCategoryImagePaths,
+                                  imageCaptions: photothequeCategoryImageCaptions,
                                 ),
                               ),
                             );

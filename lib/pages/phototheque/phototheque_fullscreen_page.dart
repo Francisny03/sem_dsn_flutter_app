@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 
 /// Page plein écran pour afficher une image de la photothèque.
-/// Défilement horizontal entre les images, indicateur "1/10", "2/10" en haut, fond blanc.
+/// Défilement horizontal entre les images, indicateur "1/10", "2/10" en haut, légende sous l'image.
 class PhotothequeFullscreenPage extends StatefulWidget {
   const PhotothequeFullscreenPage({
     super.key,
     required this.imagePaths,
     this.initialIndex = 0,
+    this.imageCaptions,
   });
 
   final List<String> imagePaths;
   final int initialIndex;
+
+  /// Légende par image (même ordre que [imagePaths]). Affichée sous l'image si non vide.
+  final List<String>? imageCaptions;
 
   @override
   State<PhotothequeFullscreenPage> createState() =>
@@ -61,17 +65,44 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage> {
             itemCount: total,
             onPageChanged: (index) => setState(() => _currentIndex = index),
             itemBuilder: (context, index) {
-              return InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4,
-                child: Center(
-                  child: Image.asset(
-                    widget.imagePaths[index],
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Center(
-                      child: Icon(Icons.image_not_supported, size: 48),
+              final caption =
+                  widget.imageCaptions != null &&
+                      index < widget.imageCaptions!.length &&
+                      widget.imageCaptions![index].isNotEmpty
+                  ? widget.imageCaptions![index]
+                  : null;
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InteractiveViewer(
+                      minScale: 0.5,
+                      maxScale: 4,
+                      child: Center(
+                        child: Image.asset(
+                          widget.imagePaths[index],
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(Icons.image_not_supported, size: 48),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    if (caption != null) ...[
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          caption,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.newsTitle.withValues(alpha: 0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               );
             },

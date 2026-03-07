@@ -20,7 +20,7 @@ class ArticleSourcesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Sources',
+            'Source(s)',
             style: TextStyle(
               color: AppColors.sectionTitle,
               fontSize: AppFontSizes.sectionTitle,
@@ -30,39 +30,37 @@ class ArticleSourcesSection extends StatelessWidget {
           const SizedBox(height: 12),
           ...sources.map(
             (source) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (source.name.isNotEmpty)
-                    Text(
-                      source.name,
-                      style: const TextStyle(
-                        color: AppColors.newsTitle,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  if (source.name.isNotEmpty && source.url.isNotEmpty)
-                    const SizedBox(height: 4),
-                  if (source.url.isNotEmpty)
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          color: AppColors.primaryColor,
-                          fontSize: 14,
-                          decoration: TextDecoration.underline,
+              padding: const EdgeInsets.only(bottom: 12),
+              child: source.name.isEmpty
+                  ? const SizedBox.shrink()
+                  : source.url.isNotEmpty
+                      ? _buildLink(context, source.name, source.url)
+                      : Text(
+                          source.name,
+                          style: const TextStyle(
+                            color: AppColors.newsTitle,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        text: source.url,
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () => _openUrl(source.url),
-                      ),
-                    ),
-                ],
-              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLink(BuildContext context, String name, String url) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          color: Colors.blue,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.underline,
+        ),
+        text: name,
+        recognizer: TapGestureRecognizer()..onTap = () => _openUrl(url),
       ),
     );
   }

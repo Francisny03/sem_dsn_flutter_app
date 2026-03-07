@@ -1,6 +1,7 @@
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sem_dsn/core/constants/live_config.dart';
 
 /// Fullscreen page for HLS live stream (better_player).
 /// Restores system UI and orientation on pop.
@@ -19,10 +20,11 @@ class _LiveFullscreenPageState extends State<LiveFullscreenPage> {
   @override
   void initState() {
     super.initState();
+    final ratio = LiveConfig.liveStreamIsVertical ? 9 / 16 : 16 / 9;
     _controller = BetterPlayerController(
       BetterPlayerConfiguration(
         autoPlay: true,
-        aspectRatio: 16 / 9,
+        aspectRatio: ratio,
         fit: BoxFit.contain,
         controlsConfiguration: BetterPlayerControlsConfiguration(
           showControls: true,
@@ -46,17 +48,16 @@ class _LiveFullscreenPageState extends State<LiveFullscreenPage> {
 
   void _exitFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
   Future<void> _closeAndPop() async {
     _exitFullscreen();
     await _controller.pause();
     if (!mounted) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    });
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   @override
@@ -75,7 +76,7 @@ class _LiveFullscreenPageState extends State<LiveFullscreenPage> {
         children: [
           Center(
             child: AspectRatio(
-              aspectRatio: 16 / 9,
+              aspectRatio: LiveConfig.liveStreamIsVertical ? 9 / 16 : 16 / 9,
               child: BetterPlayer(controller: _controller),
             ),
           ),

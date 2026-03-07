@@ -50,6 +50,7 @@ class PhotothequePage extends StatelessWidget {
                       builder: (_) => PhotothequeCategoryPage(
                         title: cat.title,
                         imagePaths: photothequeCategoryImagePaths,
+                        imageCaptions: photothequeCategoryImageCaptions,
                       ),
                     ),
                   );

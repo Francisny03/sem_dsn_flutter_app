@@ -173,7 +173,7 @@ class ArticleDetailHeroLayout extends StatelessWidget {
                         Positioned(
                           left: 16,
                           right: 16,
-                          bottom: 74,
+                          bottom: 30,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,

@@ -4,6 +4,17 @@ import 'package:sem_dsn/models/category.dart';
 import 'package:sem_dsn/services/categories_api.dart'
     show fetchCategoriesAll, getFallbackCategories;
 
+/// Tri des catégories : par [Category.position] si fourni par le backend, sinon par id (plus ancien au plus récent).
+List<Category> _sortParentCategories(List<Category> list) {
+  final sorted = List<Category>.from(list);
+  sorted.sort((a, b) {
+    final orderA = a.position ?? a.id;
+    final orderB = b.position ?? b.id;
+    return orderA.compareTo(orderB);
+  });
+  return sorted;
+}
+
 /// Provider des catégories parentes du home filter (cache en mémoire, évite rechargement à chaque ouverture / hot restart).
 class CategoriesProvider extends ChangeNotifier {
   List<Category> _parentCategories = [];
@@ -24,9 +35,10 @@ class CategoriesProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final list = await fetchCategoriesAll();
-      _parentCategories = list.isNotEmpty ? list : getFallbackCategories();
+      final raw = list.isNotEmpty ? list : getFallbackCategories();
+      _parentCategories = _sortParentCategories(raw);
     } catch (_) {
-      _parentCategories = getFallbackCategories();
+      _parentCategories = _sortParentCategories(getFallbackCategories());
     } finally {
       _loading = false;
       notifyListeners();

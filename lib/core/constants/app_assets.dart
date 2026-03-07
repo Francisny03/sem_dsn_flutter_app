@@ -4,7 +4,7 @@ class AppAssets {
   static const String bibliography = 'assets/icons/bibliography.svg';
   static const String gallery = 'assets/icons/gallery.svg';
   static const String home = 'assets/icons/home.svg';
-  static const String live = 'assets/icons/live.svg';
+  static const String livecustom = 'assets/icons/livecustom.svg';
   static const String liveOn = 'assets/icons/liveOn.svg';
 
   static const String selection = 'assets/icons/selection.svg';

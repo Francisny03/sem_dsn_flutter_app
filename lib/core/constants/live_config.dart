@@ -3,9 +3,9 @@
 class LiveConfig {
   LiveConfig._();
 
-  /// When true: live icon blinks red in header; tap opens HLS live fullscreen.
-  /// When false: tap opens YouTube recap fullscreen (recapVideoUrl).
-  static const bool isLiveInProgress = true;
+  /// When true: live icon blinks red in header; tap opens HLS live.
+  /// When false: tap opens YouTube recap (recapVideoUrl).
+  static const bool isLiveInProgress = false;
 
   /// HLS stream URL for the live (used when [isLiveInProgress] is true).
   static const String liveStreamUrl =
@@ -15,4 +15,10 @@ class LiveConfig {
   /// Empty or placeholder until recap is available.
   static const String recapVideoUrl =
       'https://www.youtube.com/watch?v=6RLheM5AZmc';
+
+  /// When true: live stream is vertical → player aspect 9/16. Otherwise 16/9.
+  static const bool liveStreamIsVertical = false;
+
+  /// When true: recap video is vertical → player aspect 9/16. Otherwise 16/9.
+  static const bool recapVideoIsVertical = false;
 }

@@ -160,6 +160,9 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
                 if (_showLiveIcon && widget.onLivePressed != null)
                   _LiveHeaderIcon(
                     isLiveInProgress: LiveConfig.isLiveInProgress,
+                    blinkAnimation: LiveConfig.isLiveInProgress
+                        ? _liveBlinkAnimation
+                        : null,
                     onPressed: widget.onLivePressed!,
                   ),
                 _HeaderIcon(
@@ -189,7 +192,7 @@ class _HeaderActionsRow extends StatelessWidget {
 
   final List<Widget> children;
 
-  static const double _cellSize = 38;
+  static const double _cellSize = 34;
   static const double _rowHeight = 44;
 
   @override
@@ -215,58 +218,31 @@ class _HeaderActionsRow extends StatelessWidget {
   }
 }
 
-class _LiveHeaderIcon extends StatefulWidget {
+class _LiveHeaderIcon extends StatelessWidget {
   const _LiveHeaderIcon({
     required this.isLiveInProgress,
     required this.onPressed,
+    this.blinkAnimation,
   });
 
   final bool isLiveInProgress;
   final VoidCallback onPressed;
-
-  @override
-  State<_LiveHeaderIcon> createState() => _LiveHeaderIconState();
-}
-
-class _LiveHeaderIconState extends State<_LiveHeaderIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _blinkController;
-  late Animation<double> _opacity;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _blinkController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
-
-    _opacity = Tween<double>(begin: 0.3, end: 1).animate(
-      CurvedAnimation(parent: _blinkController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _blinkController.dispose();
-    super.dispose();
-  }
+  final Animation<double>? blinkAnimation;
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isLiveInProgress) {
+    if (!isLiveInProgress) {
       return IconButton(
         icon: SvgPicture.asset(
-          AppAssets.live,
-          width: 28,
-          height: 28,
+          AppAssets.livecustom,
+          width: 24,
+          height: 24,
           colorFilter: const ColorFilter.mode(
             AppColors.blackIcon,
             BlendMode.srcIn,
           ),
         ),
-        onPressed: widget.onPressed,
+        onPressed: onPressed,
         style: IconButton.styleFrom(
           padding: EdgeInsets.zero,
           minimumSize: const Size(36, 36),
@@ -277,23 +253,24 @@ class _LiveHeaderIconState extends State<_LiveHeaderIcon>
     }
 
     return GestureDetector(
-      onTap: widget.onPressed,
+      onTap: onPressed,
       child: SizedBox(
         height: 36,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedBuilder(
-              animation: _opacity,
+              animation: blinkAnimation!,
               builder: (context, child) {
                 return Opacity(
-                  opacity: _opacity.value,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
+                  opacity: blinkAnimation!.value,
+                  child: SvgPicture.asset(
+                    AppAssets.livecustom,
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.red,
+                      BlendMode.srcIn,
                     ),
                   ),
                 );
@@ -321,7 +298,7 @@ class _HeaderIcon extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
-  static const double _iconSize = 28;
+  static const double _iconSize = 24;
 
   @override
   Widget build(BuildContext context) {

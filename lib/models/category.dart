@@ -8,6 +8,7 @@ class Category {
     required this.createdAt,
     required this.updatedAt,
     this.children = const [],
+    this.position,
   });
 
   final int id;
@@ -17,6 +18,9 @@ class Category {
   final String createdAt;
   final String updatedAt;
   final List<Category> children;
+
+  /// Ordre d’affichage (si fourni par le backend) ; sinon on trie par id.
+  final int? position;
 
   bool get isParent => parentId == null;
   bool get hasChildren => children.isNotEmpty;
@@ -35,6 +39,7 @@ class Category {
               ?.map((e) => Category.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      position: json['position'] as int?,
     );
   }
 }
