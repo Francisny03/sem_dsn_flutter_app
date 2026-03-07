@@ -31,9 +31,14 @@ class GalleriesProvider extends ChangeNotifier {
     try {
       final res = await fetchGalleries();
       _galleries = res.results;
+      _loading = false;
+      notifyListeners();
+      // Précharger le nombre d'images de chaque galerie en arrière-plan pour afficher les counts sur la liste sans ouvrir chaque galerie.
+      for (final g in _galleries) {
+        loadGalleryImages(g.id);
+      }
     } catch (_) {
       _galleries = [];
-    } finally {
       _loading = false;
       notifyListeners();
     }
