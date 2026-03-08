@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
+import 'package:sem_dsn/pages/home/home_page.dart';
 import 'package:sem_dsn/pages/welcome_screen.dart';
+
+const String _keyHasSeenWelcome = 'sem_dsn_has_seen_welcome';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,6 +34,28 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
     _controller.forward();
+
+    _goToNext();
+  }
+
+  Future<void> _goToNext() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenWelcome = prefs.getBool(_keyHasSeenWelcome) ?? false;
+
+    if (!mounted) return;
+    if (hasSeenWelcome) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder<void>(
+          pageBuilder: (_, __, ___) => const HomePage(),
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 400),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
+      );
+      return;
+    }
 
     Future.delayed(const Duration(milliseconds: 3000), () {
       if (!mounted) return;

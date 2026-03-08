@@ -22,6 +22,7 @@ class FeaturedSection extends StatefulWidget {
   });
 
   final List<Article>? articles;
+
   /// Si fourni (ex. nom de la sous-catégorie API), remplace le titre par défaut.
   final String? sectionTitle;
   final SelectionService? selectionService;
@@ -118,7 +119,7 @@ class _FeaturedSectionState extends State<FeaturedSection> {
             itemBuilder: (context, index) {
               if (useApi) {
                 final article = apiArticles[index];
-                final imagePath = article.firstImageUrl ?? AppAssets.news1;
+                final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
                 final date = Article.formatDisplayDate(article.articleDate);
                 final tag = article.categories.isNotEmpty
                     ? article.categories.first.name
@@ -140,6 +141,7 @@ class _FeaturedSectionState extends State<FeaturedSection> {
                   title: article.title,
                   date: date,
                   heroTag: heroTag,
+                  showPlayButton: article.hasVideo,
                   isStarSelected:
                       widget.selectionService?.contains(selectedArticle) ??
                       false,
@@ -176,6 +178,7 @@ class _FeaturedSectionState extends State<FeaturedSection> {
                 title: item.title,
                 date: item.date,
                 heroTag: heroTag,
+                showPlayButton: false,
                 isStarSelected:
                     widget.selectionService?.contains(article) ?? false,
                 onStarTap: widget.selectionService != null
@@ -210,6 +213,7 @@ class _FeaturedCard extends StatelessWidget {
     required this.title,
     required this.date,
     required this.heroTag,
+    this.showPlayButton = false,
     this.isStarSelected = false,
     this.onStarTap,
     this.onTap,
@@ -219,6 +223,7 @@ class _FeaturedCard extends StatelessWidget {
   final String title;
   final String date;
   final Object heroTag;
+  final bool showPlayButton;
   final bool isStarSelected;
   final VoidCallback? onStarTap;
   final VoidCallback? onTap;
@@ -251,6 +256,21 @@ class _FeaturedCard extends StatelessWidget {
                   gradient: AppColors.gradientFeatured,
                 ),
               ),
+              if (showPlayButton)
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.5),
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow,
+                      color: AppColors.whiteTextColor,
+                      size: 36,
+                    ),
+                  ),
+                ),
               if (onStarTap != null)
                 Positioned(
                   bottom: 8,

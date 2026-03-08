@@ -19,6 +19,7 @@ class Article {
     this.isPublished = true,
     this.images = const [],
     this.categories = const [],
+    this.videoUrl,
   });
 
   final int id;
@@ -36,13 +37,21 @@ class Article {
   final List<ArticleImage> images;
   final List<Category> categories;
 
-  /// Première image URL ou null.
+  /// URL vidéo (ex. YouTube) si l’article en a une.
+  final String? videoUrl;
+
+  /// Première image URL ou null (null si liste vide ou url vide).
   String? get firstImageUrl {
     if (images.isEmpty) return null;
     final sorted = List<ArticleImage>.from(images)
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    return sorted.first.url;
+    final url = sorted.first.url;
+    return (url.isEmpty) ? null : url;
   }
+
+  /// True si l’article a une vidéo à afficher.
+  bool get hasVideo =>
+      videoUrl != null && videoUrl!.trim().isNotEmpty;
 
   /// Date affichée (article_date ou published_at).
   String get displayDate => articleDate;
@@ -90,6 +99,7 @@ class Article {
               ?.map((e) => Category.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      videoUrl: json['video_url'] as String?,
     );
   }
 }

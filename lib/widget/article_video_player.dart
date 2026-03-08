@@ -56,11 +56,14 @@ class ArticleVideoPlayer extends StatefulWidget {
   final Object? heroTagForPlay;
 
   @override
-  State<ArticleVideoPlayer> createState() => _ArticleVideoPlayerState();
+  State<ArticleVideoPlayer> createState() => ArticleVideoPlayerState();
 }
 
-class _ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
+/// State exposée pour que le parent puisse appeler [pause] au retour (éviter le rectangle YouTube).
+class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
   YoutubePlayerController? _youtubeController;
+
+  void pause() => _youtubeController?.pause();
 
   @override
   void initState() {

@@ -12,6 +12,10 @@ class ApiConfig {
   static String article(int id) => '$baseUrl/articles/$id';
   static String articlesHome() => '$baseUrl/articles/home?category_id=all';
 
+  /// Articles d’une catégorie (ex. Réalisations). page/limit pour pagination.
+  static String articlesByCategory(int categoryId, {int page = 1, int limit = 20}) =>
+      '$baseUrl/articles/public/categories/$categoryId?page=$page&limit=$limit';
+
   static String books() => '$baseUrl/books';
 
   static String galleries() => '$baseUrl/galleries';

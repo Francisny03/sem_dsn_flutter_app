@@ -38,8 +38,9 @@ class CategoriesProvider extends ChangeNotifier {
       final raw = list.isNotEmpty ? list : getFallbackCategories();
       final sorted = _sortParentCategories(raw);
       // Actualités en dur toujours en premier (éviter doublon si l’API envoie déjà une catégorie actualites).
-      final withoutActualites =
-          sorted.where((c) => c.slug != 'actualites').toList();
+      final withoutActualites = sorted
+          .where((c) => c.slug != 'actualites' && c.id != 3)
+          .toList();
       _parentCategories = [getActualitesCategory(), ...withoutActualites];
     } catch (_) {
       _parentCategories = _sortParentCategories(getFallbackCategories());

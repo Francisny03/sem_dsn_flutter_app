@@ -216,7 +216,7 @@ class OverlayCardListFromArticles extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final article = articles[index];
-        final imagePath = article.firstImageUrl ?? AppAssets.news1;
+        final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
         final date = _formatArticleDate(article.articleDate);
         final selectedArticle = SelectedArticle(
           title: article.title,
@@ -234,7 +234,7 @@ class OverlayCardListFromArticles extends StatelessWidget {
           imagePath: imagePath,
           title: article.title,
           date: date,
-          showPlayButton: false,
+          showPlayButton: article.hasVideo,
           heroTag: heroTag,
           isStarSelected: selectionService?.contains(selectedArticle) ?? false,
           onStarTap: selectionService != null
@@ -282,7 +282,7 @@ class _ImageBelowCardListFromArticles extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final article = articles[index];
-        final imagePath = article.firstImageUrl ?? AppAssets.news1;
+        final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
         final date = _formatArticleDate(article.articleDate);
         final selectedArticle = SelectedArticle(
           title: article.title,
@@ -300,6 +300,7 @@ class _ImageBelowCardListFromArticles extends StatelessWidget {
           imagePath: imagePath,
           title: article.title,
           date: showDate ? date : null,
+          showPlayButton: article.hasVideo,
           heroTag: heroTag,
           isStarSelected: selectionService?.contains(selectedArticle) ?? false,
           onStarTap: selectionService != null

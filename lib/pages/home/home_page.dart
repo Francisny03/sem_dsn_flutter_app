@@ -7,6 +7,7 @@ import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
 import 'package:sem_dsn/models/article.dart';
+import 'package:sem_dsn/models/category.dart';
 import 'package:sem_dsn/providers/articles_provider.dart';
 import 'package:sem_dsn/providers/categories_provider.dart';
 import 'package:sem_dsn/providers/home_articles_provider.dart';
@@ -43,6 +44,23 @@ List<Article> _lastNArticlesByDate(List<Article> articles, int n) {
       }
     });
   return sorted.take(n).toList();
+}
+
+/// Liste d’articles à passer à HomeFilterContent : priorité aux articles chargés par catégorie (API), sinon liste globale.
+List<Article> _articlesForFilter(
+  ArticlesProvider articlesProvider,
+  List<Category> parentCategories,
+  int selectedIndex,
+  List<Article> fallbackArticles,
+) {
+  if (parentCategories.isEmpty ||
+      selectedIndex < 0 ||
+      selectedIndex >= parentCategories.length) {
+    return fallbackArticles;
+  }
+  final cat = parentCategories[selectedIndex];
+  final byCategory = articlesProvider.getArticlesForCategory(cat.id);
+  return byCategory.isNotEmpty ? byCategory : fallbackArticles;
 }
 
 /// Page d'accueil : header, filtres, contenu selon filtre (layout overlay / with_children ou listes par slug), bottom nav.
@@ -119,6 +137,20 @@ class _HomePageState extends State<HomePage> {
     final articles = articlesProvider.articles;
     // Hero = toujours les 5 derniers articles toutes catégories (tri par date décroissante).
     final heroArticles = _lastNArticlesByDate(articles, 5);
+
+    // Charger les articles par catégorie pour l’onglet sélectionné (ex. Réalisations) si pas Actualités.
+    if (parentCategories.isNotEmpty &&
+        selectedIndex < parentCategories.length &&
+        !parentCategories[selectedIndex].hasChildren) {
+      final cat = parentCategories[selectedIndex];
+      if (cat.id != 9000) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            context.read<ArticlesProvider>().loadArticlesForCategory(cat.id);
+          }
+        });
+      }
+    }
 
     final hasChildren =
         parentCategories.isNotEmpty &&
@@ -333,7 +365,12 @@ class _HomePageState extends State<HomePage> {
                             : HomeFilterContent(
                                 key: ValueKey<int>(selectedIndex),
                                 parentCategories: parentCategories,
-                                articles: articlesProvider.articles,
+                                articles: _articlesForFilter(
+                                  articlesProvider,
+                                  parentCategories,
+                                  selectedIndex,
+                                  articles,
+                                ),
                                 selectedIndex: selectedIndex,
                                 selectionService: selectionService,
                                 onArticleTap: _openArticle,

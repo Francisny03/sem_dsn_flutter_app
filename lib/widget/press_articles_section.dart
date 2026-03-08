@@ -79,7 +79,7 @@ class PressArticlesSection extends StatelessWidget {
           itemBuilder: (context, index) {
             if (useApi) {
               final article = apiArticles[index];
-              final imagePath = article.firstImageUrl ?? AppAssets.news1;
+              final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
               final date = Article.formatDisplayDate(article.articleDate);
               final tag = article.categories.isNotEmpty
                   ? article.categories.first.name
@@ -101,6 +101,7 @@ class PressArticlesSection extends StatelessWidget {
                 title: article.title,
                 date: date,
                 heroTag: heroTag,
+                showPlayButton: article.hasVideo,
                 isStarSelected:
                     selectionService?.contains(selectedArticle) ?? false,
                 onStarTap: selectionService != null
@@ -135,6 +136,7 @@ class PressArticlesSection extends StatelessWidget {
               title: item.title,
               date: item.date,
               heroTag: heroTag,
+              showPlayButton: false,
               isStarSelected:
                   selectionService?.contains(selectedArticle) ?? false,
               onStarTap: selectionService != null
@@ -168,6 +170,7 @@ class _PressArticleTile extends StatelessWidget {
     required this.title,
     required this.date,
     required this.heroTag,
+    this.showPlayButton = false,
     this.isStarSelected = false,
     this.onStarTap,
     this.onTap,
@@ -177,6 +180,7 @@ class _PressArticleTile extends StatelessWidget {
   final String title;
   final String date;
   final Object heroTag;
+  final bool showPlayButton;
   final bool isStarSelected;
   final VoidCallback? onStarTap;
   final VoidCallback? onTap;
@@ -194,17 +198,39 @@ class _PressArticleTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Hero(
-                tag: heroTag,
-                child: ClipRRect(
-                  borderRadius: AppBorderRadius.r10,
-                  child: ImageFromPath(
-                    path: imagePath,
-                    width: 90,
-                    height: 90,
-                    fit: BoxFit.cover,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Hero(
+                    tag: heroTag,
+                    child: ClipRRect(
+                      borderRadius: AppBorderRadius.r10,
+                      child: ImageFromPath(
+                        path: imagePath,
+                        width: 90,
+                        height: 90,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
+                  if (showPlayButton)
+                    Positioned.fill(
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.5),
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            color: AppColors.whiteTextColor,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -226,11 +252,15 @@ class _PressArticleTile extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          date,
-                          style: const TextStyle(
-                            color: AppColors.newsDate,
-                            fontSize: AppFontSizes.pressArticleDate,
+                        Expanded(
+                          child: Text(
+                            date,
+                            style: const TextStyle(
+                              color: AppColors.newsDate,
+                              fontSize: AppFontSizes.pressArticleDate,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (onStarTap != null)

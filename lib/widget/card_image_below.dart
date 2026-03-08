@@ -13,6 +13,7 @@ class CardImageBelow extends StatelessWidget {
     required this.title,
     required this.heroTag,
     this.date,
+    this.showPlayButton = false,
     this.isStarSelected = false,
     this.onStarTap,
     this.onTap,
@@ -22,6 +23,7 @@ class CardImageBelow extends StatelessWidget {
   final String title;
   final Object heroTag;
   final String? date;
+  final bool showPlayButton;
   final bool isStarSelected;
   final VoidCallback? onStarTap;
   final VoidCallback? onTap;
@@ -40,18 +42,35 @@ class CardImageBelow extends StatelessWidget {
                 tag: heroTag,
                 child: ClipRRect(
                   borderRadius: AppBorderRadius.r12,
-                    child: SizedBox(
-                      height: 180,
+                  child: SizedBox(
+                    height: 180,
+                    width: double.infinity,
+                    child: ImageFromPath(
+                      path: imagePath,
+                      fit: BoxFit.cover,
                       width: double.infinity,
-                      child: ImageFromPath(
-                        path: imagePath,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
+                      height: double.infinity,
                     ),
+                  ),
                 ),
               ),
+              if (showPlayButton)
+                Positioned.fill(
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withValues(alpha: 0.5),
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow,
+                        color: AppColors.whiteTextColor,
+                        size: 40,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
           Padding(

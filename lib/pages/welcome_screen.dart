@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_padding.dart';
@@ -8,6 +9,8 @@ import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/home/home_page.dart';
 import 'package:sem_dsn/widget/congolese_flag_painter.dart';
 import 'package:sem_dsn/widget/custom_button.dart';
+
+const String _keyHasSeenWelcome = 'sem_dsn_has_seen_welcome';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -108,10 +111,15 @@ class WelcomeScreen extends StatelessWidget {
                           child: StadiumButton(
                             value: AppStrings.continueButton,
                             type: BtnType.white,
-                            onPressed: () {
+                            onPressed: () async {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.setBool(_keyHasSeenWelcome, true);
+                              if (!context.mounted) return;
                               Navigator.of(context).pushReplacement(
                                 PageRouteBuilder<void>(
-                                  pageBuilder: (_, __, ___) => const HomePage(),
+                                  pageBuilder: (_, __, ___) =>
+                                      const HomePage(),
                                   transitionDuration: const Duration(
                                     milliseconds: 800,
                                   ),

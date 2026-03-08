@@ -1,7 +1,7 @@
 class AppStrings {
   AppStrings._();
 
-  static const String appTitle = 'SEM DSN';
+  static const String appTitle = 'DSN';
 
   static const String welcomeHeroText =
       'Accélérons la marche vers le développement';

@@ -15,6 +15,7 @@ class ArticleContentCard extends StatelessWidget {
     this.bodyHtml,
     this.showTagTitleDate = true,
     this.heroCapDrawnAbove = false,
+    this.contentTopPadding,
   });
 
   final String title;
@@ -31,12 +32,16 @@ class ArticleContentCard extends StatelessWidget {
   /// true = la calotte arrondie est déjà dessinée au-dessus (dans l'image Hero) : pas de bord arrondi ni ombre en haut.
   final bool heroCapDrawnAbove;
 
+  /// Si défini, remplace le padding top par défaut (ex. quand la carte est sous la vidéo pour réduire l'espace).
+  final double? contentTopPadding;
+
   static const double _paddingTopHero = 28;
   static const double _paddingTopDefault = 28;
 
   @override
   Widget build(BuildContext context) {
-    final paddingTop = showTagTitleDate ? _paddingTopDefault : _paddingTopHero;
+    final defaultTop = showTagTitleDate ? _paddingTopDefault : _paddingTopHero;
+    final paddingTop = contentTopPadding ?? defaultTop;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20, paddingTop, 20, 24),

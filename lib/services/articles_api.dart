@@ -24,8 +24,9 @@ Future<ArticlesResponse> fetchArticles() async {
   final list = map['results'] as List<dynamic>? ?? [];
   final total = map['total'] as int? ?? 0;
   return ArticlesResponse(
-    results:
-        list.map((e) => Article.fromJson(e as Map<String, dynamic>)).toList(),
+    results: list
+        .map((e) => Article.fromJson(e as Map<String, dynamic>))
+        .toList(),
     total: total,
   );
 }
@@ -50,6 +51,32 @@ class ArticlesHomeResponse {
 
   final List<Article> aLaUne;
   final List<Article> contenuGeneral;
+}
+
+/// Récupère les articles d’une catégorie (ex. Réalisations id=7).
+Future<ArticlesResponse> fetchArticlesByCategory(
+  int categoryId, {
+  int page = 1,
+  int limit = 20,
+}) async {
+  final uri = Uri.parse(
+    ApiConfig.articlesByCategory(categoryId, page: page, limit: limit),
+  );
+  final response = await http.get(uri, headers: {'accept': '*/*'});
+  if (response.statusCode != 200) {
+    throw Exception(
+      'articles/public/categories/$categoryId: ${response.statusCode}',
+    );
+  }
+  final map = json.decode(response.body) as Map<String, dynamic>;
+  final list = map['results'] as List<dynamic>? ?? [];
+  final total = map['total'] as int? ?? 0;
+  return ArticlesResponse(
+    results: list
+        .map((e) => Article.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    total: total,
+  );
 }
 
 /// Récupère les articles pour la page d’accueil (À la une + contenu général).

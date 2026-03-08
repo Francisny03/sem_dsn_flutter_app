@@ -1,7 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'package:sem_dsn/core/constants/app_assets.dart';
+
 /// Affiche une image depuis un chemin asset ou une URL (avec cache pour le réseau).
+/// Si [path] est vide, affiche le placeholder [AppAssets.defaultImageArticle].
 class ImageFromPath extends StatelessWidget {
   const ImageFromPath({
     super.key,
@@ -16,14 +19,20 @@ class ImageFromPath extends StatelessWidget {
   final double? width;
   final double? height;
 
-  bool get _isNetwork =>
-      path.startsWith('http://') || path.startsWith('https://');
+  String get _effectivePath =>
+      path.trim().isEmpty ? AppAssets.defaultImageArticle : path;
+
+  bool get _isNetwork {
+    final p = _effectivePath;
+    return p.startsWith('http://') || p.startsWith('https://');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final p = _effectivePath;
     if (_isNetwork) {
       return CachedNetworkImage(
-        imageUrl: path,
+        imageUrl: p,
         fit: fit,
         width: width,
         height: height,
@@ -39,6 +48,6 @@ class ImageFromPath extends StatelessWidget {
         ),
       );
     }
-    return Image.asset(path, fit: fit, width: width, height: height);
+    return Image.asset(p, fit: fit, width: width, height: height);
   }
 }

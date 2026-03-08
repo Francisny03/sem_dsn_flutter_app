@@ -75,17 +75,20 @@ class ArticleDetailArgs {
     bool isHeroOrFeatured = false,
   }) {
     final date = _formatArticleDate(article.articleDate);
+    final hasVideo = article.hasVideo;
     return ArticleDetailArgs(
       title: article.title,
       date: date,
       tag: tag,
       body: article.subtitle ?? article.title,
       bodyHtml: article.description.isNotEmpty ? article.description : null,
-      imagePath: article.firstImageUrl ?? AppAssets.news1,
+      imagePath: article.firstImageUrl ?? AppAssets.defaultImageArticle,
       articleId: article.id,
       sources: article.sources.isNotEmpty ? article.sources : null,
       isHeroOrFeatured: isHeroOrFeatured,
       heroTagOverride: heroTagOverride,
+      isVideo: hasVideo,
+      videoPath: hasVideo ? article.videoUrl : null,
     );
   }
 

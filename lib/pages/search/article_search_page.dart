@@ -94,7 +94,7 @@ class _ArticleSearchPageState extends State<ArticleSearchPage> {
     String sourceId,
     SelectionService selectionService,
   ) {
-    final imagePath = article.firstImageUrl ?? AppAssets.news1;
+    final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
     final date = _formatArticleDate(article.articleDate);
     final selectedArticle = SelectedArticle(
       title: article.title,

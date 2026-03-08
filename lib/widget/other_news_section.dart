@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
@@ -48,7 +49,7 @@ List<Widget> buildOtherNewsSlivers(
           list.asMap().entries.map((entry) {
             final index = entry.key;
             final article = entry.value;
-            final imagePath = article.firstImageUrl ?? '';
+            final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
             final date = Article.formatDisplayDate(article.articleDate);
             final heroTag = ArticleDetailArgs.heroTagFor(
               imagePath: imagePath,
@@ -64,11 +65,13 @@ List<Widget> buildOtherNewsSlivers(
               heroTag: heroTag,
               selectionService: selectionService,
               onTap: onArticleTap != null
-                  ? () => onArticleTap(ArticleDetailArgs.fromArticle(
+                  ? () => onArticleTap(
+                      ArticleDetailArgs.fromArticle(
                         article,
                         AppStrings.news,
                         heroTagOverride: heroTag,
-                      ))
+                      ),
+                    )
                   : null,
             );
           }).toList(),
@@ -189,13 +192,13 @@ class _OtherNewsTileState extends State<OtherNewsTile> {
                         ),
                         if (onStarTap != null)
                           Padding(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(3),
                             child: AnimatedSelectionStar(
                               isSelected: isStarSelected,
                               onTap: onStarTap,
                               selectedColor: AppColors.heroSelectionTag,
                               unselectedColor: AppColors.grayTextColor,
-                              size: 24,
+                              size: 14,
                             ),
                           ),
                       ],
