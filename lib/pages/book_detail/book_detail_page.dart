@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
@@ -8,6 +9,7 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/models/book.dart';
 import 'package:sem_dsn/pages/book_detail/pdf_viewer_page.dart';
+import 'package:sem_dsn/providers/books_provider.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
 
 /// Hauteur du hero (cover + zone floutée avec infos).
@@ -27,10 +29,12 @@ class BookDetailPage extends StatefulWidget {
 class _BookDetailPageState extends State<BookDetailPage> {
   final ScrollController _scrollController = ScrollController();
   bool _showTitleInAppBar = false;
+  late Book _book;
 
   @override
   void initState() {
     super.initState();
+    _book = widget.book;
     _scrollController.addListener(_onScroll);
   }
 
@@ -49,16 +53,25 @@ class _BookDetailPageState extends State<BookDetailPage> {
     }
   }
 
+  Future<void> _onRefresh() async {
+    await context.read<BooksProvider>().load();
+    if (!mounted) return;
+    final updated = context.read<BooksProvider>().getBookById(widget.book.id);
+    if (updated != null) setState(() => _book = updated);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final book = widget.book;
+    final book = _book;
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Column(
         children: [
           Expanded(
-            child: CustomScrollView(
-              controller: _scrollController,
+            child: RefreshIndicator(
+              onRefresh: _onRefresh,
+              child: CustomScrollView(
+                controller: _scrollController,
               slivers: [
                 SliverAppBar(
                   expandedHeight: _kExpandedHeight,
@@ -202,8 +215,9 @@ class _BookDetailPageState extends State<BookDetailPage> {
                 ),
               ],
             ),
+            ),
           ),
-          if (book.fileUrl.isNotEmpty) _buildStickyButton(context),
+          if (_book.fileUrl.isNotEmpty) _buildStickyButton(context),
         ],
       ),
     );
@@ -229,7 +243,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () =>
-                _openPdf(context, widget.book.fileUrl, widget.book.name),
+                _openPdf(context, _book.fileUrl, _book.name),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryColor,
               foregroundColor: AppColors.whiteTextColor,
@@ -248,10 +262,10 @@ class _BookDetailPageState extends State<BookDetailPage> {
   }
 
   void _share(BuildContext context) {
-    if (widget.book.fileUrl.isNotEmpty) {
-      Share.share(widget.book.fileUrl, subject: widget.book.name);
+    if (_book.fileUrl.isNotEmpty) {
+      Share.share(_book.fileUrl, subject: _book.name);
     } else {
-      Share.share(widget.book.name);
+      Share.share(_book.name);
     }
   }
 

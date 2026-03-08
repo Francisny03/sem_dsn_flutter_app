@@ -49,7 +49,8 @@ List<Widget> buildOtherNewsSlivers(
           list.asMap().entries.map((entry) {
             final index = entry.key;
             final article = entry.value;
-            final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
+            final imagePath =
+                article.firstImageUrl ?? AppAssets.defaultImageArticle;
             final date = Article.formatDisplayDate(article.articleDate);
             final heroTag = ArticleDetailArgs.heroTagFor(
               imagePath: imagePath,
@@ -180,28 +181,35 @@ class _OtherNewsTileState extends State<OtherNewsTile> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          widget.date,
-                          style: const TextStyle(
-                            color: AppColors.newsDate,
-                            fontSize: AppFontSizes.pressArticleDate,
-                          ),
-                        ),
-                        if (onStarTap != null)
-                          Padding(
-                            padding: const EdgeInsets.all(3),
-                            child: AnimatedSelectionStar(
-                              isSelected: isStarSelected,
-                              onTap: onStarTap,
-                              selectedColor: AppColors.heroSelectionTag,
-                              unselectedColor: AppColors.grayTextColor,
-                              size: 14,
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.date,
+                              style: const TextStyle(
+                                color: AppColors.newsDate,
+                                fontSize: AppFontSizes.pressArticleDate,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                      ],
+                          if (onStarTap != null)
+                            Padding(
+                              padding: const EdgeInsets.all(3),
+                              child: AnimatedSelectionStar(
+                                isSelected: isStarSelected,
+                                onTap: onStarTap!,
+                                selectedColor: AppColors.heroSelectionTag,
+                                unselectedColor: AppColors.grayTextColor,
+                                size: 14,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

@@ -138,15 +138,18 @@ class _HomePageState extends State<HomePage> {
     // Hero = toujours les 5 derniers articles toutes catégories (tri par date décroissante).
     final heroArticles = _lastNArticlesByDate(articles, 5);
 
-    // Charger les articles par catégorie pour l’onglet sélectionné (ex. Réalisations) si pas Actualités.
+    // Charger les articles par catégorie pour l’onglet sélectionné (Réalisations, ou overlay 1 enfant ex. Discours).
     if (parentCategories.isNotEmpty &&
-        selectedIndex < parentCategories.length &&
-        !parentCategories[selectedIndex].hasChildren) {
+        selectedIndex < parentCategories.length) {
       final cat = parentCategories[selectedIndex];
       if (cat.id != 9000) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            context.read<ArticlesProvider>().loadArticlesForCategory(cat.id);
+          if (!mounted) return;
+          final ap = context.read<ArticlesProvider>();
+          if (cat.hasChildren && cat.children.length == 1) {
+            ap.loadArticlesForCategory(cat.children.first.id);
+          } else if (!cat.hasChildren) {
+            ap.loadArticlesForCategory(cat.id);
           }
         });
       }
@@ -191,21 +194,20 @@ class _HomePageState extends State<HomePage> {
         }
       } else if (contentLayout == CategoryDisplayLayout.overlay &&
           cat.children.length == 1) {
-        final childId = cat.children.first.id;
-        overlayChildArticles = articles
-            .where((a) => a.categories.any((c) => c.id == childId))
-            .toList();
+        overlayChildArticles = articlesProvider.getArticlesForCategory(
+          cat.children.first.id,
+        );
       }
     }
 
     // Mettre en cache les articles de presse pour "Autres Actualités" (page détail).
     final useWithChildren =
         hasChildren && contentLayout == CategoryDisplayLayout.withChildren;
-    final isActualitesTab = hasChildren &&
+    final isActualitesTab =
+        hasChildren &&
         selectedIndex < parentCategories.length &&
         parentCategories[selectedIndex].slug == 'actualites';
-    final homeSectionsLoading =
-        isActualitesTab && homeArticlesProvider.loading;
+    final homeSectionsLoading = isActualitesTab && homeArticlesProvider.loading;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<PressArticlesCacheProvider>().setPressArticles(

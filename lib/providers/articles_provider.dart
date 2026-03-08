@@ -39,10 +39,14 @@ class ArticlesProvider extends ChangeNotifier {
     }
   }
 
-  /// Charge les articles d’une catégorie (ex. Réalisations). Utilise l’API articles/public/categories/{id}.
+  /// Charge les articles d’une catégorie (ex. Réalisations, Discours). Utilise articles/public/all?category_id=.
   Future<void> loadArticlesForCategory(int categoryId) async {
     try {
-      final res = await fetchArticlesByCategory(categoryId, page: 1, limit: 50);
+      final res = await fetchArticlesByCategory(
+        categoryId,
+        page: 1,
+        limit: 200,
+      );
       _articlesByCategory[categoryId] = res.results;
       notifyListeners();
     } catch (_) {

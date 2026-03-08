@@ -35,7 +35,7 @@ class BibliographyLivreTile extends StatelessWidget {
       children: [
         Container(
           width: 120,
-          height: 140,
+          height: 150,
           decoration: BoxDecoration(
             borderRadius: AppBorderRadius.r8,
             border: Border.all(
@@ -49,7 +49,7 @@ class BibliographyLivreTile extends StatelessWidget {
             child: ImageFromPath(
               path: imagePath,
               width: 120,
-              height: 140,
+              height: 150,
               fit: BoxFit.cover,
             ),
           ),
@@ -66,7 +66,7 @@ class BibliographyLivreTile extends StatelessWidget {
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               if (description.isNotEmpty) ...[
@@ -78,11 +78,11 @@ class BibliographyLivreTile extends StatelessWidget {
                     fontSize: 13,
                     height: 1.4,
                   ),
-                  maxLines: 4,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-
+              const SizedBox(height: 6),
               Text(
                 year,
                 style: const TextStyle(color: AppColors.newsDate, fontSize: 12),

@@ -48,8 +48,10 @@ class _BibliographiePageState extends State<BibliographiePage> {
         final loading = booksProvider.loading;
         final useApiBooks = books.isNotEmpty;
 
-        return NestedScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+        return RefreshIndicator(
+          onRefresh: () => booksProvider.load(),
+          child: NestedScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
             SliverToBoxAdapter(
               child: Padding(
@@ -87,6 +89,7 @@ class _BibliographiePageState extends State<BibliographiePage> {
           //     const _RevuesTabContent(),
           //   ],
           // ),
+          ),
         );
       },
     );
@@ -124,7 +127,7 @@ class _LivresTabContent extends StatelessWidget {
               imagePath: AppAssets.imageOrDefault(book.coverUrl),
               title: book.name,
               description: book.description ?? '',
-              year: book.year,
+              year: book.displayDate,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(

@@ -22,11 +22,14 @@ class Book {
   final String updatedAt;
   final String coverUrl;
   final String fileUrl;
+
   /// Auteur du livre (optionnel, fourni par l’API si dispo).
   final String? author;
+
   /// Résumé / description du livre (optionnel).
   final String? description;
-  /// Date de publication (optionnel ; sinon on utilise [createdAt] pour l’affichage).
+
+  /// Date de publication du livre (optionnel). Le backend peut envoyer une date+heure (ISO) ; on n’utilise que la date pour l’affichage.
   final String? publishedAt;
 
   /// Année extraite de [publishedAt] ou [createdAt] pour l’affichage (ex. "2026").
@@ -44,8 +47,18 @@ class Book {
     try {
       final d = DateTime.parse(raw);
       const months = [
-        'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
-        'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc',
+        'Jan',
+        'Fév',
+        'Mar',
+        'Avr',
+        'Mai',
+        'Juin',
+        'Juil',
+        'Août',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Déc',
       ];
       return '${d.day} ${months[d.month - 1]} ${d.year}';
     } catch (_) {
@@ -65,7 +78,14 @@ class Book {
       fileUrl: json['file_url'] as String? ?? '',
       author: json['author'] as String?,
       description: json['description'] as String?,
-      publishedAt: json['published_at'] as String?,
+      publishedAt: _parseDateOnly(json['published_at'] as String?),
     );
+  }
+
+  /// Le backend peut envoyer une date+heure (ex. 2026-01-15T14:30:00Z) ; on garde uniquement la date (YYYY-MM-DD).
+  static String? _parseDateOnly(String? value) {
+    if (value == null || value.isEmpty) return null;
+    if (value.length >= 10) return value.substring(0, 10);
+    return value;
   }
 }

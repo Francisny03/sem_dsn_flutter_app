@@ -490,8 +490,8 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                                 ),
                               ),
                               Positioned(
-                                right: 8,
-                                bottom: 40,
+                                right: 15,
+                                top: -8,
                                 child: Builder(
                                   builder: (context) {
                                     final article = SelectedArticle(
@@ -514,7 +514,7 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                                         selectedColor: AppColors.yellowLight,
                                         unselectedColor:
                                             AppColors.whiteTextColor,
-                                        size: 18,
+                                        size: 25,
                                       ),
                                     );
                                   },

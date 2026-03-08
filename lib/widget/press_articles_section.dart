@@ -81,9 +81,7 @@ class PressArticlesSection extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (_, __) => SizedBox(
               height: 98,
-              child: NetflixShimmer(
-                child: _PressSkeletonTile(),
-              ),
+              child: NetflixShimmer(child: _PressSkeletonTile()),
             ),
           ),
         ],
@@ -357,33 +355,36 @@ class _PressArticleTile extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            date,
-                            style: const TextStyle(
-                              color: AppColors.newsDate,
-                              fontSize: AppFontSizes.pressArticleDate,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (onStarTap != null)
-                          Padding(
-                            padding: const EdgeInsets.all(3),
-                            child: AnimatedSelectionStar(
-                              isSelected: isStarSelected,
-                              onTap: onStarTap!,
-                              selectedColor: AppColors.heroSelectionTag,
-                              unselectedColor: AppColors.grayTextColor,
-                              size: 14,
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              date,
+                              style: const TextStyle(
+                                color: AppColors.newsDate,
+                                fontSize: AppFontSizes.pressArticleDate,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                      ],
+                          if (onStarTap != null)
+                            Padding(
+                              padding: const EdgeInsets.all(3),
+                              child: AnimatedSelectionStar(
+                                isSelected: isStarSelected,
+                                onTap: onStarTap!,
+                                selectedColor: AppColors.heroSelectionTag,
+                                unselectedColor: AppColors.grayTextColor,
+                                size: 14,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

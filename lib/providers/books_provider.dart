@@ -11,6 +11,14 @@ class BooksProvider extends ChangeNotifier {
   List<Book> get books => _books;
   bool get loading => _loading;
 
+  Book? getBookById(int id) {
+    try {
+      return _books.firstWhere((b) => b.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> loadIfNeeded() async {
     if (_loading || _books.isNotEmpty) return;
     await load();

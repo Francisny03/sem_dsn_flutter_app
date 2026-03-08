@@ -13,12 +13,29 @@ class ArticlesResponse {
   final int total;
 }
 
-/// Récupère la liste des articles.
+/// Récupère la liste des articles (endpoint public/all, pour Hero et filtres).
 Future<ArticlesResponse> fetchArticles() async {
-  final uri = Uri.parse(ApiConfig.articles());
+  return fetchArticlesPublicAll();
+}
+
+/// Récupère les articles publics, optionnellement filtrés par catégorie (ex. category_id=14 pour Discours).
+Future<ArticlesResponse> fetchArticlesPublicAll({
+  int? categoryId,
+  int page = 1,
+  int limit = 200,
+}) async {
+  final uri = Uri.parse(
+    ApiConfig.articlesPublicAll(
+      page: page,
+      limit: limit,
+      categoryId: categoryId,
+    ),
+  );
   final response = await http.get(uri, headers: {'accept': '*/*'});
   if (response.statusCode != 200) {
-    throw Exception('articles: ${response.statusCode}');
+    throw Exception(
+      'articles/public/all${categoryId != null ? '?category_id=$categoryId' : ''}: ${response.statusCode}',
+    );
   }
   final map = json.decode(response.body) as Map<String, dynamic>;
   final list = map['results'] as List<dynamic>? ?? [];
@@ -53,29 +70,16 @@ class ArticlesHomeResponse {
   final List<Article> contenuGeneral;
 }
 
-/// Récupère les articles d’une catégorie (ex. Réalisations id=7).
+/// Récupère les articles d’une catégorie (ex. Réalisations, Discours enfant 14). Utilise articles/public/all?category_id=.
 Future<ArticlesResponse> fetchArticlesByCategory(
   int categoryId, {
   int page = 1,
-  int limit = 20,
+  int limit = 200,
 }) async {
-  final uri = Uri.parse(
-    ApiConfig.articlesByCategory(categoryId, page: page, limit: limit),
-  );
-  final response = await http.get(uri, headers: {'accept': '*/*'});
-  if (response.statusCode != 200) {
-    throw Exception(
-      'articles/public/categories/$categoryId: ${response.statusCode}',
-    );
-  }
-  final map = json.decode(response.body) as Map<String, dynamic>;
-  final list = map['results'] as List<dynamic>? ?? [];
-  final total = map['total'] as int? ?? 0;
-  return ArticlesResponse(
-    results: list
-        .map((e) => Article.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    total: total,
+  return fetchArticlesPublicAll(
+    categoryId: categoryId,
+    page: page,
+    limit: limit,
   );
 }
 

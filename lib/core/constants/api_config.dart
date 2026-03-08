@@ -12,6 +12,19 @@ class ApiConfig {
   static String article(int id) => '$baseUrl/articles/$id';
   static String articlesHome() => '$baseUrl/articles/home?category_id=all';
 
+  /// Tous les articles publics (liste globale ou filtrée par catégorie). Utilisé pour Hero, filtres et overlay (ex. Discours).
+  static String articlesPublicAll({
+    int page = 1,
+    int limit = 200,
+    int? categoryId,
+  }) {
+    var url = '$baseUrl/articles/public/all?page=$page&limit=$limit';
+    if (categoryId != null) {
+      url += '&category_id=$categoryId';
+    }
+    return url;
+  }
+
   /// Articles d’une catégorie (ex. Réalisations). page/limit pour pagination.
   static String articlesByCategory(int categoryId, {int page = 1, int limit = 20}) =>
       '$baseUrl/articles/public/categories/$categoryId?page=$page&limit=$limit';
