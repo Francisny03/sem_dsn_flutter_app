@@ -40,5 +40,10 @@ class AppAssets {
 
   static const String defaultImageArticle = 'assets/images/placeholder.png';
 
+  /// Si [path] est null ou vide, renvoie [defaultImageArticle], sinon [path].
+  /// À utiliser pour home, photothèque, bibliographie, sélection quand le backend peut ne pas renvoyer d’image.
+  static String imageOrDefault(String? path) =>
+      (path == null || path.trim().isEmpty) ? defaultImageArticle : path;
+
   // static const String videotest = 'assets/videos/videotest.mp4';
 }

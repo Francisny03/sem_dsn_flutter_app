@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sem_dsn/core/theme/app_colors.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
+import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/providers/galleries_provider.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_fullscreen_page.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
@@ -91,13 +92,16 @@ class _PhotothequeCategoryPageState extends State<PhotothequeCategoryPage> {
                         itemCount: images.length,
                         itemBuilder: (context, index) {
                           final img = images[index];
+                          final imageUrl = AppAssets.imageOrDefault(img.url);
                           return _PhotoGridTile(
-                            imageUrl: img.url,
+                            imageUrl: imageUrl,
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
                                   builder: (_) => PhotothequeFullscreenPage(
-                                    imagePaths: images.map((e) => e.url).toList(),
+                                    imagePaths: images
+                                        .map((e) => AppAssets.imageOrDefault(e.url))
+                                        .toList(),
                                     initialIndex: index,
                                     imageCaptions: images.map((e) => e.name).toList(),
                                   ),

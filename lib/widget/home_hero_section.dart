@@ -276,7 +276,7 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                     slide = _HeroSlide(
                       title: apiArticle.title,
                       date: Article.formatDisplayDate(apiArticle.articleDate),
-                      imagePath: apiArticle.firstImageUrl ?? AppAssets.defaultImageArticle,
+                      imagePath: AppAssets.imageOrDefault(apiArticle.firstImageUrl),
                       tag: tag,
                     );
                   } else {
@@ -362,9 +362,8 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                             date: Article.formatDisplayDate(
                               widget.articles![safeIndex].articleDate,
                             ),
-                            imagePath:
-                                widget.articles![safeIndex].firstImageUrl ??
-                                AppAssets.defaultImageArticle,
+                            imagePath: AppAssets.imageOrDefault(
+                                widget.articles![safeIndex].firstImageUrl),
                           )
                         : _heroSlides[safeIndex];
                     final article = SelectedArticle(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
@@ -118,7 +119,7 @@ class _LivresTabContent extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(top: 0),
             child: BibliographyLivreTile(
-              imagePath: book.coverUrl,
+              imagePath: AppAssets.imageOrDefault(book.coverUrl),
               title: book.name,
               year: book.year,
               onTap: () {
@@ -135,7 +136,7 @@ class _LivresTabContent extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(top: 16),
           child: BibliographyLivreTile(
-            imagePath: book.image,
+            imagePath: AppAssets.imageOrDefault(book.image),
             title: book.title,
             description: book.description,
             year: book.year,
@@ -164,7 +165,7 @@ class _RevuesTabContent extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.only(top: 0),
           child: BibliographyRevueTile(
-            imagePath: review.image,
+            imagePath: AppAssets.imageOrDefault(review.image),
             title: review.title,
             description: review.description,
             date: review.date,

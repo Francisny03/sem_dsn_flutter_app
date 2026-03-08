@@ -216,7 +216,7 @@ class OverlayCardListFromArticles extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final article = articles[index];
-        final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
+        final imagePath = AppAssets.imageOrDefault(article.firstImageUrl);
         final date = _formatArticleDate(article.articleDate);
         final selectedArticle = SelectedArticle(
           title: article.title,
@@ -282,7 +282,7 @@ class _ImageBelowCardListFromArticles extends StatelessWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final article = articles[index];
-        final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
+        final imagePath = AppAssets.imageOrDefault(article.firstImageUrl);
         final date = _formatArticleDate(article.articleDate);
         final selectedArticle = SelectedArticle(
           title: article.title,

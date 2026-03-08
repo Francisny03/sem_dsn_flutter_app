@@ -7,6 +7,7 @@ import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
 
@@ -29,7 +30,7 @@ class _SelectionPageContentState extends State<SelectionPageContent> {
             date: article.date,
             tag: AppStrings.news,
             body: AppStrings.articleBodySample,
-            imagePath: article.imagePath,
+            imagePath: AppAssets.imageOrDefault(article.imagePath),
             isVideo: false,
             isHeroOrFeatured: false,
             heroTagOverride: heroTag,
@@ -97,8 +98,9 @@ class _SelectionPageContentState extends State<SelectionPageContent> {
             SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final article = items[index];
+                final imagePath = AppAssets.imageOrDefault(article.imagePath);
                 final heroTag = ArticleDetailArgs.heroTagFor(
-                  imagePath: article.imagePath,
+                  imagePath: imagePath,
                   title: article.title,
                   date: article.date,
                   sourceId: 'selection',
@@ -106,6 +108,7 @@ class _SelectionPageContentState extends State<SelectionPageContent> {
                 );
                 return _SelectionArticleTile(
                   article: article,
+                  imagePath: imagePath,
                   heroTag: heroTag,
                   onTap: () => _openArticle(article, heroTag),
                   onRemoveFromSelection: () => selection.remove(article),
@@ -122,12 +125,14 @@ class _SelectionPageContentState extends State<SelectionPageContent> {
 class _SelectionArticleTile extends StatelessWidget {
   const _SelectionArticleTile({
     required this.article,
+    required this.imagePath,
     required this.heroTag,
     required this.onTap,
     required this.onRemoveFromSelection,
   });
 
   final SelectedArticle article;
+  final String imagePath;
   final Object heroTag;
   final VoidCallback onTap;
   final VoidCallback onRemoveFromSelection;
@@ -151,7 +156,7 @@ class _SelectionArticleTile extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: AppBorderRadius.r10,
                     child: ImageFromPath(
-                      path: article.imagePath,
+                      path: imagePath,
                       width: 90,
                       height: 90,
                       fit: BoxFit.cover,

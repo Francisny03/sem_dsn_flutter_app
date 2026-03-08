@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/constants/bibliography_data.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
@@ -159,7 +160,7 @@ class _BibliographieSearchPageState extends State<BibliographieSearchPage> {
                       (book) => Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: BibliographyLivreTile(
-                          imagePath: book.image,
+                          imagePath: AppAssets.imageOrDefault(book.image),
                           title: book.title,
                           description: book.description,
                           year: book.year,
@@ -186,7 +187,7 @@ class _BibliographieSearchPageState extends State<BibliographieSearchPage> {
                       (review) => Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: BibliographyRevueTile(
-                          imagePath: review.image,
+                          imagePath: AppAssets.imageOrDefault(review.image),
                           title: review.title,
                           description: review.description,
                           date: review.date,

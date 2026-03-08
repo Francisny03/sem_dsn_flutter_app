@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
@@ -90,7 +91,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
                     background: Stack(
                       fit: StackFit.expand,
                       children: [
-                        ImageFromPath(path: book.coverUrl, fit: BoxFit.cover),
+                        ImageFromPath(path: AppAssets.imageOrDefault(book.coverUrl), fit: BoxFit.cover),
                         Positioned.fill(
                           child: ClipRect(
                             child: BackdropFilter(
@@ -105,7 +106,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
                             child: ClipRRect(
                               borderRadius: AppBorderRadius.r12,
                               child: ImageFromPath(
-                                path: book.coverUrl,
+                                path: AppAssets.imageOrDefault(book.coverUrl),
                                 width: 140,
                                 height: 200,
                                 fit: BoxFit.cover,
