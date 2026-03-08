@@ -22,21 +22,20 @@ class BibliographiePage extends StatefulWidget {
   State<BibliographiePage> createState() => _BibliographiePageState();
 }
 
-class _BibliographiePageState extends State<BibliographiePage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _BibliographiePageState extends State<BibliographiePage> {
+  // --- TABS (caché) : réactiver pour afficher Livres | Revues de Presse ---
+  // with SingleTickerProviderStateMixin {
+  // late TabController _tabController;
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _tabController = TabController(length: 2, vsync: this);
+  // }
+  // @override
+  // void dispose() {
+  //   _tabController.dispose();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -66,25 +65,28 @@ class _BibliographiePageState extends State<BibliographiePage>
                 ),
               ),
             ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _StickyTabBarDelegate(
-                child: _BibliographyTabBar(controller: _tabController),
-              ),
-            ),
+            // --- TABS (caché) ---
+            // SliverPersistentHeader(
+            //   pinned: true,
+            //   delegate: _StickyTabBarDelegate(
+            //     child: _BibliographyTabBar(controller: _tabController),
+            //   ),
+            // ),
           ],
-          body: TabBarView(
-            controller: _tabController,
-            physics: const BouncingScrollPhysics(),
-            children: [
-              _LivresTabContent(
-                loading: loading,
-                useApiBooks: useApiBooks,
-                books: books,
-              ),
-              const _RevuesTabContent(),
-            ],
+          body: _LivresTabContent(
+            loading: loading,
+            useApiBooks: useApiBooks,
+            books: books,
           ),
+          // --- TABS (caché) : TabBarView avec Livres + Revues ---
+          // body: TabBarView(
+          //   controller: _tabController,
+          //   physics: const BouncingScrollPhysics(),
+          //   children: [
+          //     _LivresTabContent(loading: loading, useApiBooks: useApiBooks, books: books),
+          //     const _RevuesTabContent(),
+          //   ],
+          // ),
         );
       },
     );
@@ -150,7 +152,8 @@ class _LivresTabContent extends StatelessWidget {
   }
 }
 
-/// Contenu de l’onglet Revues de Presse (scroll vertical).
+/// Contenu de l’onglet Revues de Presse (scroll vertical). Conservé pour réactiver les tabs.
+// ignore: unused_element
 class _RevuesTabContent extends StatelessWidget {
   const _RevuesTabContent();
 
@@ -179,8 +182,8 @@ class _RevuesTabContent extends StatelessWidget {
   }
 }
 
-/// Barre d’onglets Livres | Revues de Presse (style titre + soulignement pour l’actif).
-/// Synchronisée avec le [TabController] pour le swipe entre onglets.
+/// Barre d’onglets Livres | Revues de Presse (style titre + soulignement pour l’actif). Conservé pour réactiver les tabs.
+// ignore: unused_element
 class _BibliographyTabBar extends StatelessWidget {
   const _BibliographyTabBar({required this.controller});
 
@@ -268,6 +271,7 @@ class _TabLabel extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   _StickyTabBarDelegate({required this.child});
 

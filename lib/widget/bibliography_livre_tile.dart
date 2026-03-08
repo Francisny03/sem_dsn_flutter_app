@@ -21,6 +21,7 @@ class BibliographyLivreTile extends StatelessWidget {
   final String title;
   final String description;
   final String year;
+
   /// Tap sur tout le container (prioritaire ; le bouton "Lire plus" appelle aussi [onTap] si présent).
   final VoidCallback? onTap;
   final VoidCallback? onLirePlus;
@@ -30,102 +31,94 @@ class BibliographyLivreTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 140,
-            decoration: BoxDecoration(
-              borderRadius: AppBorderRadius.r8,
-              border: Border.all(
-                width: 1,
-                color: AppColors.bibliographyBorderColor,
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: ClipRRect(
-              borderRadius: AppBorderRadius.r8,
-              child: ImageFromPath(
-                path: imagePath,
-                width: 120,
-                height: 140,
-                fit: BoxFit.cover,
-              ),
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 120,
+          height: 140,
+          decoration: BoxDecoration(
+            borderRadius: AppBorderRadius.r8,
+            border: Border.all(
+              width: 1,
+              color: AppColors.bibliographyBorderColor,
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          clipBehavior: Clip.antiAlias,
+          child: ClipRRect(
+            borderRadius: AppBorderRadius.r8,
+            child: ImageFromPath(
+              path: imagePath,
+              width: 120,
+              height: 140,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.newsTitle,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (description.isNotEmpty) ...[
+                const SizedBox(height: 6),
                 Text(
-                  title,
+                  description,
                   style: const TextStyle(
-                    color: AppColors.newsTitle,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    color: AppColors.grayTextColor,
+                    fontSize: 13,
+                    height: 1.4,
                   ),
-                  maxLines: 3,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      color: AppColors.grayTextColor,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      year,
-                      style: const TextStyle(
-                        color: AppColors.newsDate,
-                        fontSize: 12,
-                      ),
-                    ),
-                    if (_effectiveOnLirePlus != null)
-                      TextButton(
-                        onPressed: _effectiveOnLirePlus,
-                        style: TextButton.styleFrom(
-                          backgroundColor: AppColors.primaryColor,
-                          foregroundColor: AppColors.whiteTextColor,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 6,
-                          ),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppBorderRadius.rtotal,
-                          ),
-                        ),
-                        child: Text(
-                          AppStrings.bibButtonLirePlus,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
               ],
-            ),
+
+              Text(
+                year,
+                style: const TextStyle(color: AppColors.newsDate, fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+              if (_effectiveOnLirePlus != null)
+                TextButton(
+                  onPressed: _effectiveOnLirePlus,
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.primaryColor,
+                    foregroundColor: AppColors.whiteTextColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppBorderRadius.rtotal,
+                    ),
+                  ),
+                  child: Text(
+                    AppStrings.bibButtonLirePlus,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 10),
       child: onTap != null
           ? Material(
               color: Colors.transparent,
