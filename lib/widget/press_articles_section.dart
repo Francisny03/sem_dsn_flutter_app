@@ -9,19 +9,25 @@ import 'package:sem_dsn/models/article.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
+import 'package:sem_dsn/widget/netflix_shimmer.dart';
 
 /// Section "Press Articles" : liste verticale d'articles (image + titre + date + favori).
+/// Si [loading] est true, affiche un placeholder style Netflix.
 /// Si [articles] est fourni (API), affiche ces articles ; sinon données statiques.
 class PressArticlesSection extends StatelessWidget {
   const PressArticlesSection({
     super.key,
     this.articles,
+    this.loading = false,
     this.sectionTitle,
     this.selectionService,
     this.onArticleTap,
   });
 
   final List<Article>? articles;
+
+  /// true = afficher le placeholder de chargement (style Netflix).
+  final bool loading;
 
   /// Si fourni (ex. nom de la sous-catégorie API), remplace le titre par défaut.
   final String? sectionTitle;
@@ -51,6 +57,38 @@ class PressArticlesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              sectionTitle ?? AppStrings.sectionTitlePressArticles,
+              style: const TextStyle(
+                color: AppColors.sectionTitle,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: 4,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, __) => SizedBox(
+              height: 98,
+              child: NetflixShimmer(
+                child: _PressSkeletonTile(),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     final apiArticles = articles ?? [];
     final useApi = apiArticles.isNotEmpty;
     final count = useApi ? apiArticles.length : _staticArticles.length;
@@ -79,7 +117,8 @@ class PressArticlesSection extends StatelessWidget {
           itemBuilder: (context, index) {
             if (useApi) {
               final article = apiArticles[index];
-              final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
+              final imagePath =
+                  article.firstImageUrl ?? AppAssets.defaultImageArticle;
               final date = Article.formatDisplayDate(article.articleDate);
               final tag = article.categories.isNotEmpty
                   ? article.categories.first.name
@@ -160,6 +199,76 @@ class PressArticlesSection extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+const Color _kPressSkeletonColor = Color(0xFF3D3D3D);
+
+/// Tuile skeleton pour Autres infos (rectangle à gauche, texte à droite).
+class _PressSkeletonTile extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A2A2A),
+              borderRadius: AppBorderRadius.r10,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 14,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: _kPressSkeletonColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 14,
+                  width: 120,
+                  decoration: BoxDecoration(
+                    color: _kPressSkeletonColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      height: 12,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        color: _kPressSkeletonColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    Icon(
+                      Icons.star_border,
+                      size: 18,
+                      color: _kPressSkeletonColor,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -245,7 +354,7 @@ class _PressArticleTile extends StatelessWidget {
                         fontSize: AppFontSizes.pressArticleTitle,
                         fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 0),
@@ -265,13 +374,13 @@ class _PressArticleTile extends StatelessWidget {
                         ),
                         if (onStarTap != null)
                           Padding(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(3),
                             child: AnimatedSelectionStar(
                               isSelected: isStarSelected,
                               onTap: onStarTap!,
                               selectedColor: AppColors.heroSelectionTag,
                               unselectedColor: AppColors.grayTextColor,
-                              size: 24,
+                              size: 14,
                             ),
                           ),
                       ],

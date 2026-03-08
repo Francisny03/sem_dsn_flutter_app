@@ -201,6 +201,11 @@ class _HomePageState extends State<HomePage> {
     // Mettre en cache les articles de presse pour "Autres Actualités" (page détail).
     final useWithChildren =
         hasChildren && contentLayout == CategoryDisplayLayout.withChildren;
+    final isActualitesTab = hasChildren &&
+        selectedIndex < parentCategories.length &&
+        parentCategories[selectedIndex].slug == 'actualites';
+    final homeSectionsLoading =
+        isActualitesTab && homeArticlesProvider.loading;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<PressArticlesCacheProvider>().setPressArticles(
@@ -258,6 +263,7 @@ class _HomePageState extends State<HomePage> {
                   SliverToBoxAdapter(
                     child: HomeHeroSection(
                       articles: heroArticles.isNotEmpty ? heroArticles : null,
+                      loading: articlesProvider.loading,
                       selectionService: selectionService,
                       onCardTap: (args) => _openArticle(args),
                     ),
@@ -316,6 +322,7 @@ class _HomePageState extends State<HomePage> {
                                           articles: featuredArticles.isNotEmpty
                                               ? featuredArticles
                                               : null,
+                                          loading: homeSectionsLoading,
                                           sectionTitle: featuredSectionTitle,
                                           selectionService: selectionService,
                                           onArticleTap: (args) =>
@@ -326,6 +333,7 @@ class _HomePageState extends State<HomePage> {
                                           articles: pressArticles.isNotEmpty
                                               ? pressArticles
                                               : null,
+                                          loading: homeSectionsLoading,
                                           sectionTitle: pressSectionTitle,
                                           selectionService: selectionService,
                                           onArticleTap: (args) =>

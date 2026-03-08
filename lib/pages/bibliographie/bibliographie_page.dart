@@ -123,6 +123,7 @@ class _LivresTabContent extends StatelessWidget {
             child: BibliographyLivreTile(
               imagePath: AppAssets.imageOrDefault(book.coverUrl),
               title: book.name,
+              description: book.description ?? '',
               year: book.year,
               onTap: () {
                 Navigator.of(context).push(

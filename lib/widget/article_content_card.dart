@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
+import 'package:sem_dsn/models/article_source.dart';
+import 'package:sem_dsn/widget/article_sources_section.dart';
 
 /// Carte de lecture avec bord arrondi en haut (topLeft, topRight).
 /// Utilisée sous l'image dans la page détail article (Hero et Presse/Réalisation).
@@ -16,6 +18,7 @@ class ArticleContentCard extends StatelessWidget {
     this.showTagTitleDate = true,
     this.heroCapDrawnAbove = false,
     this.contentTopPadding,
+    this.sources,
   });
 
   final String title;
@@ -34,6 +37,9 @@ class ArticleContentCard extends StatelessWidget {
 
   /// Si défini, remplace le padding top par défaut (ex. quand la carte est sous la vidéo pour réduire l'espace).
   final double? contentTopPadding;
+
+  /// Si défini et non vide, affiche la section sources dans la même carte (même fond blanc).
+  final List<ArticleSource>? sources;
 
   static const double _paddingTopHero = 28;
   static const double _paddingTopDefault = 28;
@@ -126,6 +132,11 @@ class ArticleContentCard extends StatelessWidget {
                 fontSize: 15,
                 height: 1.5,
               ),
+            ),
+          if (sources != null && sources!.isNotEmpty)
+            ArticleSourcesSection(
+              sources: sources!,
+              includeHorizontalPadding: false,
             ),
         ],
       ),

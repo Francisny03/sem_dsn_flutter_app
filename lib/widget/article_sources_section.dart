@@ -7,15 +7,25 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Section affichée en fin d’article : liste des sources (nom + URL en colonne).
 class ArticleSourcesSection extends StatelessWidget {
-  const ArticleSourcesSection({super.key, required this.sources});
+  const ArticleSourcesSection({
+    super.key,
+    required this.sources,
+    this.includeHorizontalPadding = true,
+  });
 
   final List<ArticleSource> sources;
+
+  /// Si false, le padding horizontal n'est pas appliqué (ex. quand la section est dans [ArticleContentCard]).
+  final bool includeHorizontalPadding;
 
   @override
   Widget build(BuildContext context) {
     if (sources.isEmpty) return const SizedBox.shrink();
+    final padding = includeHorizontalPadding
+        ? const EdgeInsets.fromLTRB(20, 16, 20, 24)
+        : const EdgeInsets.only(top: 16, bottom: 24);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: padding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -34,15 +44,15 @@ class ArticleSourcesSection extends StatelessWidget {
               child: source.name.isEmpty
                   ? const SizedBox.shrink()
                   : source.url.isNotEmpty
-                      ? _buildLink(context, source.name, source.url)
-                      : Text(
-                          source.name,
-                          style: const TextStyle(
-                            color: AppColors.newsTitle,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                  ? _buildLink(context, source.name, source.url)
+                  : Text(
+                      source.name,
+                      style: const TextStyle(
+                        color: AppColors.newsTitle,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
         ],

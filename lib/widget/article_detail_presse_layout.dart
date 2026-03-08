@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/article_content_card.dart';
-import 'package:sem_dsn/widget/article_sources_section.dart';
 import 'package:sem_dsn/widget/article_video_player.dart'
     show ArticleVideoPlayer, ArticleVideoPlayerState, kYoutubeTestUrl;
 import 'package:sem_dsn/widget/image_from_path.dart';
@@ -186,12 +185,9 @@ class _ArticleDetailPresseLayoutState extends State<ArticleDetailPresseLayout> {
                 body: args.body,
                 bodyHtml: args.bodyHtml,
                 showTagTitleDate: true,
+                sources: args.sources,
               ),
             ),
-            if (args.sources != null && args.sources!.isNotEmpty)
-              SliverToBoxAdapter(
-                child: ArticleSourcesSection(sources: args.sources!),
-              ),
             if (args.showOtherNews)
               ...buildOtherNewsSlivers(
                 context,

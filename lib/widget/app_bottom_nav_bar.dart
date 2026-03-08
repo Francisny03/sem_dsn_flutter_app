@@ -62,19 +62,15 @@ class AppBottomNavBar extends StatelessWidget {
                             isSelected
                                 ? AppAssets.selection2Full
                                 : AppAssets.selection2,
-                            width: 26,
-                            height: 26,
+                            width: 22,
+                            height: 22,
                             colorFilter: ColorFilter.mode(
                               color,
                               BlendMode.srcIn,
                             ),
                           )
                         else
-                          Icon(
-                            item.icon,
-                            color: color,
-                            size: 26,
-                          ),
+                          Icon(item.icon, color: color, size: 22),
                         const SizedBox(height: 4),
                         Text(
                           item.label,

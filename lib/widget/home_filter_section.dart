@@ -4,6 +4,8 @@ import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_padding.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/models/category.dart';
+import 'package:sem_dsn/widget/netflix_loading_placeholder.dart';
+import 'package:sem_dsn/widget/netflix_shimmer.dart';
 
 class HomeFilterSection extends StatelessWidget {
   const HomeFilterSection({
@@ -25,17 +27,10 @@ class HomeFilterSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading && parentCategories.isEmpty) {
-      return SizedBox(
-        height: 40,
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.primaryColor,
-            ),
-          ),
+      return NetflixShimmer(
+        child: NetflixLoadingPlaceholder(
+          height: 40,
+          borderRadius: AppBorderRadius.rtotal,
         ),
       );
     }

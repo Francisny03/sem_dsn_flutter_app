@@ -5,7 +5,6 @@ import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/article_content_card.dart';
-import 'package:sem_dsn/widget/article_sources_section.dart';
 import 'package:sem_dsn/widget/article_video_player.dart'
     show ArticleVideoPlayer, ArticleVideoPlayerState, kYoutubeTestUrl;
 import 'package:sem_dsn/widget/image_from_path.dart';
@@ -144,12 +143,9 @@ class _ArticleDetailHeroLayoutState extends State<ArticleDetailHeroLayout> {
                   showTagTitleDate: true,
                   heroCapDrawnAbove: false,
                   contentTopPadding: 0,
+                  sources: args.sources,
                 ),
               ),
-              if (args.sources != null && args.sources!.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: ArticleSourcesSection(sources: args.sources!),
-                ),
               if (args.showOtherNews)
                 ...buildOtherNewsSlivers(
                   context,
@@ -392,12 +388,9 @@ class _ArticleDetailHeroLayoutState extends State<ArticleDetailHeroLayout> {
                 bodyHtml: args.bodyHtml,
                 showTagTitleDate: false,
                 heroCapDrawnAbove: false,
+                sources: args.sources,
               ),
             ),
-            if (args.sources != null && args.sources!.isNotEmpty)
-              SliverToBoxAdapter(
-                child: ArticleSourcesSection(sources: args.sources!),
-              ),
             if (args.showOtherNews)
               ...buildOtherNewsSlivers(
                 context,

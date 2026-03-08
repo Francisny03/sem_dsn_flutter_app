@@ -9,19 +9,25 @@ import 'package:sem_dsn/models/article.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
+import 'package:sem_dsn/widget/netflix_shimmer.dart';
 
 /// Section "Featured" (À La Une) : liste horizontale de cartes d'articles en vedette.
+/// Si [loading] est true, affiche un placeholder style Netflix.
 /// Si [articles] est fourni (API), affiche ces articles ; sinon données statiques.
 class FeaturedSection extends StatefulWidget {
   const FeaturedSection({
     super.key,
     this.articles,
+    this.loading = false,
     this.sectionTitle,
     this.selectionService,
     this.onArticleTap,
   });
 
   final List<Article>? articles;
+
+  /// true = afficher le placeholder de chargement (style Netflix).
+  final bool loading;
 
   /// Si fourni (ex. nom de la sous-catégorie API), remplace le titre par défaut.
   final String? sectionTitle;
@@ -91,6 +97,36 @@ class _FeaturedSectionState extends State<FeaturedSection> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.loading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              widget.sectionTitle ?? AppStrings.sectionTitleFeatured,
+              style: const TextStyle(
+                color: AppColors.sectionTitle,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 220,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: 3,
+              itemBuilder: (_, __) => NetflixShimmer(
+                child: _FeaturedSkeletonCard(),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     final apiArticles = widget.articles ?? [];
     final useApi = apiArticles.isNotEmpty;
     final count = useApi ? apiArticles.length : _items.length;
@@ -207,6 +243,68 @@ class _FeaturedSectionState extends State<FeaturedSection> {
   }
 }
 
+const Color _kFeaturedSkeletonColor = Color(0xFF3D3D3D);
+
+/// Carte skeleton pour À la une (même forme que _FeaturedCard : rectangle + texte en bas).
+class _FeaturedSkeletonCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160,
+      height: 220,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: AppBorderRadius.r12,
+      ),
+      child: ClipRRect(
+        borderRadius: AppBorderRadius.r12,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 14,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: _kFeaturedSkeletonColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 14,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: _kFeaturedSkeletonColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Icon(
+                Icons.star_border,
+                size: 20,
+                color: _kFeaturedSkeletonColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FeaturedCard extends StatelessWidget {
   const _FeaturedCard({
     required this.imagePath,
@@ -285,7 +383,7 @@ class _FeaturedCard extends StatelessWidget {
                         onTap: onStarTap!,
                         selectedColor: AppColors.heroSelectionTag,
                         unselectedColor: AppColors.whiteTextColor,
-                        size: 18,
+                        size: 14,
                       ),
                     ),
                   ),
