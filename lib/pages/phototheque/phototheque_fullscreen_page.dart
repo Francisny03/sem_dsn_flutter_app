@@ -89,7 +89,7 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage> {
                     if (caption != null) ...[
                       const SizedBox(height: 12),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           caption,
                           textAlign: TextAlign.center,

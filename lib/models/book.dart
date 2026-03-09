@@ -12,6 +12,9 @@ class Book {
     this.author,
     this.description,
     this.publishedAt,
+    this.purchaseUrl,
+    this.vendorName,
+    this.position,
   });
 
   final int id;
@@ -31,6 +34,15 @@ class Book {
 
   /// Date de publication du livre (optionnel). Le backend peut envoyer une date+heure (ISO) ; on n’utilise que la date pour l’affichage.
   final String? publishedAt;
+
+  /// Lien d'achat (optionnel).
+  final String? purchaseUrl;
+
+  /// Nom du vendeur (optionnel). Affiché avec [purchaseUrl] comme « Achetez sur : [nom] ».
+  final String? vendorName;
+
+  /// Ordre d'affichage dans la liste (optionnel). Tri par [position] en bibliographie.
+  final int? position;
 
   /// Année extraite de [publishedAt] ou [createdAt] pour l’affichage (ex. "2026").
   String get year {
@@ -79,6 +91,9 @@ class Book {
       author: json['author'] as String?,
       description: json['description'] as String?,
       publishedAt: _parseDateOnly(json['published_at'] as String?),
+      purchaseUrl: json['purchase_url'] as String?,
+      vendorName: json['vendor_name'] as String?,
+      position: json['position'] as int?,
     );
   }
 

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
-import 'package:sem_dsn/core/constants/app_font_sizes.dart';
-import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/constants/discours_data.dart';
-import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/models/article.dart';
 import 'package:sem_dsn/models/category.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
@@ -99,18 +96,7 @@ class _EmptyCategoryMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-      child: Center(
-        child: Text(
-          AppStrings.noArticlesYet,
-          style: TextStyle(
-            fontSize: AppFontSizes.sectionTitle,
-            color: AppColors.primaryColor,
-          ),
-        ),
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }
 

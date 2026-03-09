@@ -4,7 +4,6 @@ import 'package:sem_dsn/core/constants/app_font_sizes.dart';
 import 'package:sem_dsn/core/constants/app_padding.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/models/category.dart';
-import 'package:sem_dsn/widget/netflix_loading_placeholder.dart';
 import 'package:sem_dsn/widget/netflix_shimmer.dart';
 
 class HomeFilterSection extends StatelessWidget {
@@ -24,13 +23,31 @@ class HomeFilterSection extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final VoidCallback? onRetry;
 
+  /// Largeurs des chips placeholder pour ressembler aux vrais filtres (pas un long container).
+  static const List<double> _placeholderChipWidths = [72, 98, 85, 112, 78, 92];
+
   @override
   Widget build(BuildContext context) {
     if (loading && parentCategories.isEmpty) {
-      return NetflixShimmer(
-        child: NetflixLoadingPlaceholder(
-          height: 40,
-          borderRadius: AppBorderRadius.rtotal,
+      return SizedBox(
+        height: 40,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: AppPadding.horizontalPadding10,
+          itemCount: _placeholderChipWidths.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (_, index) {
+            return NetflixShimmer(
+              child: Container(
+                width: _placeholderChipWidths[index],
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.filterUnselected,
+                  borderRadius: AppBorderRadius.rtotal,
+                ),
+              ),
+            );
+          },
         ),
       );
     }

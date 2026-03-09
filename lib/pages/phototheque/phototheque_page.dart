@@ -102,7 +102,9 @@ class PhotothequePage extends StatelessWidget {
                   final gallery = galleries[index];
                   return _PhotothequeCategoryCard(
                     gallery: gallery,
-                    imageCount: galleriesProvider.totalImagesForGallery(gallery.id),
+                    imageCount: galleriesProvider.totalImagesForGallery(
+                      gallery.id,
+                    ),
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -159,7 +161,10 @@ class _PhotothequeCategoryCard extends StatelessWidget {
                       )
                     : Container(
                         color: AppColors.filterUnselected,
-                        child: const Icon(Icons.photo_library_outlined, size: 48),
+                        child: const Icon(
+                          Icons.photo_library_outlined,
+                          size: 48,
+                        ),
                       ),
               ),
             ),
@@ -171,7 +176,7 @@ class _PhotothequeCategoryCard extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
-              maxLines: 1,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
             Text(

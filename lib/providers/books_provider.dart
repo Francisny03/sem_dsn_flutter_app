@@ -7,9 +7,11 @@ import 'package:sem_dsn/services/books_api.dart';
 class BooksProvider extends ChangeNotifier {
   List<Book> _books = [];
   bool _loading = false;
+  bool _loadFailed = false;
 
   List<Book> get books => _books;
   bool get loading => _loading;
+  bool get loadFailed => _loadFailed;
 
   Book? getBookById(int id) {
     try {
@@ -26,12 +28,16 @@ class BooksProvider extends ChangeNotifier {
 
   Future<void> load() async {
     _loading = true;
+    _loadFailed = false;
     notifyListeners();
     try {
       final res = await fetchBooks();
-      _books = res.results;
+      final list = res.results;
+      list.sort((a, b) => (a.position ?? 0).compareTo(b.position ?? 0));
+      _books = list;
     } catch (_) {
       _books = [];
+      _loadFailed = true;
     } finally {
       _loading = false;
       notifyListeners();

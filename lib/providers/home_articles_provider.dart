@@ -8,10 +8,12 @@ class HomeArticlesProvider extends ChangeNotifier {
   List<Article> _aLaUne = [];
   List<Article> _contenuGeneral = [];
   bool _loading = false;
+  bool _loadFailed = false;
 
   List<Article> get aLaUne => _aLaUne;
   List<Article> get contenuGeneral => _contenuGeneral;
   bool get loading => _loading;
+  bool get loadFailed => _loadFailed;
 
   /// Charge les articles home si pas déjà chargés.
   Future<void> loadIfNeeded() async {
@@ -22,6 +24,7 @@ class HomeArticlesProvider extends ChangeNotifier {
   /// Force le rechargement (ex. pull-to-refresh).
   Future<void> load() async {
     _loading = true;
+    _loadFailed = false;
     notifyListeners();
     try {
       final res = await fetchArticlesHome();
@@ -30,6 +33,7 @@ class HomeArticlesProvider extends ChangeNotifier {
     } catch (_) {
       _aLaUne = [];
       _contenuGeneral = [];
+      _loadFailed = true;
     } finally {
       _loading = false;
       notifyListeners();

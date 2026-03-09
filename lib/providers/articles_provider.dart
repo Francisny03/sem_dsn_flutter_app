@@ -7,12 +7,14 @@ import 'package:sem_dsn/services/articles_api.dart';
 class ArticlesProvider extends ChangeNotifier {
   List<Article> _articles = [];
   bool _loading = false;
+  bool _loadFailed = false;
 
   /// Cache des articles par catégorie (ex. id 7 = Réalisations), pour les onglets home.
   final Map<int, List<Article>> _articlesByCategory = {};
 
   List<Article> get articles => _articles;
   bool get loading => _loading;
+  bool get loadFailed => _loadFailed;
 
   /// Articles chargés pour une catégorie (ex. Réalisations). Vide si pas encore chargé.
   List<Article> getArticlesForCategory(int categoryId) =>
@@ -27,12 +29,14 @@ class ArticlesProvider extends ChangeNotifier {
   /// Force le rechargement (ex. pull-to-refresh).
   Future<void> load() async {
     _loading = true;
+    _loadFailed = false;
     notifyListeners();
     try {
       final res = await fetchArticles();
       _articles = res.results;
     } catch (_) {
       _articles = [];
+      _loadFailed = true;
     } finally {
       _loading = false;
       notifyListeners();

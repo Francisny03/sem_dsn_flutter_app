@@ -95,6 +95,8 @@ class _PhotothequeCategoryPageState extends State<PhotothequeCategoryPage> {
                           final imageUrl = AppAssets.imageOrDefault(img.url);
                           return _PhotoGridTile(
                             imageUrl: imageUrl,
+                            cacheKey: 'pt_${img.galleryId}_${img.id}',
+                            memCacheSize: 400,
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
@@ -121,10 +123,14 @@ class _PhotothequeCategoryPageState extends State<PhotothequeCategoryPage> {
 class _PhotoGridTile extends StatelessWidget {
   const _PhotoGridTile({
     required this.imageUrl,
+    this.cacheKey,
+    this.memCacheSize,
     required this.onTap,
   });
 
   final String imageUrl;
+  final String? cacheKey;
+  final int? memCacheSize;
   final VoidCallback onTap;
 
   @override
@@ -137,6 +143,9 @@ class _PhotoGridTile extends StatelessWidget {
           borderRadius: AppBorderRadius.r4,
           child: ImageFromPath(
             path: imageUrl,
+            cacheKey: cacheKey,
+            memCacheWidth: memCacheSize,
+            memCacheHeight: memCacheSize,
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,

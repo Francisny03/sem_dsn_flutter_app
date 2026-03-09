@@ -50,6 +50,11 @@ class AppStrings {
   /// Message affiché quand une catégorie n’a pas encore d’articles.
   static const String noArticlesYet = 'Pas d\'articles pour le moment';
 
+  /// Message affiché quand le chargement échoue (pas de connexion).
+  static const String noConnectionMessage =
+      'Vous n\'êtes pas connecté. Vérifiez votre connexion internet et réessayez.';
+  static const String noConnectionButton = 'Actualiser';
+
   static const String sourcesTitle = 'Source(s)';
 
   // Bottom navigation
@@ -72,6 +77,7 @@ class AppStrings {
   static const String bibBookDetailDateLabel = 'Date de publication';
   static const String bibBookDetailAuthorLabel = 'Auteur';
   static const String bibBookDetailReadButton = 'Lire le livre';
+  static const String bibBookDetailAchetezSur = 'Achetez sur';
   static const String bibSearchTitle = 'Recherche Bibliographie';
   static const String bibSearchHint =
       'Rechercher par titre, description, date...';
@@ -108,6 +114,9 @@ class AppStrings {
   // Menu 3 points (header)
   static const String menuTitle = 'Menu';
   static const String menuLanguages = 'Langues';
+  static const String menuPrivacy = 'Politique de confidentialité';
+  static const String menuCGU = 'Conditions d\'utilisation';
+  static const String menuContact = 'Contact';
   static const String languageFrench = 'Français';
   static const String languageEnglish = 'Anglais';
   static const String languageLingala = 'Lingala';

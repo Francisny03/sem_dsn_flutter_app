@@ -68,39 +68,6 @@ class _FeaturedSectionState extends State<FeaturedSection> {
 
   void _onSelectionChanged() => setState(() {});
 
-  static const List<({String image, String title, String date})> _items = [
-    (
-      image: AppAssets.alaune1,
-      title: AppStrings.featuredTitle1,
-      date: AppStrings.featuredDate1,
-    ),
-    (
-      image: AppAssets.alaune2,
-      title: AppStrings.featuredTitle2,
-      date: AppStrings.featuredDate2,
-    ),
-    (
-      image: AppAssets.alaune1,
-      title: AppStrings.featuredTitle3,
-      date: AppStrings.featuredDate3,
-    ),
-    (
-      image: AppAssets.alaune2,
-      title: AppStrings.featuredTitle2,
-      date: AppStrings.featuredDate2,
-    ),
-    (
-      image: AppAssets.alaune1,
-      title: AppStrings.featuredTitle1,
-      date: AppStrings.featuredDate1,
-    ),
-    (
-      image: AppAssets.alaune2,
-      title: AppStrings.featuredTitle2,
-      date: AppStrings.featuredDate2,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     if (widget.loading) {
@@ -125,9 +92,8 @@ class _FeaturedSectionState extends State<FeaturedSection> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: 3,
-              itemBuilder: (_, __) => NetflixShimmer(
-                child: _FeaturedSkeletonCard(),
-              ),
+              itemBuilder: (_, __) =>
+                  NetflixShimmer(child: _FeaturedSkeletonCard()),
             ),
           ),
         ],
@@ -135,7 +101,7 @@ class _FeaturedSectionState extends State<FeaturedSection> {
     }
     final apiArticles = widget.articles ?? [];
     final useApi = apiArticles.isNotEmpty;
-    final count = useApi ? apiArticles.length : _items.length;
+    final count = useApi ? apiArticles.length : 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,22 +118,26 @@ class _FeaturedSectionState extends State<FeaturedSection> {
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: count,
-            itemBuilder: (context, index) {
-              if (useApi) {
+        if (count > 0)
+          SizedBox(
+            height: 220,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: count,
+              itemBuilder: (context, index) {
                 final article = apiArticles[index];
-                final imagePath = article.firstImageUrl ?? AppAssets.defaultImageArticle;
+                final imagePath =
+                    article.firstImageUrl ?? AppAssets.defaultImageArticle;
                 final date = Article.formatDisplayDate(article.articleDate);
                 final cat = article.categories.isNotEmpty
                     ? article.categories.first
                     : null;
-                final tag = widget.displayTag ??
-                    (context.read<CategoriesProvider>().getDisplayNameForCategory(cat) ??
+                final tag =
+                    widget.displayTag ??
+                    (context
+                            .read<CategoriesProvider>()
+                            .getDisplayNameForCategory(cat) ??
                         cat?.name ??
                         AppStrings.news);
                 final selectedArticle = SelectedArticle(
@@ -205,49 +175,9 @@ class _FeaturedSectionState extends State<FeaturedSection> {
                         )
                       : null,
                 );
-              }
-              final item = _items[index];
-              final article = SelectedArticle(
-                title: item.title,
-                date: item.date,
-                imagePath: item.image,
-              );
-              final heroTag = ArticleDetailArgs.heroTagFor(
-                imagePath: item.image,
-                title: item.title,
-                date: item.date,
-                sourceId: 'featured',
-                index: index,
-              );
-              return _FeaturedCard(
-                imagePath: item.image,
-                title: item.title,
-                date: item.date,
-                heroTag: heroTag,
-                showPlayButton: false,
-                isStarSelected:
-                    widget.selectionService?.contains(article) ?? false,
-                onStarTap: widget.selectionService != null
-                    ? () => widget.selectionService!.toggle(article)
-                    : null,
-                onTap: widget.onArticleTap != null
-                    ? () => widget.onArticleTap!(
-                        ArticleDetailArgs(
-                          title: item.title,
-                          date: item.date,
-                          tag: AppStrings.news,
-                          body: AppStrings.articleBodySample,
-                          imagePath: item.image,
-                          isVideo: false,
-                          isHeroOrFeatured: true,
-                          heroTagOverride: heroTag,
-                        ),
-                      )
-                    : null,
-              );
-            },
+              },
+            ),
           ),
-        ),
       ],
     );
   }

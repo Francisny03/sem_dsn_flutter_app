@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sem_dsn/core/constants/app_font_sizes.dart';
-import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/constants/category_display_layout.dart';
 import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
@@ -11,6 +9,8 @@ import 'package:sem_dsn/models/category.dart';
 import 'package:sem_dsn/providers/articles_provider.dart';
 import 'package:sem_dsn/providers/categories_provider.dart';
 import 'package:sem_dsn/providers/home_articles_provider.dart';
+import 'package:sem_dsn/providers/books_provider.dart';
+import 'package:sem_dsn/providers/galleries_provider.dart';
 import 'package:sem_dsn/providers/press_articles_cache_provider.dart';
 import 'package:sem_dsn/pages/live/live_replay_player_page.dart';
 import 'package:sem_dsn/pages/selection/selection_page_content.dart';
@@ -28,6 +28,7 @@ import 'package:sem_dsn/widget/featured_section.dart';
 import 'package:sem_dsn/widget/home_filter_content.dart';
 import 'package:sem_dsn/widget/home_filter_section.dart';
 import 'package:sem_dsn/widget/home_hero_section.dart';
+import 'package:sem_dsn/widget/no_connection_view.dart';
 import 'package:sem_dsn/widget/press_articles_section.dart';
 
 /// Retourne les [n] derniers articles par date (article_date décroissant).
@@ -251,125 +252,120 @@ class _HomePageState extends State<HomePage> {
           index: _selectedNavIndex,
           children: [
             RefreshIndicator(
-              onRefresh: () async {
-                final cat = context.read<CategoriesProvider>();
-                final art = context.read<ArticlesProvider>();
-                final homeArt = context.read<HomeArticlesProvider>();
-                await Future.wait([cat.load(), art.load(), homeArt.load()]);
-                if (mounted) setState(() {});
-              },
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  const SliverToBoxAdapter(child: SizedBox(height: 4)),
-                  SliverToBoxAdapter(
-                    child: HomeHeroSection(
-                      articles: heroArticles.isNotEmpty ? heroArticles : null,
-                      loading: articlesProvider.loading,
-                      selectionService: selectionService,
-                      onCardTap: (args) => _openArticle(args),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _StickyFilterDelegate(
-                      child: HomeFilterSection(
-                        parentCategories: parentCategories,
-                        loading: categoriesProvider.loading,
-                        selectedIndex: selectedIndex,
-                        onSelected: (index) =>
-                            setState(() => _selectedFilterIndex = index),
-                        onRetry: () => categoriesProvider.load(),
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 280),
-                        switchInCurve: Curves.easeOut,
-                        switchOutCurve: Curves.easeIn,
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position:
-                                      Tween<Offset>(
-                                        begin: const Offset(0, 0.03),
-                                        end: Offset.zero,
-                                      ).animate(
-                                        CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeOut,
-                                        ),
-                                      ),
-                                  child: child,
-                                ),
-                              );
-                            },
-                        child: hasChildren
-                            ? contentLayout ==
-                                      CategoryDisplayLayout.withChildren
-                                  ? Column(
-                                      key: const ValueKey<String>(
-                                        'with_children',
-                                      ),
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        FeaturedSection(
-                                          articles: featuredArticles.isNotEmpty
-                                              ? featuredArticles
-                                              : null,
-                                          loading: homeSectionsLoading,
-                                          sectionTitle: featuredSectionTitle,
-                                          displayTag: isActualitesTab
-                                              ? null
-                                              : parentCategories[selectedIndex]
-                                                    .name,
-                                          selectionService: selectionService,
-                                          onArticleTap: (args) =>
-                                              _openArticle(args),
-                                        ),
-                                        const SizedBox(height: 24),
-                                        PressArticlesSection(
-                                          articles: pressArticles.isNotEmpty
-                                              ? pressArticles
-                                              : null,
-                                          loading: homeSectionsLoading,
-                                          sectionTitle: pressSectionTitle,
-                                          displayTag: isActualitesTab
-                                              ? null
-                                              : parentCategories[selectedIndex]
-                                                    .name,
-                                          selectionService: selectionService,
-                                          onArticleTap: (args) =>
-                                              _openArticle(args),
-                                        ),
-                                      ],
-                                    )
-                                  : overlayChildArticles.isEmpty
-                                  ? Padding(
-                                      key: const ValueKey<String>(
-                                        'overlay_empty',
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 32,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          AppStrings.noArticlesYet,
-                                          style: TextStyle(
-                                            fontSize: AppFontSizes.sectionTitle,
-                                            color: AppColors.primaryColor,
+                    onRefresh: () async {
+                      final cat = context.read<CategoriesProvider>();
+                      final art = context.read<ArticlesProvider>();
+                      final homeArt = context.read<HomeArticlesProvider>();
+                      await Future.wait([cat.load(), art.load(), homeArt.load()]);
+                      if (mounted) setState(() {});
+                    },
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                        SliverToBoxAdapter(
+                          child: HomeHeroSection(
+                            articles: heroArticles.isNotEmpty ? heroArticles : null,
+                            loading: articlesProvider.loading,
+                            selectionService: selectionService,
+                            onCardTap: (args) => _openArticle(args),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                        SliverPersistentHeader(
+                          pinned: true,
+                          delegate: _StickyFilterDelegate(
+                            child: HomeFilterSection(
+                              parentCategories: parentCategories,
+                              loading: categoriesProvider.loading,
+                              selectedIndex: selectedIndex,
+                              onSelected: (index) =>
+                                  setState(() => _selectedFilterIndex = index),
+                              onRetry: () => categoriesProvider.load(),
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 24),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 280),
+                              switchInCurve: Curves.easeOut,
+                              switchOutCurve: Curves.easeIn,
+                              transitionBuilder:
+                                  (Widget child, Animation<double> animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position:
+                                        Tween<Offset>(
+                                          begin: const Offset(0, 0.03),
+                                          end: Offset.zero,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOut,
                                           ),
                                         ),
-                                      ),
-                                    )
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: hasChildren
+                                  ? contentLayout ==
+                                            CategoryDisplayLayout.withChildren
+                                      ? Column(
+                                          key: const ValueKey<String>(
+                                            'with_children',
+                                          ),
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            if (isActualitesTab &&
+                                                featuredArticles.isEmpty &&
+                                                pressArticles.isEmpty &&
+                                                !homeSectionsLoading &&
+                                                homeArticlesProvider.loadFailed)
+                                              NoConnectionView(
+                                                onRetry: () =>
+                                                    homeArticlesProvider.load(),
+                                              )
+                                            else ...[
+                                              FeaturedSection(
+                                                articles:
+                                                    featuredArticles.isNotEmpty
+                                                    ? featuredArticles
+                                                    : null,
+                                                loading: homeSectionsLoading,
+                                                sectionTitle: featuredSectionTitle,
+                                                displayTag: isActualitesTab
+                                                    ? null
+                                                    : parentCategories[selectedIndex]
+                                                          .name,
+                                                selectionService: selectionService,
+                                                onArticleTap: (args) =>
+                                                    _openArticle(args),
+                                              ),
+                                              const SizedBox(height: 24),
+                                              PressArticlesSection(
+                                                articles: pressArticles.isNotEmpty
+                                                    ? pressArticles
+                                                    : null,
+                                                loading: homeSectionsLoading,
+                                                sectionTitle: pressSectionTitle,
+                                                displayTag: isActualitesTab
+                                                    ? null
+                                                    : parentCategories[selectedIndex]
+                                                          .name,
+                                                selectionService: selectionService,
+                                                onArticleTap: (args) =>
+                                                    _openArticle(args),
+                                              ),
+                                            ],
+                                          ],
+                                        )
+                                  : overlayChildArticles.isEmpty
+                                  ? const SizedBox.shrink()
                                   : OverlayCardListFromArticles(
                                       key: const ValueKey<String>('overlay'),
                                       articles: overlayChildArticles,
@@ -398,11 +394,12 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             RefreshIndicator(
-              onRefresh: () async => setState(() {}),
+              onRefresh: () =>
+                  context.read<GalleriesProvider>().loadGalleries(),
               child: const PhotothequePage(),
             ),
             RefreshIndicator(
-              onRefresh: () async => setState(() {}),
+              onRefresh: () => context.read<BooksProvider>().load(),
               child: const BibliographiePage(),
             ),
             SelectionPageContent(
@@ -417,6 +414,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
 }
 
 /// Délégué pour que la barre de filtres reste sticky quand le hero a défilé.

@@ -34,34 +34,6 @@ class _HeroSlide {
   final String? tag;
 }
 
-const List<_HeroSlide> _heroSlides = [
-  _HeroSlide(
-    title: AppStrings.heroTitle1,
-    date: AppStrings.heroDate1,
-    imagePath: AppAssets.hero1,
-  ),
-  _HeroSlide(
-    title: AppStrings.heroTitle2,
-    date: AppStrings.heroDate2,
-    imagePath: AppAssets.hero2,
-  ),
-  _HeroSlide(
-    title: AppStrings.heroTitle3,
-    date: AppStrings.heroDate3,
-    imagePath: AppAssets.alaune1,
-  ),
-  _HeroSlide(
-    title: AppStrings.heroTitle4,
-    date: AppStrings.heroDate4,
-    imagePath: AppAssets.news1,
-  ),
-  _HeroSlide(
-    title: AppStrings.heroTitle5,
-    date: AppStrings.heroDate5,
-    imagePath: AppAssets.news2,
-  ),
-];
-
 const Duration _kAutoScrollDuration = Duration(seconds: 5);
 
 const Duration _kSlideContentAnimationDuration = Duration(milliseconds: 450);
@@ -300,8 +272,7 @@ class _AnimatedHeroSlideContentState extends State<_AnimatedHeroSlideContent>
 }
 
 /// Section héros : carousel d'actualités avec image, dégradé, badge, titre, date.
-/// Si [loading] est true, affiche un placeholder style Netflix (pas les images statiques).
-/// Si [articles] est fourni (API), affiche ces articles ; sinon données statiques.
+/// Si [loading] est true, affiche un placeholder style Netflix.
 class HomeHeroSection extends StatefulWidget {
   const HomeHeroSection({
     super.key,
@@ -360,11 +331,14 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
 
   void _onSelectionChanged() => setState(() {});
 
+  /// On n'utilise jamais les slides statiques : sans articles API, on affiche le placeholder.
   int get _slideCount {
     final list = widget.articles;
     if (list != null && list.isNotEmpty) return list.length;
-    return _heroSlides.length;
+    return 0;
   }
+
+  bool get _hasContent => _slideCount > 0;
 
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
@@ -395,207 +369,194 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
         child: SizedBox(
           height: 360,
           width: double.infinity,
-          child: widget.loading
+          child: (widget.loading || !_hasContent)
               ? _HeroLoadingPlaceholder()
               : Stack(
                   children: [
-                    PageView.builder(
-                      controller: _pageController,
-                      itemCount: _slideCount,
-                      onPageChanged: _onPageChanged,
-                      itemBuilder: (context, index) {
-                        final useApi =
-                            widget.articles != null &&
-                            widget.articles!.isNotEmpty;
-                        final _HeroSlide slide;
-                        Article? apiArticle;
-                        if (useApi) {
-                          apiArticle = widget.articles![index];
-                          final cat = apiArticle.categories.isNotEmpty
-                              ? apiArticle.categories.first
-                              : null;
-                          final tag = context.read<CategoriesProvider>().getDisplayNameForCategory(cat) ??
-                              cat?.name ??
-                              AppStrings.news;
-                          slide = _HeroSlide(
-                            title: apiArticle.title,
-                            date: Article.formatDisplayDate(
-                              apiArticle.articleDate,
-                            ),
-                            imagePath: AppAssets.imageOrDefault(
-                              apiArticle.firstImageUrl,
-                            ),
-                            tag: tag,
-                          );
-                        } else {
-                          slide = _heroSlides[index];
-                        }
-                        final heroTag = ArticleDetailArgs.heroTagFor(
-                          imagePath: slide.imagePath,
-                          title: slide.title,
-                          date: slide.date,
-                          sourceId: 'hero',
-                          index: index,
-                        );
-                        return GestureDetector(
-                          onTap: () {
-                            if (apiArticle != null &&
-                                widget.onCardTap != null) {
+                          PageView.builder(
+                            controller: _pageController,
+                            itemCount: _slideCount,
+                            onPageChanged: _onPageChanged,
+                            itemBuilder: (context, index) {
+                              final apiArticle = widget.articles![index];
                               final cat = apiArticle.categories.isNotEmpty
                                   ? apiArticle.categories.first
                                   : null;
-                              final tag = context.read<CategoriesProvider>().getDisplayNameForCategory(cat) ??
+                              final tag =
+                                  context
+                                      .read<CategoriesProvider>()
+                                      .getDisplayNameForCategory(cat) ??
                                   cat?.name ??
                                   AppStrings.news;
-                              widget.onCardTap!(
-                                ArticleDetailArgs.fromArticle(
-                                  apiArticle,
-                                  tag,
-                                  isHeroOrFeatured: true,
-                                  heroTagOverride: heroTag,
+                              final slide = _HeroSlide(
+                                title: apiArticle.title,
+                                date: Article.formatDisplayDate(
+                                  apiArticle.articleDate,
                                 ),
+                                imagePath: AppAssets.imageOrDefault(
+                                  apiArticle.firstImageUrl,
+                                ),
+                                tag: tag,
                               );
-                            } else if (widget.onCardTap != null) {
-                              widget.onCardTap!(
-                                ArticleDetailArgs(
-                                  title: slide.title,
-                                  date: slide.date,
-                                  tag: AppStrings.news,
-                                  body: AppStrings.articleBodySample,
-                                  imagePath: slide.imagePath,
-                                  isVideo: false,
-                                  isHeroOrFeatured: true,
-                                  heroTagOverride: heroTag,
-                                ),
+                              final heroTag = ArticleDetailArgs.heroTagFor(
+                                imagePath: slide.imagePath,
+                                title: slide.title,
+                                date: slide.date,
+                                sourceId: 'hero',
+                                index: index,
                               );
-                            }
-                          },
-                          behavior: HitTestBehavior.opaque,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Hero(
-                                tag: heroTag,
-                                child: ImageFromPath(
-                                  path: slide.imagePath,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                              ),
-                              Container(
-                                decoration: const BoxDecoration(
-                                  gradient: AppColors.gradientHero,
-                                ),
-                              ),
-                              Positioned(
-                                left: 16,
-                                right: 50,
-                                bottom: 40,
-                                child: _AnimatedHeroSlideContent(
-                                  slide: slide,
-                                  selectionService: widget.selectionService,
-                                ),
-                              ),
-                              Positioned(
-                                right: 15,
-                                top: -8,
-                                child: Builder(
-                                  builder: (context) {
-                                    final article = SelectedArticle(
-                                      title: slide.title,
-                                      date: slide.date,
-                                      imagePath: slide.imagePath,
-                                    );
-                                    return Container(
-                                      width: 38,
-                                      height: 38,
-                                      alignment: Alignment.center,
-                                      child: AnimatedSelectionStar(
-                                        isSelected:
-                                            widget.selectionService?.contains(
-                                              article,
-                                            ) ??
-                                            false,
-                                        onTap: () => widget.selectionService
-                                            ?.toggle(article),
-                                        selectedColor: AppColors.yellowLight,
-                                        unselectedColor:
-                                            AppColors.whiteTextColor,
-                                        size: 25,
+                              return GestureDetector(
+                                onTap: () {
+                                  if (widget.onCardTap != null) {
+                                    final cat = apiArticle.categories.isNotEmpty
+                                        ? apiArticle.categories.first
+                                        : null;
+                                    final tagName =
+                                        context
+                                            .read<CategoriesProvider>()
+                                            .getDisplayNameForCategory(cat) ??
+                                        cat?.name ??
+                                        AppStrings.news;
+                                    widget.onCardTap!(
+                                      ArticleDetailArgs.fromArticle(
+                                        apiArticle,
+                                        tagName,
+                                        isHeroOrFeatured: true,
+                                        heroTagOverride: heroTag,
                                       ),
                                     );
-                                  },
+                                  }
+                                },
+                                behavior: HitTestBehavior.opaque,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Hero(
+                                      tag: heroTag,
+                                      child: ImageFromPath(
+                                        path: slide.imagePath,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration: const BoxDecoration(
+                                        gradient: AppColors.gradientHero,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      left: 16,
+                                      right: 50,
+                                      bottom: 40,
+                                      child: _AnimatedHeroSlideContent(
+                                        slide: slide,
+                                        selectionService:
+                                            widget.selectionService,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 15,
+                                      top: -8,
+                                      child: Builder(
+                                        builder: (context) {
+                                          final article = SelectedArticle(
+                                            title: slide.title,
+                                            date: slide.date,
+                                            imagePath: slide.imagePath,
+                                          );
+                                          return Container(
+                                            width: 38,
+                                            height: 38,
+                                            alignment: Alignment.center,
+                                            child: AnimatedSelectionStar(
+                                              isSelected:
+                                                  widget.selectionService
+                                                      ?.contains(article) ??
+                                                  false,
+                                              onTap: () => widget
+                                                  .selectionService
+                                                  ?.toggle(article),
+                                              selectedColor:
+                                                  AppColors.yellowLight,
+                                              unselectedColor:
+                                                  AppColors.whiteTextColor,
+                                              size: 25,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          // Positioned(
+                          //   bottom: 60,
+                          //   right: 16,
+                          //   child: Builder(
+                          //     builder: (context) {
+                          //       final n = _slideCount;
+                          //       final safeIndex = n > 0 ? _currentIndex.clamp(0, n - 1) : 0;
+                          //       final useApi =
+                          //           widget.articles != null && widget.articles!.isNotEmpty;
+                          //       final slide = useApi
+                          //           ? _HeroSlide(
+                          //               title: widget.articles![safeIndex].title,
+                          //               date: Article.formatDisplayDate(
+                          //                 widget.articles![safeIndex].articleDate,
+                          //               ),
+                          //               imagePath: AppAssets.imageOrDefault(
+                          //                 widget.articles![safeIndex].firstImageUrl,
+                          //               ),
+                          //             )
+                          //           : _heroSlides[safeIndex];
+                          //       final article = SelectedArticle(
+                          //         title: slide.title,
+                          //         date: slide.date,
+                          //         imagePath: slide.imagePath,
+                          //       );
+                          //       return Container(
+                          //         width: 38,
+                          //         height: 38,
+                          //         decoration: const BoxDecoration(
+                          //           color: Colors.transparent,
+                          //           borderRadius: BorderRadius.only(
+                          //             bottomLeft: Radius.circular(10),
+                          //             bottomRight: Radius.circular(10),
+                          //           ),
+                          //         ),
+                          //         alignment: Alignment.center,
+                          //         child: AnimatedSelectionStar(
+                          //           isSelected:
+                          //               widget.selectionService?.contains(article) ?? false,
+                          //           onTap: () => widget.selectionService?.toggle(article),
+                          //           selectedColor: AppColors.yellowLight,
+                          //           unselectedColor: AppColors.whiteTextColor,
+                          //           size: 24,
+                          //         ),
+                          //       );
+                          //     },
+                          //   ),
+                          // ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 12,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                _slideCount,
+                                (i) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  child: _dot(active: i == _currentIndex),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        );
-                      },
-                    ),
-                    // Positioned(
-                    //   bottom: 60,
-                    //   right: 16,
-                    //   child: Builder(
-                    //     builder: (context) {
-                    //       final n = _slideCount;
-                    //       final safeIndex = n > 0 ? _currentIndex.clamp(0, n - 1) : 0;
-                    //       final useApi =
-                    //           widget.articles != null && widget.articles!.isNotEmpty;
-                    //       final slide = useApi
-                    //           ? _HeroSlide(
-                    //               title: widget.articles![safeIndex].title,
-                    //               date: Article.formatDisplayDate(
-                    //                 widget.articles![safeIndex].articleDate,
-                    //               ),
-                    //               imagePath: AppAssets.imageOrDefault(
-                    //                 widget.articles![safeIndex].firstImageUrl,
-                    //               ),
-                    //             )
-                    //           : _heroSlides[safeIndex];
-                    //       final article = SelectedArticle(
-                    //         title: slide.title,
-                    //         date: slide.date,
-                    //         imagePath: slide.imagePath,
-                    //       );
-                    //       return Container(
-                    //         width: 38,
-                    //         height: 38,
-                    //         decoration: const BoxDecoration(
-                    //           color: Colors.transparent,
-                    //           borderRadius: BorderRadius.only(
-                    //             bottomLeft: Radius.circular(10),
-                    //             bottomRight: Radius.circular(10),
-                    //           ),
-                    //         ),
-                    //         alignment: Alignment.center,
-                    //         child: AnimatedSelectionStar(
-                    //           isSelected:
-                    //               widget.selectionService?.contains(article) ?? false,
-                    //           onTap: () => widget.selectionService?.toggle(article),
-                    //           selectedColor: AppColors.yellowLight,
-                    //           unselectedColor: AppColors.whiteTextColor,
-                    //           size: 24,
-                    //         ),
-                    //       );
-                    //     },
-                    //   ),
-                    // ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 12,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          _slideCount,
-                          (i) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: _dot(active: i == _currentIndex),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
         ),

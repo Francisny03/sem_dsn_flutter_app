@@ -40,27 +40,6 @@ class PressArticlesSection extends StatelessWidget {
   final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
 
-  static const List<({String image, String title, String date})>
-  _staticArticles = [
-    (
-      image: AppAssets.news1,
-      title:
-          'Le président Denis Sassou-Nguesso a été reçu jeudi à Beijing en Chine',
-      date: '04 Septembre 2025',
-    ),
-    (
-      image: AppAssets.news2,
-      title: 'Chine : Denis Sassou-Nguesso reçu par Vladimir Poutine à Pékin',
-      date: '04 Septembre 2025',
-    ),
-    (
-      image: AppAssets.news3,
-      title:
-          'France - Congo : Macron reçoit Denis Sassou N\'Guesso à l\'Élysée',
-      date: '04 Septembre 2025',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -95,7 +74,7 @@ class PressArticlesSection extends StatelessWidget {
     }
     final apiArticles = articles ?? [];
     final useApi = apiArticles.isNotEmpty;
-    final count = useApi ? apiArticles.length : _staticArticles.length;
+    final count = useApi ? apiArticles.length : 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,14 +91,14 @@ class PressArticlesSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: count,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            if (useApi) {
+        if (count > 0)
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: count,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
               final article = apiArticles[index];
               final imagePath =
                   article.firstImageUrl ?? AppAssets.defaultImageArticle;
@@ -127,8 +106,11 @@ class PressArticlesSection extends StatelessWidget {
               final cat = article.categories.isNotEmpty
                   ? article.categories.first
                   : null;
-              final tag = displayTag ??
-                  (context.read<CategoriesProvider>().getDisplayNameForCategory(cat) ??
+              final tag =
+                  displayTag ??
+                  (context.read<CategoriesProvider>().getDisplayNameForCategory(
+                        cat,
+                      ) ??
                       cat?.name ??
                       AppStrings.news);
               final selectedArticle = SelectedArticle(
@@ -164,48 +146,8 @@ class PressArticlesSection extends StatelessWidget {
                       )
                     : null,
               );
-            }
-            final item = _staticArticles[index];
-            final selectedArticle = SelectedArticle(
-              title: item.title,
-              date: item.date,
-              imagePath: item.image,
-            );
-            final heroTag = ArticleDetailArgs.heroTagFor(
-              imagePath: item.image,
-              title: item.title,
-              date: item.date,
-              sourceId: 'press',
-              index: index,
-            );
-            return _PressArticleTile(
-              imagePath: item.image,
-              title: item.title,
-              date: item.date,
-              heroTag: heroTag,
-              showPlayButton: false,
-              isStarSelected:
-                  selectionService?.contains(selectedArticle) ?? false,
-              onStarTap: selectionService != null
-                  ? () => selectionService!.toggle(selectedArticle)
-                  : null,
-              onTap: onArticleTap != null
-                  ? () => onArticleTap!(
-                      ArticleDetailArgs(
-                        title: item.title,
-                        date: item.date,
-                        tag: AppStrings.news,
-                        body: AppStrings.articleBodySample,
-                        imagePath: item.image,
-                        isVideo: false,
-                        isHeroOrFeatured: false,
-                        heroTagOverride: heroTag,
-                      ),
-                    )
-                  : null,
-            );
-          },
-        ),
+            },
+          ),
       ],
     );
   }

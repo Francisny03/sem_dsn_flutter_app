@@ -48,10 +48,8 @@ class _BibliographiePageState extends State<BibliographiePage> {
         final loading = booksProvider.loading;
         final useApiBooks = books.isNotEmpty;
 
-        return RefreshIndicator(
-          onRefresh: () => booksProvider.load(),
-          child: NestedScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+        return NestedScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
             SliverToBoxAdapter(
               child: Padding(
@@ -67,28 +65,14 @@ class _BibliographiePageState extends State<BibliographiePage> {
                 ),
               ),
             ),
-            // --- TABS (caché) ---
-            // SliverPersistentHeader(
-            //   pinned: true,
-            //   delegate: _StickyTabBarDelegate(
-            //     child: _BibliographyTabBar(controller: _tabController),
-            //   ),
-            // ),
           ],
-          body: _LivresTabContent(
-            loading: loading,
-            useApiBooks: useApiBooks,
-            books: books,
-          ),
-          // --- TABS (caché) : TabBarView avec Livres + Revues ---
-          // body: TabBarView(
-          //   controller: _tabController,
-          //   physics: const BouncingScrollPhysics(),
-          //   children: [
-          //     _LivresTabContent(loading: loading, useApiBooks: useApiBooks, books: books),
-          //     const _RevuesTabContent(),
-          //   ],
-          // ),
+          body: RefreshIndicator(
+            onRefresh: () => booksProvider.load(),
+            child: _LivresTabContent(
+              loading: loading,
+              useApiBooks: useApiBooks,
+              books: books,
+            ),
           ),
         );
       },

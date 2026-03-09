@@ -5,19 +5,27 @@ import 'package:sem_dsn/core/constants/app_assets.dart';
 
 /// Affiche une image depuis un chemin asset ou une URL (avec cache pour le réseau).
 /// Si [path] est vide, affiche le placeholder [AppAssets.defaultImageArticle].
+/// [cacheKey] : clé stable pour le cache (recommandé en photothèque pour réouverture d'album).
+/// [memCacheWidth] / [memCacheHeight] : taille en cache mémoire (ex. 400 pour miniatures = plus d'images gardées en mémoire).
 class ImageFromPath extends StatelessWidget {
   const ImageFromPath({
     super.key,
     required this.path,
+    this.cacheKey,
     this.fit = BoxFit.cover,
     this.width,
     this.height,
+    this.memCacheWidth,
+    this.memCacheHeight,
   });
 
   final String path;
+  final String? cacheKey;
   final BoxFit fit;
   final double? width;
   final double? height;
+  final int? memCacheWidth;
+  final int? memCacheHeight;
 
   String get _effectivePath =>
       path.trim().isEmpty ? AppAssets.defaultImageArticle : path;
@@ -33,9 +41,13 @@ class ImageFromPath extends StatelessWidget {
     if (_isNetwork) {
       return CachedNetworkImage(
         imageUrl: p,
+        cacheKey: cacheKey ?? p,
         fit: fit,
         width: width,
         height: height,
+        memCacheWidth: memCacheWidth,
+        memCacheHeight: memCacheHeight,
+        fadeInDuration: Duration.zero,
         placeholder: (_, __) => SizedBox(
           width: width,
           height: height,

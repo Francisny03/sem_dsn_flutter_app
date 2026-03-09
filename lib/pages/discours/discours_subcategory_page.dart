@@ -108,22 +108,7 @@ class _DiscoursSubcategoryPageState extends State<DiscoursSubcategoryPage> {
               ),
             ),
           ),
-          if (items.isEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Center(
-                  child: Text(
-                    AppStrings.noArticlesYet,
-                    style: TextStyle(
-                      fontSize: AppFontSizes.sectionTitle,
-                      color: AppColors.primaryColor,
-                    ),
-                  ),
-                ),
-              ),
-            )
-          else
+          if (items.isNotEmpty)
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
               sliver: SliverList(
