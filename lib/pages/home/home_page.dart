@@ -326,6 +326,10 @@ class _HomePageState extends State<HomePage> {
                                               : null,
                                           loading: homeSectionsLoading,
                                           sectionTitle: featuredSectionTitle,
+                                          displayTag: isActualitesTab
+                                              ? null
+                                              : parentCategories[selectedIndex]
+                                                    .name,
                                           selectionService: selectionService,
                                           onArticleTap: (args) =>
                                               _openArticle(args),
@@ -337,6 +341,10 @@ class _HomePageState extends State<HomePage> {
                                               : null,
                                           loading: homeSectionsLoading,
                                           sectionTitle: pressSectionTitle,
+                                          displayTag: isActualitesTab
+                                              ? null
+                                              : parentCategories[selectedIndex]
+                                                    .name,
                                           selectionService: selectionService,
                                           onArticleTap: (args) =>
                                               _openArticle(args),
@@ -365,10 +373,7 @@ class _HomePageState extends State<HomePage> {
                                   : OverlayCardListFromArticles(
                                       key: const ValueKey<String>('overlay'),
                                       articles: overlayChildArticles,
-                                      tag: parentCategories[selectedIndex]
-                                          .children
-                                          .first
-                                          .name,
+                                      tag: parentCategories[selectedIndex].name,
                                       selectionService: selectionService,
                                       onArticleTap: _openArticle,
                                     )

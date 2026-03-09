@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_font_sizes.dart';
@@ -6,6 +7,7 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/models/article.dart';
+import 'package:sem_dsn/providers/categories_provider.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
@@ -20,6 +22,7 @@ class PressArticlesSection extends StatelessWidget {
     this.articles,
     this.loading = false,
     this.sectionTitle,
+    this.displayTag,
     this.selectionService,
     this.onArticleTap,
   });
@@ -31,6 +34,9 @@ class PressArticlesSection extends StatelessWidget {
 
   /// Si fourni (ex. nom de la sous-catégorie API), remplace le titre par défaut.
   final String? sectionTitle;
+
+  /// Tag affiché (ex. nom du parent). Si fourni, utilisé pour les articles au lieu de la catégorie de l'article.
+  final String? displayTag;
   final SelectionService? selectionService;
   final void Function(ArticleDetailArgs args)? onArticleTap;
 
@@ -118,9 +124,13 @@ class PressArticlesSection extends StatelessWidget {
               final imagePath =
                   article.firstImageUrl ?? AppAssets.defaultImageArticle;
               final date = Article.formatDisplayDate(article.articleDate);
-              final tag = article.categories.isNotEmpty
-                  ? article.categories.first.name
-                  : AppStrings.news;
+              final cat = article.categories.isNotEmpty
+                  ? article.categories.first
+                  : null;
+              final tag = displayTag ??
+                  (context.read<CategoriesProvider>().getDisplayNameForCategory(cat) ??
+                      cat?.name ??
+                      AppStrings.news);
               final selectedArticle = SelectedArticle(
                 title: article.title,
                 date: date,

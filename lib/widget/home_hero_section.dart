@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_border_radius.dart';
 import 'package:sem_dsn/core/constants/app_padding.dart';
@@ -9,6 +10,7 @@ import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/models/article.dart';
+import 'package:sem_dsn/providers/categories_provider.dart';
 import 'package:sem_dsn/services/selection_service.dart';
 import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/congolese_flag_painter.dart';
@@ -409,9 +411,12 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                         Article? apiArticle;
                         if (useApi) {
                           apiArticle = widget.articles![index];
-                          final tag = apiArticle.categories.isNotEmpty
-                              ? apiArticle.categories.first.name
-                              : AppStrings.news;
+                          final cat = apiArticle.categories.isNotEmpty
+                              ? apiArticle.categories.first
+                              : null;
+                          final tag = context.read<CategoriesProvider>().getDisplayNameForCategory(cat) ??
+                              cat?.name ??
+                              AppStrings.news;
                           slide = _HeroSlide(
                             title: apiArticle.title,
                             date: Article.formatDisplayDate(
@@ -436,9 +441,12 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                           onTap: () {
                             if (apiArticle != null &&
                                 widget.onCardTap != null) {
-                              final tag = apiArticle.categories.isNotEmpty
-                                  ? apiArticle.categories.first.name
-                                  : AppStrings.news;
+                              final cat = apiArticle.categories.isNotEmpty
+                                  ? apiArticle.categories.first
+                                  : null;
+                              final tag = context.read<CategoriesProvider>().getDisplayNameForCategory(cat) ??
+                                  cat?.name ??
+                                  AppStrings.news;
                               widget.onCardTap!(
                                 ArticleDetailArgs.fromArticle(
                                   apiArticle,

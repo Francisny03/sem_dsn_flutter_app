@@ -19,9 +19,30 @@ List<Category> _sortParentCategories(List<Category> list) {
 class CategoriesProvider extends ChangeNotifier {
   List<Category> _parentCategories = [];
   bool _loading = false;
+  final Map<int, String> _categoryIdToDisplayName = {};
 
   List<Category> get parentCategories => _parentCategories;
   bool get loading => _loading;
+
+  /// Nom à afficher pour une catégorie : si elle a un parent (parent_id != null), retourne le nom du parent.
+  String? getDisplayNameForCategory(Category? category) {
+    if (category == null) return null;
+    if (category.parentId == null) return category.name;
+    return _categoryIdToDisplayName[category.id] ?? category.name;
+  }
+
+  String? getDisplayNameForCategoryId(int categoryId) =>
+      _categoryIdToDisplayName[categoryId];
+
+  void _buildCategoryDisplayNames() {
+    _categoryIdToDisplayName.clear();
+    for (final parent in _parentCategories) {
+      _categoryIdToDisplayName[parent.id] = parent.name;
+      for (final child in parent.children) {
+        _categoryIdToDisplayName[child.id] = parent.name;
+      }
+    }
+  }
 
   /// Charge les catégories si pas déjà chargées. À appeler au premier affichage du home.
   Future<void> loadIfNeeded() async {
@@ -42,8 +63,10 @@ class CategoriesProvider extends ChangeNotifier {
           .where((c) => c.slug != 'actualites' && c.id != 3)
           .toList();
       _parentCategories = [getActualitesCategory(), ...withoutActualites];
+      _buildCategoryDisplayNames();
     } catch (_) {
       _parentCategories = _sortParentCategories(getFallbackCategories());
+      _buildCategoryDisplayNames();
     } finally {
       _loading = false;
       notifyListeners();
