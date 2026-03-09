@@ -19,6 +19,12 @@ String? getYoutubeVideoId(String path) {
     final id = uri.queryParameters['v'];
     return (id != null && id.isNotEmpty) ? id : null;
   }
+  // YouTube Shorts : https://www.youtube.com/shorts/VIDEO_ID
+  if (uri.host.contains('youtube.com') &&
+      uri.pathSegments.length >= 2 &&
+      uri.pathSegments[0] == 'shorts') {
+    return uri.pathSegments[1];
+  }
   if (uri.host == 'youtu.be' && uri.pathSegments.isNotEmpty) {
     return uri.pathSegments.first;
   }
