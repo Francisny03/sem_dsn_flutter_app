@@ -11,21 +11,37 @@ const String kYoutubeTestUrl =
 /// Indique si [path] est une URL YouTube.
 bool isYoutubeUrl(String path) => getYoutubeVideoId(path) != null;
 
-/// Extrait l’ID vidéo d’une URL YouTube (youtube.com/watch?v=xxx ou youtu.be/xxx).
+/// Indique si [path] est une URL YouTube Shorts (format vertical).
+bool isYoutubeShortsUrl(String path) {
+  final uri = Uri.tryParse(path.trim());
+  if (uri == null) return false;
+  if (!uri.host.toLowerCase().contains('youtube.com')) return false;
+  return RegExp(r'^/shorts/[^/?]+').hasMatch(uri.path) ||
+      (uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'shorts');
+}
+
+/// Extrait l’ID vidéo d’une URL YouTube (youtube.com/watch?v=xxx, Shorts, youtu.be/xxx).
 String? getYoutubeVideoId(String path) {
-  final uri = Uri.tryParse(path);
+  final trimmed = path.trim();
+  if (trimmed.isEmpty) return null;
+  final uri = Uri.tryParse(trimmed);
   if (uri == null) return null;
-  if (uri.host.contains('youtube.com') && uri.path == '/watch') {
-    final id = uri.queryParameters['v'];
-    return (id != null && id.isNotEmpty) ? id : null;
+  final host = uri.host.toLowerCase();
+  final pathStr = uri.path;
+
+  if (host.contains('youtube.com')) {
+    if (pathStr == '/watch') {
+      final id = uri.queryParameters['v'];
+      return (id != null && id.isNotEmpty) ? id : null;
+    }
+    // YouTube Shorts : /shorts/VIDEO_ID (ou /shorts/VIDEO_ID/)
+    final shortsMatch = RegExp(r'^/shorts/([^/?]+)').firstMatch(pathStr);
+    if (shortsMatch != null) return shortsMatch.group(1);
+    if (uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'shorts') {
+      return uri.pathSegments[1];
+    }
   }
-  // YouTube Shorts : https://www.youtube.com/shorts/VIDEO_ID
-  if (uri.host.contains('youtube.com') &&
-      uri.pathSegments.length >= 2 &&
-      uri.pathSegments[0] == 'shorts') {
-    return uri.pathSegments[1];
-  }
-  if (uri.host == 'youtu.be' && uri.pathSegments.isNotEmpty) {
+  if (host == 'youtu.be' && uri.pathSegments.isNotEmpty) {
     return uri.pathSegments.first;
   }
   return null;
@@ -74,22 +90,42 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
   @override
   void initState() {
     super.initState();
-    final videoId = getYoutubeVideoId(widget.videoPath);
-    if (videoId != null) {
-      final startAt = getYoutubeStartSeconds(widget.videoPath);
-      _youtubeController = YoutubePlayerController(
-        initialVideoId: videoId,
-        flags: YoutubePlayerFlags(
-          autoPlay: widget.autoPlay,
-          mute: false,
-          startAt: startAt ?? 0,
-        ),
-      )..addListener(_onControllerUpdate);
-    }
+    _syncController();
   }
 
   void _onControllerUpdate() {
     if (mounted) setState(() {});
+  }
+
+  void _syncController() {
+    final videoId = getYoutubeVideoId(widget.videoPath);
+    if (videoId == null) {
+      _youtubeController?.removeListener(_onControllerUpdate);
+      _youtubeController?.dispose();
+      _youtubeController = null;
+      if (mounted) setState(() {});
+      return;
+    }
+    _youtubeController?.removeListener(_onControllerUpdate);
+    _youtubeController?.dispose();
+    final startAt = getYoutubeStartSeconds(widget.videoPath);
+    _youtubeController = YoutubePlayerController(
+      initialVideoId: videoId,
+      flags: YoutubePlayerFlags(
+        autoPlay: widget.autoPlay,
+        mute: false,
+        startAt: startAt ?? 0,
+      ),
+    )..addListener(_onControllerUpdate);
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didUpdateWidget(covariant ArticleVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoPath != widget.videoPath) {
+      _syncController();
+    }
   }
 
   @override
@@ -127,20 +163,32 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
 
     final c = _youtubeController!;
     final controlsVisible = c.value.isControlsVisible;
+    final isShorts = isYoutubeShortsUrl(widget.videoPath);
+    final media = MediaQuery.sizeOf(context);
+    // Shorts : conteneur vertical 9:16 (largeur × 16/9), plafonné à 70 % de l’écran
+    final containerHeight = isShorts
+        ? (media.width * (16 / 9)).clamp(widget.height, media.height * 0.7)
+        : widget.height;
 
     return SizedBox(
-      height: widget.height,
+      height: containerHeight,
       width: double.infinity,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Zone vidéo 16:9 pour aligner les seek sur le bouton play
-          final videoHeight = constraints.maxWidth * 9 / 16;
-          final h = videoHeight.clamp(0.0, constraints.maxHeight);
+          // Shorts : toute la hauteur du conteneur. Watch : zone 16:9
+          final videoHeight = isShorts
+              ? constraints.maxHeight
+              : (constraints.maxWidth * 9 / 16).clamp(
+                  0.0,
+                  constraints.maxHeight,
+                );
+          final h = videoHeight;
           return Stack(
             clipBehavior: Clip.none,
             children: [
               YoutubePlayer(
                 controller: c,
+                aspectRatio: isShorts ? 9 / 16 : 16 / 9,
                 showVideoProgressIndicator: true,
                 progressIndicatorColor: AppColors.heroSelectionTag,
                 bottomActions: [
