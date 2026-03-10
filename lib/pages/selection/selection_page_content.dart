@@ -8,7 +8,6 @@ import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/core/animation/selection_star_animation.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
-import 'package:sem_dsn/widget/article_detail_args.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
 
 /// Contenu de l’onglet Sélection : titre, sous-titre "Articles de presse", liste des articles

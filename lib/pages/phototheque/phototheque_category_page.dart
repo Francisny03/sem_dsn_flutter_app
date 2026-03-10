@@ -106,6 +106,8 @@ class _PhotothequeCategoryPageState extends State<PhotothequeCategoryPage> {
                                         .toList(),
                                     initialIndex: index,
                                     imageCaptions: images.map((e) => e.name).toList(),
+                                    albumTitle: widget.title,
+                                    galleryId: widget.galleryId,
                                   ),
                                 ),
                               );

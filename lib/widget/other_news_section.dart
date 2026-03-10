@@ -202,7 +202,7 @@ class _OtherNewsTileState extends State<OtherNewsTile> {
                               padding: const EdgeInsets.all(3),
                               child: AnimatedSelectionStar(
                                 isSelected: isStarSelected,
-                                onTap: onStarTap!,
+                                onTap: onStarTap,
                                 selectedColor: AppColors.heroSelectionTag,
                                 unselectedColor: AppColors.grayTextColor,
                                 size: 14,
