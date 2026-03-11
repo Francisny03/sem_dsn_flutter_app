@@ -44,7 +44,7 @@ class ImageFromPath extends StatelessWidget {
         cacheKey: cacheKey ?? p,
         fit: fit,
         width: width,
-        height: 10,
+        height: height,
         memCacheWidth: memCacheWidth,
         memCacheHeight: memCacheHeight,
         fadeInDuration: Duration.zero,
