@@ -23,6 +23,12 @@ class LiveProvider extends ChangeNotifier {
   /// Recap = même URL pour l’instant (quand status == ended).
   String get recapVideoUrl => _currentLive?.url ?? '';
 
+  /// True si le direct actuel est un flux HLS (pas YouTube).
+  bool get isHlsLive =>
+      _currentLive != null &&
+      (_currentLive!.platform.toUpperCase() == 'HLS' ||
+          _currentLive!.url.trim().toLowerCase().endsWith('.m3u8'));
+
   /// Charge la config si pas déjà chargée (au démarrage).
   Future<void> loadIfNeeded() async {
     if (_loading || _currentLive != null) return;

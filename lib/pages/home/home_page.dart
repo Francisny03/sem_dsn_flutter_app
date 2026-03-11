@@ -101,28 +101,50 @@ class _HomePageState extends State<HomePage> {
     final recapUrl = liveProvider.recapVideoUrl;
 
     if (isLive && liveUrl.isNotEmpty) {
-      final videoId = getYoutubeVideoId(liveUrl);
-      if (videoId != null) {
+      final isHls =
+          liveProvider.isHlsLive ||
+          liveUrl.trim().toLowerCase().endsWith('.m3u8');
+      if (isHls) {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) =>
-                LiveReplayPlayerPage(isLive: true, videoId: videoId),
+                LiveReplayPlayerPage(isLive: true, streamUrl: liveUrl),
           ),
         );
+      } else {
+        final videoId = getYoutubeVideoId(liveUrl);
+        if (videoId != null) {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  LiveReplayPlayerPage(isLive: true, videoId: videoId),
+            ),
+          );
+        }
       }
     } else if (recapUrl.isNotEmpty) {
-      final videoId = getYoutubeVideoId(recapUrl);
-      if (videoId != null) {
-        final startAt = getYoutubeStartSeconds(recapUrl) ?? 0;
+      final isHlsRecap = recapUrl.trim().toLowerCase().endsWith('.m3u8');
+      if (isHlsRecap) {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => LiveReplayPlayerPage(
-              isLive: false,
-              videoId: videoId,
-              startAtSeconds: startAt,
-            ),
+            builder: (_) =>
+                LiveReplayPlayerPage(isLive: false, streamUrl: recapUrl),
           ),
         );
+      } else {
+        final videoId = getYoutubeVideoId(recapUrl);
+        if (videoId != null) {
+          final startAt = getYoutubeStartSeconds(recapUrl) ?? 0;
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => LiveReplayPlayerPage(
+                isLive: false,
+                videoId: videoId,
+                startAtSeconds: startAt,
+              ),
+            ),
+          );
+        }
       }
     }
   }
