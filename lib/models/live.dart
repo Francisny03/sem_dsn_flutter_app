@@ -12,6 +12,8 @@ class Live {
     required this.createdAt,
     required this.updatedAt,
     this.scheduledAt,
+    this.image,
+    this.title,
   });
 
   final int id;
@@ -24,6 +26,12 @@ class Live {
 
   /// Date/heure prévue du direct (pour plus tard).
   final String? scheduledAt;
+
+  /// Image pour la carte hero (backend: live_image).
+  final String? image;
+
+  /// Titre pour la carte hero (backend: live_title).
+  final String? title;
 
   bool get isLive => status == LiveStatus.live;
   bool get isScheduled => status == LiveStatus.scheduled;
@@ -55,6 +63,8 @@ class Live {
       createdAt: json['created_at'] as String? ?? '',
       updatedAt: json['updated_at'] as String? ?? '',
       scheduledAt: json['scheduled_at'] as String?,
+      image: (json['live_image'] ?? json['image']) as String?,
+      title: (json['live_title'] ?? json['title']) as String?,
     );
   }
 }

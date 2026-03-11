@@ -36,6 +36,9 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
   late Animation<double> _pulseAnimation;
 
   bool _isFullscreen = false;
+
+  /// Retour en cours : on cache le lecteur pour éviter le rectangle pendant la transition (live et replay).
+  bool _isPopping = false;
   BetterPlayerController? _betterPlayerController;
   YoutubePlayerController? _youtubeController;
 
@@ -135,65 +138,89 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     if (mounted) setState(() => _isFullscreen = false);
   }
 
+  void _onBack() {
+    if (_isFullscreen) _exitFullscreen();
+    _betterPlayerController?.pause();
+    _youtubeController?.pause();
+    setState(() => _isPopping = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final ratio = widget.isLive
         ? (LiveConfig.liveStreamIsVertical ? 9 / 16 : 16 / 9)
         : (LiveConfig.recapVideoIsVertical ? 9 / 16 : 16 / 9);
 
-    return Scaffold(
-      backgroundColor: _isFullscreen ? Colors.black : AppColors.bg,
-      appBar: _isFullscreen
-          ? null
-          : AppBar(
-              backgroundColor: AppColors.bg,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, size: 22),
-                color: AppColors.blackIcon,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              title: _PulsingLiveLabel(
-                isLive: widget.isLive,
-                pulseAnimation: _pulseAnimation,
-              ),
-              centerTitle: true,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.share, size: 22),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack();
+      },
+      child: Scaffold(
+        backgroundColor: _isFullscreen ? Colors.black : AppColors.bg,
+        appBar: _isFullscreen
+            ? null
+            : AppBar(
+                backgroundColor: AppColors.bg,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new, size: 22),
                   color: AppColors.blackIcon,
-                  onPressed: _share,
+                  onPressed: _onBack,
                 ),
-              ],
-            ),
-      body: _isFullscreen
-          ? Stack(
-              fit: StackFit.expand,
-              children: [
-                Center(
-                  child: AspectRatio(aspectRatio: ratio, child: _buildPlayer()),
+                title: _PulsingLiveLabel(
+                  isLive: widget.isLive,
+                  pulseAnimation: _pulseAnimation,
                 ),
-                SafeArea(
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      onPressed: _closeFullscreen,
-                    ),
+                centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.share, size: 22),
+                    color: AppColors.blackIcon,
+                    onPressed: _share,
                   ),
-                ),
-              ],
-            )
-          : SafeArea(
-              child: Center(
-                child: AspectRatio(aspectRatio: ratio, child: _buildPlayer()),
+                ],
               ),
-            ),
+        body: _isPopping
+            ? Container(color: _isFullscreen ? Colors.black : AppColors.bg)
+            : (_isFullscreen
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Center(
+                          child: AspectRatio(
+                            aspectRatio: ratio,
+                            child: _buildPlayer(),
+                          ),
+                        ),
+                        SafeArea(
+                          child: Align(
+                            alignment: Alignment.topRight,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                              onPressed: _closeFullscreen,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : SafeArea(
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: ratio,
+                          child: _buildPlayer(),
+                        ),
+                      ),
+                    )),
+      ),
     );
   }
 

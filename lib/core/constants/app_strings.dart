@@ -157,7 +157,9 @@ class AppStrings {
 
   // Live
   static const String liveTitle = 'En direct';
-  static const String liveDescription =
-      'Vous pouvez maintenant voir la visite du Président de la République en direct';
+
+  /// Titre par défaut de la carte hero live (si le backend n’envoie pas de titre).
+  static const String liveHeroDefaultTitle = 'Suivez le live';
+  static const String liveDescription = 'Cliquez pour voir en direct';
   static const String liveButton = 'Voir la visite';
 }

@@ -166,8 +166,9 @@ class _HomePageState extends State<HomePage> {
       });
     }
     final articles = articlesProvider.articles;
-    // Hero = toujours les 5 derniers articles toutes catégories (tri par date décroissante).
-    final heroArticles = _lastNArticlesByDate(articles, 5);
+    final hasLiveContent = liveProvider.hasLiveContent;
+    // Hero = si live actif : 1 slide live + 4 articles ; sinon 5 derniers articles.
+    final heroArticles = _lastNArticlesByDate(articles, hasLiveContent ? 4 : 5);
 
     // Charger les articles par catégorie pour l’onglet sélectionné (Réalisations, ou overlay 1 enfant ex. Discours).
     if (parentCategories.isNotEmpty &&
@@ -307,6 +308,10 @@ class _HomePageState extends State<HomePage> {
                       loading: articlesProvider.loading,
                       selectionService: selectionService,
                       onCardTap: (args) => _openArticle(args),
+                      hasLiveContent: hasLiveContent,
+                      liveImageUrl: liveProvider.currentLive?.image,
+                      liveTitle: liveProvider.currentLive?.title,
+                      onLiveTap: hasLiveContent ? _onLivePressed : null,
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 20)),
