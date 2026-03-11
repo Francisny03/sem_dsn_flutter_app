@@ -33,4 +33,7 @@ class ApiConfig {
 
   static String galleries() => '$baseUrl/galleries';
   static String galleryImages(int galleryId) => '$baseUrl/galleries/$galleryId/images';
+
+  /// Config du direct (un seul live par app).
+  static String lives() => '$baseUrl/lives';
 }

@@ -10,10 +10,18 @@ import 'package:sem_dsn/widget/header_menu.dart';
 class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
+    this.hasLiveContent,
+    this.isLiveInProgress,
     this.onSearchPressed,
     this.onNotificationsPressed,
     this.onLivePressed,
   });
+
+  /// Afficher l’icône live (si null, utilise [LiveConfig.hasLiveContent]).
+  final bool? hasLiveContent;
+
+  /// En direct → icône clignotante (si null, utilise [LiveConfig.isLiveInProgress]).
+  final bool? isLiveInProgress;
 
   /// Appelé au tap sur l'icône recherche (ex: ouvre la page recherche Photothèque).
   final VoidCallback? onSearchPressed;
@@ -21,7 +29,7 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
   /// Appelé au tap sur l'icône cloche (ex: ouvre la page Notifications).
   final VoidCallback? onNotificationsPressed;
 
-  /// Appelé au tap sur l'icône live (ouvre live HLS ou recap YouTube selon config).
+  /// Appelé au tap sur l'icône live (ouvre live ou recap selon config).
   final VoidCallback? onLivePressed;
 
   @override
@@ -37,9 +45,9 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
   late final AnimationController _liveBlinkController;
   late final Animation<double> _liveBlinkAnimation;
 
-  static bool get _showLiveIcon =>
-      LiveConfig.liveStreamUrl.isNotEmpty ||
-      LiveConfig.recapVideoUrl.isNotEmpty;
+  bool get _showLiveIcon => widget.hasLiveContent ?? LiveConfig.hasLiveContent;
+  bool get _isLiveInProgress =>
+      widget.isLiveInProgress ?? LiveConfig.isLiveInProgress;
 
   @override
   void initState() {
@@ -159,8 +167,8 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
               children: [
                 if (_showLiveIcon && widget.onLivePressed != null)
                   _LiveHeaderIcon(
-                    isLiveInProgress: LiveConfig.isLiveInProgress,
-                    blinkAnimation: LiveConfig.isLiveInProgress
+                    isLiveInProgress: _isLiveInProgress,
+                    blinkAnimation: _isLiveInProgress
                         ? _liveBlinkAnimation
                         : null,
                     onPressed: widget.onLivePressed!,

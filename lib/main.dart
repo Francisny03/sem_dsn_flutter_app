@@ -10,6 +10,7 @@ import 'package:sem_dsn/providers/books_provider.dart';
 import 'package:sem_dsn/providers/categories_provider.dart';
 import 'package:sem_dsn/providers/galleries_provider.dart';
 import 'package:sem_dsn/providers/home_articles_provider.dart';
+import 'package:sem_dsn/providers/live_provider.dart';
 import 'package:sem_dsn/providers/press_articles_cache_provider.dart';
 import 'package:sem_dsn/services/read_articles_service.dart';
 import 'package:sem_dsn/services/selection_service.dart';
@@ -42,6 +43,7 @@ class SemDsnApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HomeArticlesProvider()),
         ChangeNotifierProvider(create: (_) => BooksProvider()),
         ChangeNotifierProvider(create: (_) => GalleriesProvider()),
+        ChangeNotifierProvider(create: (_) => LiveProvider()),
         ChangeNotifierProvider(create: (_) => PressArticlesCacheProvider()),
       ],
       child: MaterialApp(

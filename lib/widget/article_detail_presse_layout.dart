@@ -51,152 +51,164 @@ class _ArticleDetailPresseLayoutState extends State<ArticleDetailPresseLayout> {
   /// true = afficher le lecteur vidéo dans la page (après tap sur play).
   bool _showVideoPlayer = false;
 
+  void _onBack() {
+    if (_showVideoPlayer) {
+      _videoPlayerKey.currentState?.pause();
+      setState(() => _isPopping = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).pop();
+      });
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = widget.args;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: AppColors.bg,
-        appBar: AppBar(
+      child: PopScope(
+        canPop: !_showVideoPlayer,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _onBack();
+        },
+        child: Scaffold(
           backgroundColor: AppColors.bg,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          toolbarHeight: kToolbarHeight,
-          leadingWidth: 48,
-          titleSpacing: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 22),
-            color: AppColors.blackIcon,
-            onPressed: () {
-              if (_showVideoPlayer) {
-                _videoPlayerKey.currentState?.pause();
-                setState(() => _isPopping = true);
-              }
-              Navigator.of(context).pop();
-            },
-            style: IconButton.styleFrom(
-              padding: const EdgeInsets.all(8),
-              minimumSize: const Size(40, 40),
-            ),
-          ),
-          title: widget.showTitleInAppBar
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    args.title,
-                    style: const TextStyle(
-                      color: AppColors.onSurfaceLight,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-              : null,
-          centerTitle: true,
-          actions: [
-            DetailAppBarStar(
-              isSelected: widget.isStarSelected,
-              onTap: widget.onStarTap,
-              iconColor: AppColors.blackIcon,
-            ),
-            Builder(
-              builder: (buttonContext) => IconButton(
-                icon: const Icon(Icons.share, size: 22),
-                color: AppColors.blackIcon,
-                onPressed: () => widget.onShare(buttonContext),
-                style: IconButton.styleFrom(
-                  padding: const EdgeInsets.all(8),
-                  minimumSize: const Size(40, 40),
-                ),
+          appBar: AppBar(
+            backgroundColor: AppColors.bg,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            toolbarHeight: kToolbarHeight,
+            leadingWidth: 48,
+            titleSpacing: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, size: 22),
+              color: AppColors.blackIcon,
+              onPressed: _onBack,
+              style: IconButton.styleFrom(
+                padding: const EdgeInsets.all(8),
+                minimumSize: const Size(40, 40),
               ),
             ),
-          ],
-        ),
-        body: CustomScrollView(
-          controller: widget.scrollController,
-          slivers: [
-            SliverToBoxAdapter(
-              child: _showVideoPlayer && args.isVideo
-                  ? (_isPopping
-                      ? Container(
+            title: widget.showTitleInAppBar
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      args.title,
+                      style: const TextStyle(
+                        color: AppColors.onSurfaceLight,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                : null,
+            centerTitle: true,
+            actions: [
+              DetailAppBarStar(
+                isSelected: widget.isStarSelected,
+                onTap: widget.onStarTap,
+                iconColor: AppColors.blackIcon,
+              ),
+              Builder(
+                builder: (buttonContext) => IconButton(
+                  icon: const Icon(Icons.share, size: 22),
+                  color: AppColors.blackIcon,
+                  onPressed: () => widget.onShare(buttonContext),
+                  style: IconButton.styleFrom(
+                    padding: const EdgeInsets.all(8),
+                    minimumSize: const Size(40, 40),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          body: CustomScrollView(
+            controller: widget.scrollController,
+            slivers: [
+              SliverToBoxAdapter(
+                child: _showVideoPlayer && args.isVideo
+                    ? (_isPopping
+                          ? Container(
+                              height: _imageHeight,
+                              width: double.infinity,
+                              color: AppColors.bg,
+                            )
+                          : ArticleVideoPlayer(
+                              key: _videoPlayerKey,
+                              videoPath: args.videoPath ?? kYoutubeTestUrl,
+                              height: _imageHeight,
+                              autoPlay: true,
+                              heroTagForPlay: args.heroTagVideoPlay,
+                            ))
+                    : GestureDetector(
+                        onTap: args.isVideo && args.videoPath != null
+                            ? () => setState(() => _showVideoPlayer = true)
+                            : null,
+                        child: SizedBox(
                           height: _imageHeight,
                           width: double.infinity,
-                          color: AppColors.bg,
-                        )
-                      : ArticleVideoPlayer(
-                          key: _videoPlayerKey,
-                          videoPath: args.videoPath ?? kYoutubeTestUrl,
-                          height: _imageHeight,
-                          autoPlay: true,
-                          heroTagForPlay: args.heroTagVideoPlay,
-                        ))
-                  : GestureDetector(
-                      onTap: args.isVideo && args.videoPath != null
-                          ? () => setState(() => _showVideoPlayer = true)
-                          : null,
-                      child: SizedBox(
-                        height: _imageHeight,
-                        width: double.infinity,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Hero(
-                              tag: args.heroTag,
-                              child: ImageFromPath(
-                                path: args.imagePath,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Hero(
+                                tag: args.heroTag,
+                                child: ImageFromPath(
+                                  path: args.imagePath,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                ),
                               ),
-                            ),
-                            if (args.isVideo)
-                              Center(
-                                child: Hero(
-                                  tag: args.heroTagVideoPlay,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.black.withValues(
-                                        alpha: 0.5,
+                              if (args.isVideo)
+                                Center(
+                                  child: Hero(
+                                    tag: args.heroTagVideoPlay,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.black.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.play_arrow,
-                                      color: AppColors.whiteTextColor,
-                                      size: 40,
+                                      child: const Icon(
+                                        Icons.play_arrow,
+                                        color: AppColors.whiteTextColor,
+                                        size: 40,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-            ),
-            SliverToBoxAdapter(
-              child: ArticleContentCard(
-                title: args.title,
-                date: args.date,
-                tag: args.tag,
-                body: args.body,
-                bodyHtml: args.bodyHtml,
-                showTagTitleDate: true,
-                sources: args.sources,
               ),
-            ),
-            if (args.showOtherNews)
-              ...buildOtherNewsSlivers(
-                context,
-                selectionService: context.read<SelectionService>(),
-                onArticleTap: widget.onOtherNewsArticleTap,
+              SliverToBoxAdapter(
+                child: ArticleContentCard(
+                  title: args.title,
+                  date: args.date,
+                  tag: args.tag,
+                  body: args.body,
+                  bodyHtml: args.bodyHtml,
+                  showTagTitleDate: true,
+                  sources: args.sources,
+                ),
               ),
-            if (!args.showOtherNews)
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
+              if (args.showOtherNews)
+                ...buildOtherNewsSlivers(
+                  context,
+                  selectionService: context.read<SelectionService>(),
+                  onArticleTap: widget.onOtherNewsArticleTap,
+                ),
+              if (!args.showOtherNews)
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          ),
         ),
       ),
     );

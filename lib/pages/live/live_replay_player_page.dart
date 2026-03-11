@@ -1,13 +1,12 @@
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
-import 'package:sem_dsn/pages/live/live_fullscreen_page.dart';
-import 'package:sem_dsn/widget/youtube_fullscreen_page.dart';
 import 'package:sem_dsn/widget/youtube_seek_buttons.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -36,6 +35,7 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
+  bool _isFullscreen = false;
   BetterPlayerController? _betterPlayerController;
   YoutubePlayerController? _youtubeController;
 
@@ -86,6 +86,7 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
 
   @override
   void dispose() {
+    if (_isFullscreen) _exitFullscreen();
     _pulseController.dispose();
     _betterPlayerController?.dispose();
     _youtubeController?.removeListener(_onYoutubeUpdate);
@@ -104,30 +105,34 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     }
   }
 
+  void _enterFullscreen() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  void _exitFullscreen() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  }
+
   void _openFullscreen() {
     if (widget.isLive &&
         widget.streamUrl != null &&
         widget.streamUrl!.isNotEmpty) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          fullscreenDialog: true,
-          builder: (_) => LiveFullscreenPage(streamUrl: widget.streamUrl!),
-        ),
-      );
+      setState(() => _isFullscreen = true);
+      _enterFullscreen();
     } else if (widget.videoId != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          fullscreenDialog: true,
-          builder: (_) => YoutubeFullscreenPage(
-            videoId: widget.videoId!,
-            startAtSeconds:
-                _youtubeController?.value.position.inSeconds ??
-                widget.startAtSeconds,
-            isRecap: true,
-          ),
-        ),
-      );
+      setState(() => _isFullscreen = true);
+      _enterFullscreen();
     }
+  }
+
+  void _closeFullscreen() {
+    _exitFullscreen();
+    if (mounted) setState(() => _isFullscreen = false);
   }
 
   @override
@@ -137,34 +142,58 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
         : (LiveConfig.recapVideoIsVertical ? 9 / 16 : 16 / 9);
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 22),
-          color: AppColors.blackIcon,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: _PulsingLiveLabel(
-          isLive: widget.isLive,
-          pulseAnimation: _pulseAnimation,
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share, size: 22),
-            color: AppColors.blackIcon,
-            onPressed: _share,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Center(
-          child: AspectRatio(aspectRatio: ratio, child: _buildPlayer()),
-        ),
-      ),
+      backgroundColor: _isFullscreen ? Colors.black : AppColors.bg,
+      appBar: _isFullscreen
+          ? null
+          : AppBar(
+              backgroundColor: AppColors.bg,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 22),
+                color: AppColors.blackIcon,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              title: _PulsingLiveLabel(
+                isLive: widget.isLive,
+                pulseAnimation: _pulseAnimation,
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.share, size: 22),
+                  color: AppColors.blackIcon,
+                  onPressed: _share,
+                ),
+              ],
+            ),
+      body: _isFullscreen
+          ? Stack(
+              fit: StackFit.expand,
+              children: [
+                Center(
+                  child: AspectRatio(aspectRatio: ratio, child: _buildPlayer()),
+                ),
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      onPressed: _closeFullscreen,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : SafeArea(
+              child: Center(
+                child: AspectRatio(aspectRatio: ratio, child: _buildPlayer()),
+              ),
+            ),
     );
   }
 
@@ -183,8 +212,8 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
               progressIndicatorColor: AppColors.heroSelectionTag,
               bottomActions: [
                 const SizedBox(width: 8),
-                CurrentPosition(),
-                const SizedBox(width: 8),
+                if (!widget.isLive) CurrentPosition(),
+                if (!widget.isLive) const SizedBox(width: 8),
                 ProgressBar(
                   isExpanded: true,
                   colors: ProgressBarColors(
@@ -192,8 +221,8 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
                     handleColor: AppColors.heroSelectionTag,
                   ),
                 ),
-                const SizedBox(width: 8),
-                RemainingDuration(),
+                if (!widget.isLive) const SizedBox(width: 8),
+                if (!widget.isLive) RemainingDuration(),
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(

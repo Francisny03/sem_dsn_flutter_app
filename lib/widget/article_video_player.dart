@@ -34,6 +34,12 @@ String? getYoutubeVideoId(String path) {
       final id = uri.queryParameters['v'];
       return (id != null && id.isNotEmpty) ? id : null;
     }
+    // YouTube Live : /live/VIDEO_ID
+    final liveMatch = RegExp(r'^/live/([^/?]+)').firstMatch(pathStr);
+    if (liveMatch != null) return liveMatch.group(1);
+    if (uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'live') {
+      return uri.pathSegments[1];
+    }
     // YouTube Shorts : /shorts/VIDEO_ID (ou /shorts/VIDEO_ID/)
     final shortsMatch = RegExp(r'^/shorts/([^/?]+)').firstMatch(pathStr);
     if (shortsMatch != null) return shortsMatch.group(1);

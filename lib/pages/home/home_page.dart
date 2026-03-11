@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/constants/category_display_layout.dart';
-import 'package:sem_dsn/core/constants/live_config.dart';
+import 'package:sem_dsn/providers/live_provider.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/article_detail/article_detail_page.dart';
 import 'package:sem_dsn/models/article.dart';
@@ -84,6 +84,7 @@ class _HomePageState extends State<HomePage> {
       context.read<CategoriesProvider>().loadIfNeeded();
       context.read<ArticlesProvider>().loadIfNeeded();
       context.read<HomeArticlesProvider>().loadIfNeeded();
+      context.read<LiveProvider>().loadIfNeeded();
     });
   }
 
@@ -94,19 +95,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onLivePressed() {
-    if (LiveConfig.isLiveInProgress && LiveConfig.liveStreamUrl.isNotEmpty) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => LiveReplayPlayerPage(
-            isLive: true,
-            streamUrl: LiveConfig.liveStreamUrl,
-          ),
-        ),
-      );
-    } else if (LiveConfig.recapVideoUrl.isNotEmpty) {
-      final videoId = getYoutubeVideoId(LiveConfig.recapVideoUrl);
+    final liveProvider = context.read<LiveProvider>();
+    final isLive = liveProvider.isLiveInProgress;
+    final liveUrl = liveProvider.youtubeLiveUrl;
+    final recapUrl = liveProvider.recapVideoUrl;
+
+    if (isLive && liveUrl.isNotEmpty) {
+      final videoId = getYoutubeVideoId(liveUrl);
       if (videoId != null) {
-        final startAt = getYoutubeStartSeconds(LiveConfig.recapVideoUrl) ?? 0;
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                LiveReplayPlayerPage(isLive: true, videoId: videoId),
+          ),
+        );
+      }
+    } else if (recapUrl.isNotEmpty) {
+      final videoId = getYoutubeVideoId(recapUrl);
+      if (videoId != null) {
+        final startAt = getYoutubeStartSeconds(recapUrl) ?? 0;
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => LiveReplayPlayerPage(
@@ -126,6 +133,7 @@ class _HomePageState extends State<HomePage> {
     final categoriesProvider = context.watch<CategoriesProvider>();
     final articlesProvider = context.watch<ArticlesProvider>();
     final homeArticlesProvider = context.watch<HomeArticlesProvider>();
+    final liveProvider = context.watch<LiveProvider>();
     final parentCategories = categoriesProvider.parentCategories;
     final selectedIndex = parentCategories.isEmpty
         ? 0
@@ -219,6 +227,8 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppHeader(
+        hasLiveContent: liveProvider.hasLiveContent,
+        isLiveInProgress: liveProvider.isLiveInProgress,
         onLivePressed: _onLivePressed,
         onNotificationsPressed: () {
           Navigator.of(context).push(
@@ -252,118 +262,124 @@ class _HomePageState extends State<HomePage> {
           index: _selectedNavIndex,
           children: [
             RefreshIndicator(
-                    onRefresh: () async {
-                      final cat = context.read<CategoriesProvider>();
-                      final art = context.read<ArticlesProvider>();
-                      final homeArt = context.read<HomeArticlesProvider>();
-                      await Future.wait([cat.load(), art.load(), homeArt.load()]);
-                      if (mounted) setState(() {});
-                    },
-                    child: CustomScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      slivers: [
-                        const SliverToBoxAdapter(child: SizedBox(height: 4)),
-                        SliverToBoxAdapter(
-                          child: HomeHeroSection(
-                            articles: heroArticles.isNotEmpty ? heroArticles : null,
-                            loading: articlesProvider.loading,
-                            selectionService: selectionService,
-                            onCardTap: (args) => _openArticle(args),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                        SliverPersistentHeader(
-                          pinned: true,
-                          delegate: _StickyFilterDelegate(
-                            child: HomeFilterSection(
-                              parentCategories: parentCategories,
-                              loading: categoriesProvider.loading,
-                              selectedIndex: selectedIndex,
-                              onSelected: (index) =>
-                                  setState(() => _selectedFilterIndex = index),
-                              onRetry: () => categoriesProvider.load(),
-                            ),
-                          ),
-                        ),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 24),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 280),
-                              switchInCurve: Curves.easeOut,
-                              switchOutCurve: Curves.easeIn,
-                              transitionBuilder:
-                                  (Widget child, Animation<double> animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position:
-                                        Tween<Offset>(
-                                          begin: const Offset(0, 0.03),
-                                          end: Offset.zero,
-                                        ).animate(
-                                          CurvedAnimation(
-                                            parent: animation,
-                                            curve: Curves.easeOut,
-                                          ),
+              onRefresh: () async {
+                final cat = context.read<CategoriesProvider>();
+                final art = context.read<ArticlesProvider>();
+                final homeArt = context.read<HomeArticlesProvider>();
+                final liveProv = context.read<LiveProvider>();
+                await Future.wait([
+                  cat.load(),
+                  art.load(),
+                  homeArt.load(),
+                  liveProv.load(),
+                ]);
+                if (mounted) setState(() {});
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                  SliverToBoxAdapter(
+                    child: HomeHeroSection(
+                      articles: heroArticles.isNotEmpty ? heroArticles : null,
+                      loading: articlesProvider.loading,
+                      selectionService: selectionService,
+                      onCardTap: (args) => _openArticle(args),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _StickyFilterDelegate(
+                      child: HomeFilterSection(
+                        parentCategories: parentCategories,
+                        loading: categoriesProvider.loading,
+                        selectedIndex: selectedIndex,
+                        onSelected: (index) =>
+                            setState(() => _selectedFilterIndex = index),
+                        onRetry: () => categoriesProvider.load(),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 24),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position:
+                                      Tween<Offset>(
+                                        begin: const Offset(0, 0.03),
+                                        end: Offset.zero,
+                                      ).animate(
+                                        CurvedAnimation(
+                                          parent: animation,
+                                          curve: Curves.easeOut,
                                         ),
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: hasChildren
-                                  ? contentLayout ==
-                                            CategoryDisplayLayout.withChildren
-                                      ? Column(
-                                          key: const ValueKey<String>(
-                                            'with_children',
+                                      ),
+                                  child: child,
+                                ),
+                              );
+                            },
+                        child: hasChildren
+                            ? contentLayout ==
+                                      CategoryDisplayLayout.withChildren
+                                  ? Column(
+                                      key: const ValueKey<String>(
+                                        'with_children',
+                                      ),
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (isActualitesTab &&
+                                            featuredArticles.isEmpty &&
+                                            pressArticles.isEmpty &&
+                                            !homeSectionsLoading &&
+                                            homeArticlesProvider.loadFailed)
+                                          NoConnectionView(
+                                            onRetry: () =>
+                                                homeArticlesProvider.load(),
+                                          )
+                                        else ...[
+                                          FeaturedSection(
+                                            articles:
+                                                featuredArticles.isNotEmpty
+                                                ? featuredArticles
+                                                : null,
+                                            loading: homeSectionsLoading,
+                                            sectionTitle: featuredSectionTitle,
+                                            displayTag: isActualitesTab
+                                                ? null
+                                                : parentCategories[selectedIndex]
+                                                      .name,
+                                            selectionService: selectionService,
+                                            onArticleTap: (args) =>
+                                                _openArticle(args),
                                           ),
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            if (isActualitesTab &&
-                                                featuredArticles.isEmpty &&
-                                                pressArticles.isEmpty &&
-                                                !homeSectionsLoading &&
-                                                homeArticlesProvider.loadFailed)
-                                              NoConnectionView(
-                                                onRetry: () =>
-                                                    homeArticlesProvider.load(),
-                                              )
-                                            else ...[
-                                              FeaturedSection(
-                                                articles:
-                                                    featuredArticles.isNotEmpty
-                                                    ? featuredArticles
-                                                    : null,
-                                                loading: homeSectionsLoading,
-                                                sectionTitle: featuredSectionTitle,
-                                                displayTag: isActualitesTab
-                                                    ? null
-                                                    : parentCategories[selectedIndex]
-                                                          .name,
-                                                selectionService: selectionService,
-                                                onArticleTap: (args) =>
-                                                    _openArticle(args),
-                                              ),
-                                              const SizedBox(height: 24),
-                                              PressArticlesSection(
-                                                articles: pressArticles.isNotEmpty
-                                                    ? pressArticles
-                                                    : null,
-                                                loading: homeSectionsLoading,
-                                                sectionTitle: pressSectionTitle,
-                                                displayTag: isActualitesTab
-                                                    ? null
-                                                    : parentCategories[selectedIndex]
-                                                          .name,
-                                                selectionService: selectionService,
-                                                onArticleTap: (args) =>
-                                                    _openArticle(args),
-                                              ),
-                                            ],
-                                          ],
-                                        )
+                                          const SizedBox(height: 24),
+                                          PressArticlesSection(
+                                            articles: pressArticles.isNotEmpty
+                                                ? pressArticles
+                                                : null,
+                                            loading: homeSectionsLoading,
+                                            sectionTitle: pressSectionTitle,
+                                            displayTag: isActualitesTab
+                                                ? null
+                                                : parentCategories[selectedIndex]
+                                                      .name,
+                                            selectionService: selectionService,
+                                            onArticleTap: (args) =>
+                                                _openArticle(args),
+                                          ),
+                                        ],
+                                      ],
+                                    )
                                   : overlayChildArticles.isEmpty
                                   ? const SizedBox.shrink()
                                   : OverlayCardListFromArticles(
@@ -414,7 +430,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 }
 
 /// Délégué pour que la barre de filtres reste sticky quand le hero a défilé.
