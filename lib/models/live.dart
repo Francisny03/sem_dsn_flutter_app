@@ -1,5 +1,5 @@
 /// Statut du direct renvoyé par l'API.
-enum LiveStatus { live, scheduled, ended }
+enum LiveStatus { live, scheduled, ended, replay }
 
 /// Config du direct (une seule par app).
 class Live {
@@ -36,9 +36,26 @@ class Live {
   bool get isLive => status == LiveStatus.live;
   bool get isScheduled => status == LiveStatus.scheduled;
   bool get isEnded => status == LiveStatus.ended;
+  bool get isReplay => status == LiveStatus.replay;
 
   /// Contenu affichable (live, programmé ou recap).
   bool get hasContent => url.isNotEmpty;
+
+  /// Nouvelle instance avec un statut différent (ex. pour [LiveConfig.forceStatusForTest]).
+  Live copyWithStatus(LiveStatus newStatus) {
+    return Live(
+      id: id,
+      url: url,
+      liveId: liveId,
+      platform: platform,
+      status: newStatus,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      scheduledAt: scheduledAt,
+      image: image,
+      title: title,
+    );
+  }
 
   static LiveStatus _statusFromString(String? s) {
     switch (s?.toLowerCase()) {
@@ -48,6 +65,8 @@ class Live {
         return LiveStatus.scheduled;
       case 'ended':
         return LiveStatus.ended;
+      case 'replay':
+        return LiveStatus.replay;
       default:
         return LiveStatus.ended;
     }

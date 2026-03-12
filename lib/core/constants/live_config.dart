@@ -1,3 +1,5 @@
+import 'package:sem_dsn/models/live.dart';
+
 /// Source du live pour les tests : HLS (flux .m3u8) ou YouTube (URL live/replay).
 enum LiveSource {
   /// Utiliser [LiveConfig.liveStreamUrl] (HLS) quand [LiveConfig.isLiveInProgress] est true.
@@ -39,6 +41,11 @@ class LiveConfig {
 
   /// When true: recap video is vertical → player aspect 9/16. Otherwise 16/9.
   static const bool recapVideoIsVertical = false;
+
+  /// Pour les tests : force le statut du live après fetch (ex. [LiveStatus.replay]).
+  /// Null = utiliser le statut renvoyé par l'API.
+  static const LiveStatus? forceStatusForTest =
+      LiveStatus.replay; // Mettre LiveStatus.replay pour tester
 
   /// True si on a au moins une source à afficher (direct ou replay).
   static bool get hasLiveContent {

@@ -31,20 +31,28 @@ class LiveReplayPlayerPage extends StatefulWidget {
 }
 
 class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
   bool _isFullscreen = false;
+
+  /// true = entré en fullscreen par rotation (Case 2) → sortie auto au retour portrait. false = par bouton (Case 3) → sortie uniquement par X.
+  bool _enteredFullscreenByRotation = false;
 
   /// Retour en cours : on cache le lecteur pour éviter le rectangle pendant la transition (live et replay).
   bool _isPopping = false;
   BetterPlayerController? _betterPlayerController;
   YoutubePlayerController? _youtubeController;
 
+  bool get _isVertical => widget.isLive
+      ? LiveConfig.liveStreamIsVertical
+      : LiveConfig.recapVideoIsVertical;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -88,7 +96,26 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
   }
 
   @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    if (_isVertical) return;
+    final views = WidgetsBinding.instance.platformDispatcher.views;
+    if (views.isEmpty) return;
+    final bounds = views.first.physicalSize;
+    final ratio = views.first.devicePixelRatio;
+    final w = bounds.width / ratio;
+    final h = bounds.height / ratio;
+    if (!mounted) return;
+    if (w > h) {
+      if (!_isFullscreen) _openFullscreen(byRotation: true);
+    } else {
+      if (_isFullscreen && _enteredFullscreenByRotation) _closeFullscreen();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (_isFullscreen) _exitFullscreen();
     _pulseController.dispose();
     _betterPlayerController?.dispose();
@@ -108,7 +135,8 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     }
   }
 
-  void _enterFullscreen() {
+  /// Fullscreen en verrouillant le paysage (Cas 3 : bouton) → sortie uniquement par X.
+  void _enterFullscreenLockLandscape() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -116,26 +144,60 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     ]);
   }
 
-  void _exitFullscreen() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  /// Fullscreen sans verrouiller l’orientation (Cas 2 : rotation) → sortie auto au retour portrait.
+  void _enterFullscreenAllowRotation() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
-  void _openFullscreen() {
+  void _exitFullscreen() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  void _openFullscreen({bool byRotation = false}) {
     if (widget.isLive &&
         widget.streamUrl != null &&
         widget.streamUrl!.isNotEmpty) {
-      setState(() => _isFullscreen = true);
-      _enterFullscreen();
+      setState(() {
+        _isFullscreen = true;
+        _enteredFullscreenByRotation = byRotation;
+      });
+      if (byRotation) {
+        _enterFullscreenAllowRotation();
+      } else {
+        _enterFullscreenLockLandscape();
+      }
     } else if (widget.videoId != null) {
-      setState(() => _isFullscreen = true);
-      _enterFullscreen();
+      setState(() {
+        _isFullscreen = true;
+        _enteredFullscreenByRotation = byRotation;
+      });
+      if (byRotation) {
+        _enterFullscreenAllowRotation();
+      } else {
+        _enterFullscreenLockLandscape();
+      }
     }
   }
 
   void _closeFullscreen() {
+    if (!mounted) return;
+    setState(() {
+      _isFullscreen = false;
+      _enteredFullscreenByRotation = false;
+    });
     _exitFullscreen();
-    if (mounted) setState(() => _isFullscreen = false);
   }
 
   void _onBack() {
@@ -187,39 +249,37 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
               ),
         body: _isPopping
             ? Container(color: _isFullscreen ? Colors.black : AppColors.bg)
-            : (_isFullscreen
-                  ? Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Center(
-                          child: AspectRatio(
-                            aspectRatio: ratio,
-                            child: _buildPlayer(),
+            : Stack(
+                fit: StackFit.expand,
+                children: [
+                  SafeArea(
+                    top: !_isFullscreen,
+                    left: true,
+                    right: true,
+                    bottom: true,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: ratio,
+                        child: _buildPlayer(),
+                      ),
+                    ),
+                  ),
+                  if (_isFullscreen)
+                    SafeArea(
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 28,
                           ),
-                        ),
-                        SafeArea(
-                          child: Align(
-                            alignment: Alignment.topRight,
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                              onPressed: _closeFullscreen,
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : SafeArea(
-                      child: Center(
-                        child: AspectRatio(
-                          aspectRatio: ratio,
-                          child: _buildPlayer(),
+                          onPressed: _closeFullscreen,
                         ),
                       ),
-                    )),
+                    ),
+                ],
+              ),
       ),
     );
   }

@@ -25,6 +25,7 @@ class _HeroSlide {
     required this.imagePath,
     this.tag,
     this.isLiveTag = false,
+    this.isReplayTag = false,
   });
 
   final String title;
@@ -36,6 +37,9 @@ class _HeroSlide {
 
   /// true = badge tag en rouge (carte live).
   final bool isLiveTag;
+
+  /// true = badge tag Replay (fond noir, texte blanc).
+  final bool isReplayTag;
 }
 
 const Duration _kAutoScrollDuration = Duration(seconds: 5);
@@ -230,7 +234,9 @@ class _AnimatedHeroSlideContentState extends State<_AnimatedHeroSlideContent>
               decoration: BoxDecoration(
                 color: widget.slide.isLiveTag
                     ? AppColors.dangerLight
-                    : AppColors.heroTag,
+                    : (widget.slide.isReplayTag
+                          ? AppColors.newsTitle
+                          : AppColors.heroTag),
                 borderRadius: AppBorderRadius.rtotal,
               ),
               child: Text(
@@ -289,8 +295,11 @@ class HomeHeroSection extends StatefulWidget {
     this.selectionService,
     this.onCardTap,
     this.hasLiveContent = false,
+    this.hasReplayContent = false,
     this.liveImageUrl,
     this.liveTitle,
+    this.replayImageUrl,
+    this.replayTitle,
     this.onLiveTap,
   });
 
@@ -303,8 +312,13 @@ class HomeHeroSection extends StatefulWidget {
 
   /// true = première slide = carte live (image, titre, tag Live rouge), puis les articles.
   final bool hasLiveContent;
+
+  /// true = replay dans le hero (à l'index 1 si au moins 1 article, sinon index 0) ; retiré quand 5+ articles.
+  final bool hasReplayContent;
   final String? liveImageUrl;
   final String? liveTitle;
+  final String? replayImageUrl;
+  final String? replayTitle;
   final VoidCallback? onLiveTap;
 
   @override
@@ -354,16 +368,28 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
     final list = widget.articles;
     final articleCount = list != null ? list.length : 0;
     if (widget.hasLiveContent) return 1 + articleCount;
+    if (widget.hasReplayContent) return 1 + articleCount;
     return articleCount;
   }
 
   bool get _hasContent => _slideCount > 0;
 
   /// Index dans widget.articles pour la slide à l’index [slideIndex] (retourne null si slide = live).
+  int get _replaySlideIndex => 0;
+
+  bool _isReplaySlide(int slideIndex) =>
+      widget.hasReplayContent && slideIndex == _replaySlideIndex;
+
   int? _articleIndexForSlide(int slideIndex) {
-    if (!widget.hasLiveContent) return slideIndex;
-    if (slideIndex == 0) return null;
-    return slideIndex - 1;
+    if (widget.hasLiveContent) {
+      if (slideIndex == 0) return null;
+      return slideIndex - 1;
+    }
+    if (widget.hasReplayContent) {
+      if (slideIndex == 0) return null;
+      return slideIndex - 1;
+    }
+    return slideIndex;
   }
 
   void _startAutoScroll() {
@@ -416,6 +442,48 @@ class _HomeHeroSectionState extends State<HomeHeroSection> {
                             ),
                             tag: AppStrings.liveTitle,
                             isLiveTag: true,
+                          );
+                          return GestureDetector(
+                            onTap: widget.onLiveTap,
+                            behavior: HitTestBehavior.opaque,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                ImageFromPath(
+                                  path: slide.imagePath,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                ),
+                                Container(
+                                  decoration: const BoxDecoration(
+                                    gradient: AppColors.gradientHero,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: 16,
+                                  right: 50,
+                                  bottom: 40,
+                                  child: _AnimatedHeroSlideContent(
+                                    slide: slide,
+                                    selectionService: null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        if (_isReplaySlide(index)) {
+                          final slide = _HeroSlide(
+                            title: widget.replayTitle?.trim().isNotEmpty == true
+                                ? widget.replayTitle!
+                                : AppStrings.replayHeroDefaultTitle,
+                            date: '',
+                            imagePath: AppAssets.imageOrDefault(
+                              widget.replayImageUrl ?? widget.liveImageUrl,
+                            ),
+                            tag: AppStrings.replayTag,
+                            isReplayTag: true,
                           );
                           return GestureDetector(
                             onTap: widget.onLiveTap,

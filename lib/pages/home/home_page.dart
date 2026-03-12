@@ -166,9 +166,17 @@ class _HomePageState extends State<HomePage> {
       });
     }
     final articles = articlesProvider.articles;
-    final hasLiveContent = liveProvider.hasLiveContent;
-    // Hero = si live actif : 1 slide live + 4 articles ; sinon 5 derniers articles.
-    final heroArticles = _lastNArticlesByDate(articles, hasLiveContent ? 4 : 5);
+    final last5 = _lastNArticlesByDate(articles, 5);
+    final last4 = _lastNArticlesByDate(articles, 4);
+    final isLive = liveProvider.isLiveInProgress;
+    final isReplay = liveProvider.isReplay;
+    final isEnded = liveProvider.isEnded;
+    // Live → 1 slide live + 4 articles. Replay → replay toujours dans le hero (5 contenus max : 4 articles les plus récents + replay en dernière position).
+    final hasLiveContent = isLive && !isEnded;
+    final hasReplayContent = isReplay && !isEnded;
+    final heroArticles = hasLiveContent
+        ? last4
+        : (hasReplayContent ? last4 : last5);
 
     // Charger les articles par catégorie pour l’onglet sélectionné (Réalisations, ou overlay 1 enfant ex. Discours).
     if (parentCategories.isNotEmpty &&
@@ -252,6 +260,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppHeader(
         hasLiveContent: liveProvider.hasLiveContent,
         isLiveInProgress: liveProvider.isLiveInProgress,
+        isEnded: liveProvider.isEnded,
         onLivePressed: _onLivePressed,
         onNotificationsPressed: () {
           Navigator.of(context).push(
@@ -309,9 +318,15 @@ class _HomePageState extends State<HomePage> {
                       selectionService: selectionService,
                       onCardTap: (args) => _openArticle(args),
                       hasLiveContent: hasLiveContent,
+                      hasReplayContent: hasReplayContent,
                       liveImageUrl: liveProvider.currentLive?.image,
                       liveTitle: liveProvider.currentLive?.title,
-                      onLiveTap: hasLiveContent ? _onLivePressed : null,
+                      replayImageUrl: liveProvider.currentLive?.image,
+                      replayTitle: liveProvider.currentLive?.title,
+                      onLiveTap:
+                          (hasLiveContent || hasReplayContent) && !isEnded
+                          ? _onLivePressed
+                          : null,
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 20)),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show ChangeNotifier;
 
+import 'package:sem_dsn/core/constants/live_config.dart';
 import 'package:sem_dsn/models/live.dart';
 import 'package:sem_dsn/services/lives_api.dart';
 
@@ -14,7 +15,13 @@ class LiveProvider extends ChangeNotifier {
   /// En direct → icône qui clignote.
   bool get isLiveInProgress => _currentLive?.isLive ?? false;
 
-  /// Contenu dispo (live, programmé ou recap).
+  /// Replay → carte hero avec tag Replay, icône noire.
+  bool get isReplay => _currentLive?.isReplay ?? false;
+
+  /// Terminé → icône grise, non cliquable, pas de slide live/replay dans le hero.
+  bool get isEnded => _currentLive?.isEnded ?? false;
+
+  /// Contenu dispo (live, programmé, replay ou recap).
   bool get hasLiveContent => _currentLive?.hasContent ?? false;
 
   /// URL YouTube du direct (live ou programmé).
@@ -40,7 +47,11 @@ class LiveProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
     try {
-      _currentLive = await fetchLive();
+      var live = await fetchLive();
+      if (live != null && LiveConfig.forceStatusForTest != null) {
+        live = live.copyWithStatus(LiveConfig.forceStatusForTest!);
+      }
+      _currentLive = live;
     } catch (_) {
       _currentLive = null;
     } finally {

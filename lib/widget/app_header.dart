@@ -12,6 +12,7 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
     super.key,
     this.hasLiveContent,
     this.isLiveInProgress,
+    this.isEnded,
     this.onSearchPressed,
     this.onNotificationsPressed,
     this.onLivePressed,
@@ -22,6 +23,9 @@ class AppHeader extends StatefulWidget implements PreferredSizeWidget {
 
   /// En direct → icône clignotante (si null, utilise [LiveConfig.isLiveInProgress]).
   final bool? isLiveInProgress;
+
+  /// Terminé → icône grise, non cliquable.
+  final bool? isEnded;
 
   /// Appelé au tap sur l'icône recherche (ex: ouvre la page recherche Photothèque).
   final VoidCallback? onSearchPressed;
@@ -48,6 +52,7 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
   bool get _showLiveIcon => widget.hasLiveContent ?? LiveConfig.hasLiveContent;
   bool get _isLiveInProgress =>
       widget.isLiveInProgress ?? LiveConfig.isLiveInProgress;
+  bool get _isEnded => widget.isEnded ?? false;
 
   @override
   void initState() {
@@ -165,13 +170,14 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
 
             _HeaderActionsRow(
               children: [
-                if (_showLiveIcon && widget.onLivePressed != null)
+                if (_showLiveIcon)
                   _LiveHeaderIcon(
                     isLiveInProgress: _isLiveInProgress,
+                    isEnded: _isEnded,
                     blinkAnimation: _isLiveInProgress
                         ? _liveBlinkAnimation
                         : null,
-                    onPressed: widget.onLivePressed!,
+                    onPressed: _isEnded ? null : widget.onLivePressed,
                   ),
                 _HeaderIcon(
                   icon: Icons.notifications_outlined,
@@ -229,16 +235,38 @@ class _HeaderActionsRow extends StatelessWidget {
 class _LiveHeaderIcon extends StatelessWidget {
   const _LiveHeaderIcon({
     required this.isLiveInProgress,
+    required this.isEnded,
     required this.onPressed,
     this.blinkAnimation,
   });
 
   final bool isLiveInProgress;
-  final VoidCallback onPressed;
+  final bool isEnded;
+  final VoidCallback? onPressed;
   final Animation<double>? blinkAnimation;
 
   @override
   Widget build(BuildContext context) {
+    if (isEnded) {
+      return IconButton(
+        icon: SvgPicture.asset(
+          AppAssets.livecustom,
+          width: 20,
+          height: 20,
+          colorFilter: const ColorFilter.mode(
+            AppColors.endedLiveColor,
+            BlendMode.srcIn,
+          ),
+        ),
+        onPressed: null,
+        style: IconButton.styleFrom(
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(36, 36),
+          maximumSize: const Size(36, 36),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+    }
     if (!isLiveInProgress) {
       return IconButton(
         icon: SvgPicture.asset(

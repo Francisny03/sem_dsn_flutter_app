@@ -61,4 +61,7 @@ class AppColors {
 
   /// Bordure des couvertures livre / revue dans la Bibliographie (#2B271B).
   static const Color bibliographyBorderColor = Color(0xFF2B271B);
+
+  /// Endedlivecolor
+  static const Color endedLiveColor = Color(0xFFABABAB);
 }

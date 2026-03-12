@@ -160,6 +160,13 @@ class AppStrings {
 
   /// Titre par défaut de la carte hero live (si le backend n’envoie pas de titre).
   static const String liveHeroDefaultTitle = 'Suivez le live';
+
+  /// Titre par défaut de la carte hero replay.
+  static const String replayHeroDefaultTitle = 'Suivez le replay';
+
+  /// Tag affiché sur la carte hero replay (fond noir, texte blanc).
+  static const String replayTag = 'Replay';
+
   static const String liveDescription = 'Cliquez pour voir en direct';
   static const String liveButton = 'Voir la visite';
 }
