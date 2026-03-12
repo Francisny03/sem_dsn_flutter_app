@@ -93,109 +93,73 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
       elevation: 0,
       scrolledUnderElevation: 0,
       titleSpacing: 0,
-      leadingWidth: 0,
-      title: Padding(
-        padding: const EdgeInsets.only(left: 20, right: 8),
+      leadingWidth: 80,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 20),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Hero(
-                  tag: 'app_logo',
-                  child: SvgPicture.asset(
-                    AppAssets.logoApp,
-                    width: 32,
-                    height: 32,
-                    colorFilter: const ColorFilter.mode(
-                      AppColors.primaryColor,
-                      BlendMode.srcIn,
-                    ),
-                  ),
+            Hero(
+              tag: 'app_logo',
+              child: SvgPicture.asset(
+                AppAssets.logoApp,
+                width: 32,
+                height: 32,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.primaryColor,
+                  BlendMode.srcIn,
                 ),
-                Transform.translate(
-                  offset: const Offset(-4, 10),
-                  child: SlideTransition(
-                    position: _textSlide,
-                    child: SvgPicture.asset(
-                      AppAssets.dsn,
-                      width: 12,
-                      height: 12,
-                      colorFilter: const ColorFilter.mode(
-                        AppColors.onSurfaceLight,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                    //   AppStrings.headerTitle,
-                    //   style: TextStyle(
-                    //     color: AppColors.onSurfaceLight,
-                    //     fontWeight: FontWeight.w900,
-                    //     fontSize: 20,
-                    //     shadows: [
-                    //       const Shadow(
-                    //         color: Colors.black,
-                    //         offset: Offset(-1, -1),
-                    //         blurRadius: 0,
-                    //       ),
-                    //       const Shadow(
-                    //         color: Colors.black,
-                    //         offset: Offset(1, -1),
-                    //         blurRadius: 0,
-                    //       ),
-                    //       const Shadow(
-                    //         color: Colors.black,
-                    //         offset: Offset(-1, 1),
-                    //         blurRadius: 0,
-                    //       ),
-                    //       const Shadow(
-                    //         color: Colors.black,
-                    //         offset: Offset(1, 1),
-                    //         blurRadius: 0,
-                    //       ),
-                    //       // Shadow(
-                    //       //   color: Colors.black.withValues(alpha: 0.3),
-                    //       //   offset: const Offset(0, 2),
-                    //       //   blurRadius: 4,
-                    //       // ),
-                    //     ],
-                    //   ),
-                    // ),
-                  ),
-                ),
-              ],
+              ),
             ),
-
-            _HeaderActionsRow(
-              children: [
-                if (_showLiveIcon)
-                  _LiveHeaderIcon(
-                    isLiveInProgress: _isLiveInProgress,
-                    isEnded: _isEnded,
-                    blinkAnimation: _isLiveInProgress
-                        ? _liveBlinkAnimation
-                        : null,
-                    onPressed: _isEnded ? null : widget.onLivePressed,
+            Transform.translate(
+              offset: const Offset(-4, 10),
+              child: SlideTransition(
+                position: _textSlide,
+                child: SvgPicture.asset(
+                  AppAssets.dsn,
+                  width: 12,
+                  height: 12,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.onSurfaceLight,
+                    BlendMode.srcIn,
                   ),
-                _HeaderIcon(
-                  icon: Icons.notifications_outlined,
-                  onPressed: widget.onNotificationsPressed ?? () {},
                 ),
-                _HeaderIcon(
-                  icon: Icons.search,
-                  onPressed: widget.onSearchPressed ?? () {},
-                ),
-                _HeaderIcon(
-                  icon: Icons.more_vert,
-                  onPressed: () => showHeaderMenu(context),
-                ),
-              ],
+              ),
             ),
           ],
         ),
       ),
+      centerTitle: true,
+      title: _showLiveIcon
+          ? _LiveHeaderIcon(
+              isLiveInProgress: _isLiveInProgress,
+              isEnded: _isEnded,
+              blinkAnimation: _isLiveInProgress ? _liveBlinkAnimation : null,
+              onPressed: _isEnded ? null : widget.onLivePressed,
+            )
+          : const SizedBox.shrink(),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: _HeaderActionsRow(
+            children: [
+              _HeaderIcon(
+                icon: Icons.notifications_outlined,
+                onPressed: widget.onNotificationsPressed ?? () {},
+              ),
+              _HeaderIcon(
+                icon: Icons.search,
+                onPressed: widget.onSearchPressed ?? () {},
+              ),
+              _HeaderIcon(
+                icon: Icons.more_vert,
+                onPressed: () => showHeaderMenu(context),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -45,7 +45,7 @@ class LiveConfig {
   /// Pour les tests : force le statut du live après fetch (ex. [LiveStatus.replay]).
   /// Null = utiliser le statut renvoyé par l'API.
   static const LiveStatus? forceStatusForTest =
-      LiveStatus.replay; // Mettre LiveStatus.replay pour tester
+      null; // Mettre LiveStatus.replay pour tester
 
   /// True si on a au moins une source à afficher (direct ou replay).
   static bool get hasLiveContent {
