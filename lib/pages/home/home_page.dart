@@ -75,6 +75,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedFilterIndex = 0;
   int _selectedNavIndex = 0;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -86,6 +87,47 @@ class _HomePageState extends State<HomePage> {
       context.read<HomeArticlesProvider>().loadIfNeeded();
       context.read<LiveProvider>().loadIfNeeded();
     });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final position = _scrollController.position;
+    if (!position.hasPixels || !position.hasContentDimensions) return;
+    final threshold = 200.0;
+    if (position.pixels < position.maxScrollExtent - threshold) return;
+    if (!mounted) return;
+    final ap = context.read<ArticlesProvider>();
+    final categoryId = _currentListCategoryId();
+    if (categoryId == null) return;
+    if (!ap.hasMoreForCategory(categoryId) ||
+        ap.loadingMoreForCategory(categoryId))
+      return;
+    ap.loadMoreArticlesForCategory(categoryId);
+  }
+
+  /// CategoryId utilisé pour la liste d'articles affichée (load more). Null si pas une liste paginée.
+  int? _currentListCategoryId() {
+    final categories = context.read<CategoriesProvider>().parentCategories;
+    final selectedIndex = _selectedFilterIndex;
+    if (categories.isEmpty ||
+        selectedIndex < 0 ||
+        selectedIndex >= categories.length)
+      return null;
+    final cat = categories[selectedIndex];
+    if (cat.id == 9000) return null;
+    if (cat.slug == 'discours')
+      return null; // on affiche la grille, pas la liste
+    if (cat.hasChildren && cat.children.length == 1)
+      return cat.children.first.id;
+    if (!cat.hasChildren) return cat.id;
+    return null;
   }
 
   void _openArticle(ArticleDetailArgs args) {
@@ -183,15 +225,23 @@ class _HomePageState extends State<HomePage> {
         selectedIndex < parentCategories.length) {
       final cat = parentCategories[selectedIndex];
       if (cat.id != 9000) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          final ap = context.read<ArticlesProvider>();
-          if (cat.hasChildren && cat.children.length == 1) {
-            ap.loadArticlesForCategory(cat.children.first.id);
-          } else if (!cat.hasChildren) {
-            ap.loadArticlesForCategory(cat.id);
-          }
-        });
+        final categoryId = cat.hasChildren && cat.children.length == 1
+            ? cat.children.first.id
+            : cat.id;
+        final alreadyLoaded = articlesProvider
+            .getArticlesForCategory(categoryId)
+            .isNotEmpty;
+        if (!alreadyLoaded) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            final ap = context.read<ArticlesProvider>();
+            if (cat.hasChildren && cat.children.length == 1) {
+              ap.loadArticlesForCategory(cat.children.first.id);
+            } else if (!cat.hasChildren) {
+              ap.loadArticlesForCategory(cat.id);
+            }
+          });
+        }
       }
     }
 
@@ -248,6 +298,42 @@ class _HomePageState extends State<HomePage> {
         selectedIndex < parentCategories.length &&
         parentCategories[selectedIndex].slug == 'actualites';
     final homeSectionsLoading = isActualitesTab && homeArticlesProvider.loading;
+
+    // Liste paginée en slivers (overlay ou image below) pour scroll fluide + load more.
+    final filterArticles = _articlesForFilter(
+      articlesProvider,
+      parentCategories,
+      selectedIndex,
+      articles,
+    );
+    final filterCategory =
+        parentCategories.isNotEmpty &&
+            selectedIndex >= 0 &&
+            selectedIndex < parentCategories.length
+        ? parentCategories[selectedIndex]
+        : null;
+    final useSliverListOverlay =
+        (hasChildren &&
+            contentLayout == CategoryDisplayLayout.overlay &&
+            overlayChildArticles.isNotEmpty) ||
+        (filterCategory != null &&
+            !hasChildren &&
+            filterArticles.isNotEmpty &&
+            filterCategory.slug != 'discours' &&
+            filterCategory.slug != 'r-alisations' &&
+            filterCategory.slug != 'realisations' &&
+            filterCategory.slug != 'economie');
+    final useSliverListImageBelow =
+        filterCategory != null &&
+        !hasChildren &&
+        filterArticles.isNotEmpty &&
+        (filterCategory.slug == 'r-alisations' ||
+            filterCategory.slug == 'realisations' ||
+            filterCategory.slug == 'economie');
+    final listCategoryId = useSliverListOverlay
+        ? (hasChildren ? filterCategory!.children.first.id : filterCategory!.id)
+        : (useSliverListImageBelow ? filterCategory.id : null);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<PressArticlesCacheProvider>().setPressArticles(
@@ -305,9 +391,16 @@ class _HomePageState extends State<HomePage> {
                   homeArt.load(),
                   liveProv.load(),
                 ]);
-                if (mounted) setState(() {});
+                if (mounted) {
+                  final categoryId = _currentListCategoryId();
+                  if (categoryId != null) {
+                    await art.loadArticlesForCategory(categoryId);
+                  }
+                  setState(() {});
+                }
               },
               child: CustomScrollView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   const SliverToBoxAdapter(child: SizedBox(height: 4)),
@@ -343,110 +436,162 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 280),
-                        switchInCurve: Curves.easeOut,
-                        switchOutCurve: Curves.easeIn,
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position:
-                                      Tween<Offset>(
-                                        begin: const Offset(0, 0.03),
-                                        end: Offset.zero,
-                                      ).animate(
-                                        CurvedAnimation(
-                                          parent: animation,
-                                          curve: Curves.easeOut,
-                                        ),
-                                      ),
-                                  child: child,
-                                ),
-                              );
-                            },
-                        child: hasChildren
-                            ? contentLayout ==
-                                      CategoryDisplayLayout.withChildren
-                                  ? Column(
-                                      key: const ValueKey<String>(
-                                        'with_children',
-                                      ),
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (isActualitesTab &&
-                                            featuredArticles.isEmpty &&
-                                            pressArticles.isEmpty &&
-                                            !homeSectionsLoading &&
-                                            homeArticlesProvider.loadFailed)
-                                          NoConnectionView(
-                                            onRetry: () =>
-                                                homeArticlesProvider.load(),
-                                          )
-                                        else ...[
-                                          FeaturedSection(
-                                            articles:
-                                                featuredArticles.isNotEmpty
-                                                ? featuredArticles
-                                                : null,
-                                            loading: homeSectionsLoading,
-                                            sectionTitle: featuredSectionTitle,
-                                            displayTag: isActualitesTab
-                                                ? null
-                                                : parentCategories[selectedIndex]
-                                                      .name,
-                                            selectionService: selectionService,
-                                            onArticleTap: (args) =>
-                                                _openArticle(args),
-                                          ),
-                                          const SizedBox(height: 24),
-                                          PressArticlesSection(
-                                            articles: pressArticles.isNotEmpty
-                                                ? pressArticles
-                                                : null,
-                                            loading: homeSectionsLoading,
-                                            sectionTitle: pressSectionTitle,
-                                            displayTag: isActualitesTab
-                                                ? null
-                                                : parentCategories[selectedIndex]
-                                                      .name,
-                                            selectionService: selectionService,
-                                            onArticleTap: (args) =>
-                                                _openArticle(args),
-                                          ),
-                                        ],
-                                      ],
-                                    )
-                                  : overlayChildArticles.isEmpty
-                                  ? const SizedBox.shrink()
-                                  : OverlayCardListFromArticles(
-                                      key: const ValueKey<String>('overlay'),
-                                      articles: overlayChildArticles,
-                                      tag: parentCategories[selectedIndex].name,
-                                      selectionService: selectionService,
-                                      onArticleTap: _openArticle,
-                                    )
-                            : HomeFilterContent(
-                                key: ValueKey<int>(selectedIndex),
-                                parentCategories: parentCategories,
-                                articles: _articlesForFilter(
-                                  articlesProvider,
-                                  parentCategories,
-                                  selectedIndex,
-                                  articles,
-                                ),
-                                selectedIndex: selectedIndex,
-                                selectionService: selectionService,
-                                onArticleTap: _openArticle,
-                              ),
+                  if (useSliverListOverlay || useSliverListImageBelow) ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 280),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          child: SizedBox.shrink(
+                            key: ValueKey<int>(selectedIndex),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    if (useSliverListOverlay)
+                      SliverOverlayCardListFromArticles(
+                        articles: hasChildren
+                            ? overlayChildArticles
+                            : filterArticles,
+                        tag: filterCategory!.name,
+                        hasMore: listCategoryId != null
+                            ? articlesProvider.hasMoreForCategory(
+                                listCategoryId,
+                              )
+                            : false,
+                        loadingMore: listCategoryId != null
+                            ? articlesProvider.loadingMoreForCategory(
+                                listCategoryId,
+                              )
+                            : false,
+                        selectionService: selectionService,
+                        onArticleTap: _openArticle,
+                      )
+                    else
+                      SliverImageBelowCardListFromArticles(
+                        articles: filterArticles,
+                        tag: filterCategory!.name,
+                        showDate: filterCategory.slug != 'economie',
+                        hasMore: listCategoryId != null
+                            ? articlesProvider.hasMoreForCategory(
+                                listCategoryId,
+                              )
+                            : false,
+                        loadingMore: listCategoryId != null
+                            ? articlesProvider.loadingMoreForCategory(
+                                listCategoryId,
+                              )
+                            : false,
+                        selectionService: selectionService,
+                        onArticleTap: _openArticle,
+                      ),
+                  ] else ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 24),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 280),
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          transitionBuilder:
+                              (Widget child, Animation<double> animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position:
+                                        Tween<Offset>(
+                                          begin: const Offset(0, 0.03),
+                                          end: Offset.zero,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOut,
+                                          ),
+                                        ),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                          child: hasChildren
+                              ? contentLayout ==
+                                        CategoryDisplayLayout.withChildren
+                                    ? Column(
+                                        key: const ValueKey<String>(
+                                          'with_children',
+                                        ),
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (isActualitesTab &&
+                                              featuredArticles.isEmpty &&
+                                              pressArticles.isEmpty &&
+                                              !homeSectionsLoading &&
+                                              homeArticlesProvider.loadFailed)
+                                            NoConnectionView(
+                                              onRetry: () =>
+                                                  homeArticlesProvider.load(),
+                                            )
+                                          else ...[
+                                            FeaturedSection(
+                                              articles:
+                                                  featuredArticles.isNotEmpty
+                                                  ? featuredArticles
+                                                  : null,
+                                              loading: homeSectionsLoading,
+                                              sectionTitle:
+                                                  featuredSectionTitle,
+                                              displayTag: isActualitesTab
+                                                  ? null
+                                                  : parentCategories[selectedIndex]
+                                                        .name,
+                                              selectionService:
+                                                  selectionService,
+                                              onArticleTap: (args) =>
+                                                  _openArticle(args),
+                                            ),
+                                            const SizedBox(height: 24),
+                                            PressArticlesSection(
+                                              articles: pressArticles.isNotEmpty
+                                                  ? pressArticles
+                                                  : null,
+                                              loading: homeSectionsLoading,
+                                              sectionTitle: pressSectionTitle,
+                                              displayTag: isActualitesTab
+                                                  ? null
+                                                  : parentCategories[selectedIndex]
+                                                        .name,
+                                              selectionService:
+                                                  selectionService,
+                                              onArticleTap: (args) =>
+                                                  _openArticle(args),
+                                            ),
+                                          ],
+                                        ],
+                                      )
+                                    : overlayChildArticles.isEmpty
+                                    ? const SizedBox.shrink()
+                                    : OverlayCardListFromArticles(
+                                        key: const ValueKey<String>('overlay'),
+                                        articles: overlayChildArticles,
+                                        tag: parentCategories[selectedIndex]
+                                            .name,
+                                        selectionService: selectionService,
+                                        onArticleTap: _openArticle,
+                                      )
+                              : HomeFilterContent(
+                                  key: ValueKey<int>(selectedIndex),
+                                  parentCategories: parentCategories,
+                                  articles: filterArticles,
+                                  selectedIndex: selectedIndex,
+                                  selectionService: selectionService,
+                                  onArticleTap: _openArticle,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),

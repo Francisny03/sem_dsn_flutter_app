@@ -51,6 +51,8 @@ class CardOverlay extends StatelessWidget {
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
+                      memCacheWidth: 400,
+                      // pas de memCacheHeight pour garder le ratio de l'image et éviter l'effet étiré
                     ),
                   ),
                   Container(
