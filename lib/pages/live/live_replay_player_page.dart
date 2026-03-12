@@ -252,6 +252,7 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
             : Stack(
                 fit: StackFit.expand,
                 children: [
+                  Container(color: _isFullscreen ? Colors.black : AppColors.bg),
                   SafeArea(
                     top: !_isFullscreen,
                     left: true,
