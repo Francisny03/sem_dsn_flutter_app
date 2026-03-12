@@ -241,6 +241,84 @@ class OverlayCardListFromArticles extends StatelessWidget {
   }
 }
 
+/// Sliver : liste de cartes overlay + loader en bas si [hasMore] ou [loadingMore].
+class SliverOverlayCardListFromArticles extends StatelessWidget {
+  const SliverOverlayCardListFromArticles({
+    super.key,
+    required this.articles,
+    required this.tag,
+    this.hasMore = false,
+    this.loadingMore = false,
+    this.selectionService,
+    this.onArticleTap,
+  });
+
+  final List<Article> articles;
+  final String tag;
+  final bool hasMore;
+  final bool loadingMore;
+  final SelectionService? selectionService;
+  final void Function(ArticleDetailArgs args)? onArticleTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final showLoader = hasMore || loadingMore;
+    final itemCount = articles.length + (showLoader ? 1 : 0);
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          if (index >= articles.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final article = articles[index];
+          final imagePath = AppAssets.imageOrDefault(article.firstImageUrl);
+          final date = _formatArticleDate(article.articleDate);
+          final selectedArticle = SelectedArticle(
+            title: article.title,
+            date: date,
+            imagePath: imagePath,
+          );
+          final heroTag = ArticleDetailArgs.heroTagFor(
+            imagePath: imagePath,
+            title: article.title,
+            date: date,
+            sourceId: tag,
+            index: index,
+          );
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: CardOverlay(
+              imagePath: imagePath,
+              title: article.title,
+              date: date,
+              showPlayButton: article.hasVideo,
+              heroTag: heroTag,
+              isStarSelected:
+                  selectionService?.contains(selectedArticle) ?? false,
+              onStarTap: selectionService != null
+                  ? () => selectionService!.toggle(selectedArticle)
+                  : null,
+              onTap: onArticleTap != null
+                  ? () => onArticleTap!(
+                      ArticleDetailArgs.fromArticle(
+                        article,
+                        tag,
+                        heroTagOverride: heroTag,
+                      ),
+                    )
+                  : null,
+            ),
+          );
+        }, childCount: itemCount),
+      ),
+    );
+  }
+}
+
 // ——— Liste image + texte à partir d’articles API ———
 
 class _ImageBelowCardListFromArticles extends StatelessWidget {
@@ -303,6 +381,86 @@ class _ImageBelowCardListFromArticles extends StatelessWidget {
               : null,
         );
       },
+    );
+  }
+}
+
+/// Sliver : liste image below + loader en bas si [hasMore] ou [loadingMore].
+class SliverImageBelowCardListFromArticles extends StatelessWidget {
+  const SliverImageBelowCardListFromArticles({
+    super.key,
+    required this.articles,
+    required this.tag,
+    this.showDate = true,
+    this.hasMore = false,
+    this.loadingMore = false,
+    this.selectionService,
+    this.onArticleTap,
+  });
+
+  final List<Article> articles;
+  final String tag;
+  final bool showDate;
+  final bool hasMore;
+  final bool loadingMore;
+  final SelectionService? selectionService;
+  final void Function(ArticleDetailArgs args)? onArticleTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final showLoader = hasMore || loadingMore;
+    final itemCount = articles.length + (showLoader ? 1 : 0);
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          if (index >= articles.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final article = articles[index];
+          final imagePath = AppAssets.imageOrDefault(article.firstImageUrl);
+          final date = _formatArticleDate(article.articleDate);
+          final selectedArticle = SelectedArticle(
+            title: article.title,
+            date: date,
+            imagePath: imagePath,
+          );
+          final heroTag = ArticleDetailArgs.heroTagFor(
+            imagePath: imagePath,
+            title: article.title,
+            date: date,
+            sourceId: tag,
+            index: index,
+          );
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: CardImageBelow(
+              imagePath: imagePath,
+              title: article.title,
+              date: showDate ? date : null,
+              showPlayButton: article.hasVideo,
+              heroTag: heroTag,
+              isStarSelected:
+                  selectionService?.contains(selectedArticle) ?? false,
+              onStarTap: selectionService != null
+                  ? () => selectionService!.toggle(selectedArticle)
+                  : null,
+              onTap: onArticleTap != null
+                  ? () => onArticleTap!(
+                      ArticleDetailArgs.fromArticle(
+                        article,
+                        tag,
+                        heroTagOverride: heroTag,
+                      ),
+                    )
+                  : null,
+            ),
+          );
+        }, childCount: itemCount),
+      ),
     );
   }
 }

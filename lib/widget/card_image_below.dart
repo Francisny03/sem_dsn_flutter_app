@@ -50,6 +50,8 @@ class CardImageBelow extends StatelessWidget {
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
+                      memCacheWidth: 400,
+                      // pas de memCacheHeight pour garder le ratio et éviter l'effet étiré
                     ),
                   ),
                 ),
