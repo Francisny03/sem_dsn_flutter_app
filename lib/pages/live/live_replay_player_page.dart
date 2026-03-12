@@ -45,6 +45,9 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
   BetterPlayerController? _betterPlayerController;
   YoutubePlayerController? _youtubeController;
 
+  /// true = la vidéo YouTube (replay) est terminée.
+  bool _isYoutubeEnded = false;
+
   bool get _isVertical => widget.isLive
       ? LiveConfig.liveStreamIsVertical
       : LiveConfig.recapVideoIsVertical;
@@ -92,7 +95,13 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
   }
 
   void _onYoutubeUpdate() {
-    if (mounted) setState(() {});
+    if (!mounted || _youtubeController == null) return;
+    final endedNow = _youtubeController!.value.playerState == PlayerState.ended;
+    if (endedNow != _isYoutubeEnded) {
+      setState(() => _isYoutubeEnded = endedNow);
+    } else {
+      setState(() {});
+    }
   }
 
   @override
@@ -144,6 +153,16 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     ]);
   }
 
+  /// Fullscreen en gardant le téléphone en portrait (pour les vidéos verticales).
+  /// On laisse la barre de statut visible (SafeArea en haut).
+  void _enterFullscreenPortrait() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  }
+
   /// Fullscreen sans verrouiller l’orientation (Cas 2 : rotation) → sortie auto au retour portrait.
   void _enterFullscreenAllowRotation() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -173,7 +192,10 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
         _isFullscreen = true;
         _enteredFullscreenByRotation = byRotation;
       });
-      if (byRotation) {
+      if (_isVertical) {
+        // Live vertical : plein écran en portrait.
+        _enterFullscreenPortrait();
+      } else if (byRotation) {
         _enterFullscreenAllowRotation();
       } else {
         _enterFullscreenLockLandscape();
@@ -183,7 +205,10 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
         _isFullscreen = true;
         _enteredFullscreenByRotation = byRotation;
       });
-      if (byRotation) {
+      if (_isVertical) {
+        // Replay vertical : plein écran en portrait.
+        _enterFullscreenPortrait();
+      } else if (byRotation) {
         _enterFullscreenAllowRotation();
       } else {
         _enterFullscreenLockLandscape();
@@ -254,7 +279,8 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
                 children: [
                   Container(color: _isFullscreen ? Colors.black : AppColors.bg),
                   SafeArea(
-                    top: !_isFullscreen,
+                    // Pour les vidéos verticales, on veut garder la SafeArea en haut même en fullscreen.
+                    top: _isVertical ? true : !_isFullscreen,
                     left: true,
                     right: true,
                     bottom: true,
@@ -323,6 +349,25 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
                 ),
               ],
             ),
+            if (_isYoutubeEnded)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black45,
+                  child: Center(
+                    child: IconButton(
+                      iconSize: 96,
+                      icon: const Icon(
+                        Icons.play_circle_fill,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        _youtubeController!.seekTo(Duration.zero);
+                        _youtubeController!.play();
+                      },
+                    ),
+                  ),
+                ),
+              ),
             Positioned.fill(
               child: IgnorePointer(
                 ignoring: !_youtubeController!.value.isControlsVisible,

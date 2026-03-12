@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/youtube_fullscreen_page.dart';
 import 'package:sem_dsn/widget/youtube_seek_buttons.dart';
@@ -91,6 +92,12 @@ class ArticleVideoPlayer extends StatefulWidget {
 class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
   YoutubePlayerController? _youtubeController;
 
+  /// true = plein écran vertical (Shorts) affiché en overlay par-dessus la page.
+  bool _isVerticalFullscreen = false;
+
+  /// true = la vidéo est arrivée à la fin (PlayerState.ended).
+  bool _isEnded = false;
+
   void pause() => _youtubeController?.pause();
 
   @override
@@ -100,7 +107,14 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
   }
 
   void _onControllerUpdate() {
-    if (mounted) setState(() {});
+    if (!mounted || _youtubeController == null) return;
+    final state = _youtubeController!.value.playerState;
+    final endedNow = state == PlayerState.ended;
+    if (endedNow != _isEnded) {
+      setState(() => _isEnded = endedNow);
+    } else {
+      setState(() {});
+    }
   }
 
   void _syncController() {
@@ -126,6 +140,35 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
     if (mounted) setState(() {});
   }
 
+  bool get _isShorts => isYoutubeShortsUrl(widget.videoPath);
+
+  /// Active le plein écran vertical (portrait) en réutilisant le même controller.
+  void enterVerticalFullscreen() {
+    if (_youtubeController == null || !_isShorts) return;
+    if (_isVerticalFullscreen) return;
+    _isVerticalFullscreen = true;
+    setState(() {});
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  }
+
+  /// Quitte le plein écran vertical et restaure l’orientation.
+  void exitVerticalFullscreen() {
+    if (!_isVerticalFullscreen) return;
+    _isVerticalFullscreen = false;
+    setState(() {});
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
   @override
   void didUpdateWidget(covariant ArticleVideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -136,6 +179,10 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
 
   @override
   void dispose() {
+    // Si on quitte la page alors que le plein écran vertical est actif, on restaure l’UI.
+    if (_isVerticalFullscreen) {
+      exitVerticalFullscreen();
+    }
     _youtubeController?.removeListener(_onControllerUpdate);
     _youtubeController?.dispose();
     super.dispose();
@@ -169,14 +216,15 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
 
     final c = _youtubeController!;
     final controlsVisible = c.value.isControlsVisible;
-    final isShorts = isYoutubeShortsUrl(widget.videoPath);
+    final isShorts = _isShorts;
     final media = MediaQuery.sizeOf(context);
     // Shorts : conteneur vertical 9:16 (largeur × 16/9), plafonné à 70 % de l’écran
     final containerHeight = isShorts
         ? (media.width * (16 / 9)).clamp(widget.height, media.height * 0.7)
         : widget.height;
 
-    return SizedBox(
+    // Lecteur dans la page (hauteur fixée) : toujours présent pour garder le layout du scroll.
+    final embeddedPlayer = SizedBox(
       height: containerHeight,
       width: double.infinity,
       child: LayoutBuilder(
@@ -197,9 +245,9 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
                 aspectRatio: isShorts ? 9 / 16 : 16 / 9,
                 showVideoProgressIndicator: true,
                 progressIndicatorColor: AppColors.heroSelectionTag,
-                bottomActions: [
+                bottomActions: const [
                   CurrentPosition(),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   ProgressBar(
                     isExpanded: true,
                     colors: ProgressBarColors(
@@ -207,11 +255,31 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
                       handleColor: AppColors.heroSelectionTag,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   RemainingDuration(),
-                  const _YoutubeFullscreenVideoButton(),
+                  _YoutubeFullscreenVideoButton(),
                 ],
               ),
+              // Bouton replay centré quand la vidéo est terminée.
+              if (_isEnded)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black45,
+                    child: Center(
+                      child: IconButton(
+                        iconSize: 80,
+                        icon: const Icon(
+                          Icons.play_circle_fill,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          c.seekTo(Duration.zero);
+                          c.play();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
               // Même ligne que le bouton play, uniquement quand les contrôles sont visibles (tap écran)
               Positioned(
                 left: 0,
@@ -228,7 +296,7 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           YoutubeSeekBackButton(controller: c),
-                          IgnorePointer(
+                          const IgnorePointer(
                             child: SizedBox(width: 100, height: 80),
                           ),
                           YoutubeSeekForwardButton(controller: c),
@@ -242,6 +310,62 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
           );
         },
       ),
+    );
+
+    if (!_isVerticalFullscreen || !isShorts) {
+      return embeddedPlayer;
+    }
+
+    // Plein écran vertical : on garde le lecteur dans la page (embeddedPlayer)
+    // et on affiche un overlay fullscreen par-dessus avec SafeArea.
+    return Stack(
+      children: [
+        embeddedPlayer,
+        Positioned.fill(
+          child: Material(
+            color: Colors.black,
+            child: SafeArea(
+              child: Center(
+                child: AspectRatio(
+                  aspectRatio: 9 / 16,
+                  child: YoutubePlayer(
+                    controller: c,
+                    aspectRatio: 9 / 16,
+                    showVideoProgressIndicator: true,
+                    progressIndicatorColor: AppColors.heroSelectionTag,
+                    bottomActions: [
+                      const CurrentPosition(),
+                      const SizedBox(width: 8),
+                      ProgressBar(
+                        isExpanded: true,
+                        colors: ProgressBarColors(
+                          playedColor: AppColors.heroSelectionTag,
+                          handleColor: AppColors.heroSelectionTag,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const RemainingDuration(),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.fullscreen_exit,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        onPressed: exitVerticalFullscreen,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -261,6 +385,11 @@ class _YoutubeFullscreenVideoButtonState
   Widget build(BuildContext context) {
     final controller = YoutubePlayerController.of(context);
     if (controller == null) return const SizedBox.shrink();
+    final articleState = context
+        .findAncestorStateOfType<ArticleVideoPlayerState>();
+    final isShorts =
+        articleState != null &&
+        isYoutubeShortsUrl(articleState.widget.videoPath);
     final videoId = controller.metadata.videoId.isNotEmpty
         ? controller.metadata.videoId
         : controller.initialVideoId;
@@ -275,6 +404,7 @@ class _YoutubeFullscreenVideoButtonState
                 builder: (context) => YoutubeFullscreenPage(
                   videoId: videoId,
                   startAtSeconds: startAt,
+                  isVertical: isShorts,
                 ),
               ),
             )

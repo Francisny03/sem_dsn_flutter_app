@@ -5,7 +5,7 @@ import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/widget/youtube_seek_buttons.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-/// Page plein écran : uniquement la vidéo YouTube en paysage, sans barre ni texte.
+/// Page plein écran : uniquement la vidéo YouTube (paysage ou portrait), sans barre ni texte.
 /// À ouvrir via [Navigator.push] ; restaure l’orientation et la UI système au pop.
 class YoutubeFullscreenPage extends StatefulWidget {
   const YoutubeFullscreenPage({
@@ -13,6 +13,7 @@ class YoutubeFullscreenPage extends StatefulWidget {
     required this.videoId,
     this.startAtSeconds = 0,
     this.isRecap = false,
+    this.isVertical = false,
   });
 
   final String videoId;
@@ -21,12 +22,16 @@ class YoutubeFullscreenPage extends StatefulWidget {
   /// true = recap (bouton X, quitter = retour home). false = depuis article (fullscreen_exit, quitter = retour article, lecture en réduit).
   final bool isRecap;
 
+  /// true = vidéo verticale → plein écran portrait (9/16).
+  final bool isVertical;
+
   @override
   State<YoutubeFullscreenPage> createState() => _YoutubeFullscreenPageState();
 }
 
 class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
   late YoutubePlayerController _controller;
+  bool _isEnded = false;
 
   @override
   void initState() {
@@ -45,20 +50,42 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
   }
 
   void _onControllerUpdate() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final endedNow = _controller.value.playerState == PlayerState.ended;
+    if (endedNow != _isEnded) {
+      setState(() => _isEnded = endedNow);
+    } else {
+      setState(() {});
+    }
   }
 
   void _enterFullscreen() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    if (widget.isVertical ||
+        (widget.isRecap && LiveConfig.recapVideoIsVertical)) {
+      // Plein écran portrait (Shorts / vidéo verticale).
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } else {
+      // Plein écran paysage classique.
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
   }
 
   void _exitFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
   /// Recap : coupe la vidéo et retour à la page lecteur.
@@ -92,8 +119,11 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
     super.dispose();
   }
 
-  double get _aspectRatio =>
-      widget.isRecap && LiveConfig.recapVideoIsVertical ? 9 / 16 : 16 / 9;
+  double get _aspectRatio {
+    if (widget.isVertical) return 9 / 16;
+    if (widget.isRecap && LiveConfig.recapVideoIsVertical) return 9 / 16;
+    return 16 / 9;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,27 +136,46 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
             child: AspectRatio(
               aspectRatio: _aspectRatio,
               child: YoutubePlayer(
-              controller: _controller,
-              showVideoProgressIndicator: true,
-              progressIndicatorColor: AppColors.heroSelectionTag,
-              bottomActions: [
-                const SizedBox(width: 50),
-                CurrentPosition(),
-                const SizedBox(width: 8),
-                ProgressBar(
-                  isExpanded: true,
-                  colors: ProgressBarColors(
-                    playedColor: AppColors.heroSelectionTag,
-                    handleColor: AppColors.heroSelectionTag,
+                controller: _controller,
+                showVideoProgressIndicator: true,
+                progressIndicatorColor: AppColors.heroSelectionTag,
+                bottomActions: [
+                  const SizedBox(width: 50),
+                  CurrentPosition(),
+                  const SizedBox(width: 8),
+                  ProgressBar(
+                    isExpanded: true,
+                    colors: ProgressBarColors(
+                      playedColor: AppColors.heroSelectionTag,
+                      handleColor: AppColors.heroSelectionTag,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                RemainingDuration(),
-                const SizedBox(width: 50),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  RemainingDuration(),
+                  const SizedBox(width: 50),
+                ],
+              ),
             ),
           ),
+          if (_isEnded)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black45,
+                child: Center(
+                  child: IconButton(
+                    iconSize: 96,
+                    icon: const Icon(
+                      Icons.play_circle_fill,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      _controller.seekTo(Duration.zero);
+                      _controller.play();
+                    },
+                  ),
+                ),
+              ),
+            ),
           // Même ligne que le bouton play, uniquement quand les contrôles sont visibles (tap écran)
           Positioned.fill(
             child: IgnorePointer(
