@@ -48,6 +48,9 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
   /// true = la vidéo YouTube (replay) est terminée.
   bool _isYoutubeEnded = false;
 
+  /// true = l'utilisateur a fermé le fullscreen via le bouton X ; on ne réouvre pas en paysage tant qu'il n'est pas repassé en portrait.
+  bool _userDismissedFullscreen = false;
+
   bool get _isVertical => widget.isLive
       ? LiveConfig.liveStreamIsVertical
       : LiveConfig.recapVideoIsVertical;
@@ -116,8 +119,10 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     final h = bounds.height / ratio;
     if (!mounted) return;
     if (w > h) {
-      if (!_isFullscreen) _openFullscreen(byRotation: true);
+      if (!_isFullscreen && !_userDismissedFullscreen)
+        _openFullscreen(byRotation: true);
     } else {
+      _userDismissedFullscreen = false;
       if (_isFullscreen && _enteredFullscreenByRotation) _closeFullscreen();
     }
   }
@@ -221,6 +226,7 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     setState(() {
       _isFullscreen = false;
       _enteredFullscreenByRotation = false;
+      _userDismissedFullscreen = true;
     });
     _exitFullscreen();
   }
@@ -295,13 +301,20 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
                     SafeArea(
                       child: Align(
                         alignment: Alignment.topRight,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 28,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                            onPressed: _closeFullscreen,
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(48, 48),
+                              padding: const EdgeInsets.all(12),
+                            ),
                           ),
-                          onPressed: _closeFullscreen,
                         ),
                       ),
                     ),

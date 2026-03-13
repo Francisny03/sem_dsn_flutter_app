@@ -98,16 +98,16 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
   }
 
   /// Article : ferme le fullscreen, retour article avec position + play state pour continuer en lecteur réduit.
-  void _exitFullscreenAndPop() {
+  /// Délai après _exitFullscreen pour laisser l’orientation se stabiliser (surtout en paysage).
+  Future<void> _exitFullscreenAndPop() async {
     _exitFullscreen();
     final position = _controller.value.position;
     final isPlaying = _controller.value.playerState == PlayerState.playing;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Navigator.of(context).pop(<String, dynamic>{
-        'position': position.inSeconds,
-        'isPlaying': isPlaying,
-      });
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    Navigator.of(context).pop(<String, dynamic>{
+      'position': position.inSeconds,
+      'isPlaying': isPlaying,
     });
   }
 
@@ -199,15 +199,22 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,
-              child: IconButton(
-                icon: Icon(
-                  widget.isRecap ? Icons.close : Icons.fullscreen_exit,
-                  color: Colors.white,
-                  size: 28,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: IconButton(
+                  icon: Icon(
+                    widget.isRecap ? Icons.close : Icons.fullscreen_exit,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                  onPressed: widget.isRecap
+                      ? _closeAndPop
+                      : _exitFullscreenAndPop,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    padding: const EdgeInsets.all(12),
+                  ),
                 ),
-                onPressed: widget.isRecap
-                    ? _closeAndPop
-                    : _exitFullscreenAndPop,
               ),
             ),
           ),
