@@ -32,6 +32,7 @@ class YoutubeFullscreenPage extends StatefulWidget {
 class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
   late YoutubePlayerController _controller;
   bool _isEnded = false;
+  bool _lastControlsVisible = false;
 
   @override
   void initState() {
@@ -52,11 +53,12 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
   void _onControllerUpdate() {
     if (!mounted) return;
     final endedNow = _controller.value.playerState == PlayerState.ended;
-    if (endedNow != _isEnded) {
-      setState(() => _isEnded = endedNow);
-    } else {
-      setState(() {});
-    }
+    final controlsVisible = _controller.value.isControlsVisible;
+    if (endedNow == _isEnded && controlsVisible == _lastControlsVisible) return;
+    setState(() {
+      _isEnded = endedNow;
+      _lastControlsVisible = controlsVisible;
+    });
   }
 
   void _enterFullscreen() {
@@ -160,7 +162,7 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
           if (_isEnded)
             Positioned.fill(
               child: Container(
-                color: Colors.black45,
+                color: Colors.black,
                 child: Center(
                   child: IconButton(
                     iconSize: 96,
@@ -176,26 +178,27 @@ class _YoutubeFullscreenPageState extends State<YoutubeFullscreenPage> {
                 ),
               ),
             ),
-          // Même ligne que le bouton play, uniquement quand les contrôles sont visibles (tap écran)
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: !_controller.value.isControlsVisible,
-              child: AnimatedOpacity(
-                opacity: _controller.value.isControlsVisible ? 1 : 0,
-                duration: const Duration(milliseconds: 300),
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      YoutubeSeekBackButton(controller: _controller),
-                      IgnorePointer(child: SizedBox(width: 100, height: 80)),
-                      YoutubeSeekForwardButton(controller: _controller),
-                    ],
+          if (!_isEnded)
+            // Même ligne que le bouton play, uniquement quand les contrôles sont visibles (tap écran)
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: !_controller.value.isControlsVisible,
+                child: AnimatedOpacity(
+                  opacity: _controller.value.isControlsVisible ? 1 : 0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        YoutubeSeekBackButton(controller: _controller),
+                        IgnorePointer(child: SizedBox(width: 100, height: 80)),
+                        YoutubeSeekForwardButton(controller: _controller),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,

@@ -98,6 +98,9 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
   /// true = la vidéo est arrivée à la fin (PlayerState.ended).
   bool _isEnded = false;
 
+  /// Permet de ne rebuild la UI que quand les contrôles changent.
+  bool _lastControlsVisible = false;
+
   void pause() => _youtubeController?.pause();
 
   @override
@@ -108,13 +111,15 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
 
   void _onControllerUpdate() {
     if (!mounted || _youtubeController == null) return;
-    final state = _youtubeController!.value.playerState;
-    final endedNow = state == PlayerState.ended;
-    if (endedNow != _isEnded) {
-      setState(() => _isEnded = endedNow);
-    } else {
-      setState(() {});
+    final endedNow = _youtubeController!.value.playerState == PlayerState.ended;
+    final controlsVisible = _youtubeController!.value.isControlsVisible;
+    if (endedNow == _isEnded && controlsVisible == _lastControlsVisible) {
+      return;
     }
+    setState(() {
+      _isEnded = endedNow;
+      _lastControlsVisible = controlsVisible;
+    });
   }
 
   void _syncController() {
@@ -264,7 +269,7 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
               if (_isEnded)
                 Positioned.fill(
                   child: Container(
-                    color: Colors.black45,
+                    color: Colors.black,
                     child: Center(
                       child: IconButton(
                         iconSize: 80,
@@ -281,31 +286,32 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
                   ),
                 ),
               // Même ligne que le bouton play, uniquement quand les contrôles sont visibles (tap écran)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                height: h,
-                child: IgnorePointer(
-                  ignoring: !controlsVisible,
-                  child: AnimatedOpacity(
-                    opacity: controlsVisible ? 1 : 0,
-                    duration: const Duration(milliseconds: 300),
-                    child: Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          YoutubeSeekBackButton(controller: c),
-                          const IgnorePointer(
-                            child: SizedBox(width: 100, height: 80),
-                          ),
-                          YoutubeSeekForwardButton(controller: c),
-                        ],
+              if (!_isEnded)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: h,
+                  child: IgnorePointer(
+                    ignoring: !controlsVisible,
+                    child: AnimatedOpacity(
+                      opacity: controlsVisible ? 1 : 0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            YoutubeSeekBackButton(controller: c),
+                            const IgnorePointer(
+                              child: SizedBox(width: 100, height: 80),
+                            ),
+                            YoutubeSeekForwardButton(controller: c),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -328,36 +334,59 @@ class ArticleVideoPlayerState extends State<ArticleVideoPlayer> {
               child: Center(
                 child: AspectRatio(
                   aspectRatio: 9 / 16,
-                  child: YoutubePlayer(
-                    controller: c,
-                    aspectRatio: 9 / 16,
-                    showVideoProgressIndicator: true,
-                    progressIndicatorColor: AppColors.heroSelectionTag,
-                    bottomActions: [
-                      const CurrentPosition(),
-                      const SizedBox(width: 8),
-                      ProgressBar(
-                        isExpanded: true,
-                        colors: ProgressBarColors(
-                          playedColor: AppColors.heroSelectionTag,
-                          handleColor: AppColors.heroSelectionTag,
-                        ),
+                  child: Stack(
+                    children: [
+                      YoutubePlayer(
+                        controller: c,
+                        aspectRatio: 9 / 16,
+                        showVideoProgressIndicator: true,
+                        progressIndicatorColor: AppColors.heroSelectionTag,
+                        bottomActions: [
+                          const CurrentPosition(),
+                          const SizedBox(width: 8),
+                          ProgressBar(
+                            isExpanded: true,
+                            colors: ProgressBarColors(
+                              playedColor: AppColors.heroSelectionTag,
+                              handleColor: AppColors.heroSelectionTag,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const RemainingDuration(),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.fullscreen_exit,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                            onPressed: exitVerticalFullscreen,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      const RemainingDuration(),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.fullscreen_exit,
-                          color: Colors.white,
-                          size: 22,
+                      if (_isEnded)
+                        Positioned.fill(
+                          child: Container(
+                            color: Colors.black,
+                            child: Center(
+                              child: IconButton(
+                                iconSize: 96,
+                                icon: const Icon(
+                                  Icons.play_circle_fill,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  c.seekTo(Duration.zero);
+                                  c.play();
+                                },
+                              ),
+                            ),
+                          ),
                         ),
-                        onPressed: exitVerticalFullscreen,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                      ),
                     ],
                   ),
                 ),

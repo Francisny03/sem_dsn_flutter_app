@@ -107,8 +107,9 @@ class _HomePageState extends State<HomePage> {
     final categoryId = _currentListCategoryId();
     if (categoryId == null) return;
     if (!ap.hasMoreForCategory(categoryId) ||
-        ap.loadingMoreForCategory(categoryId))
+        ap.loadingMoreForCategory(categoryId)) {
       return;
+    }
     ap.loadMoreArticlesForCategory(categoryId);
   }
 
@@ -118,14 +119,17 @@ class _HomePageState extends State<HomePage> {
     final selectedIndex = _selectedFilterIndex;
     if (categories.isEmpty ||
         selectedIndex < 0 ||
-        selectedIndex >= categories.length)
+        selectedIndex >= categories.length) {
       return null;
+    }
     final cat = categories[selectedIndex];
     if (cat.id == 9000) return null;
-    if (cat.slug == 'discours')
+    if (cat.slug == 'discours') {
       return null; // on affiche la grille, pas la liste
-    if (cat.hasChildren && cat.children.length == 1)
+    }
+    if (cat.hasChildren && cat.children.length == 1) {
       return cat.children.first.id;
+    }
     if (!cat.hasChildren) return cat.id;
     return null;
   }

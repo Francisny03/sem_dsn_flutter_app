@@ -48,6 +48,9 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
   /// true = la vidéo YouTube (replay) est terminée.
   bool _isYoutubeEnded = false;
 
+  /// Permet de ne rebuild la UI que quand la visibilité des contrôles change.
+  bool _lastControlsVisible = false;
+
   /// true = l'utilisateur a fermé le fullscreen via le bouton X ; on ne réouvre pas en paysage tant qu'il n'est pas repassé en portrait.
   bool _userDismissedFullscreen = false;
 
@@ -99,12 +102,16 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
 
   void _onYoutubeUpdate() {
     if (!mounted || _youtubeController == null) return;
-    final endedNow = _youtubeController!.value.playerState == PlayerState.ended;
-    if (endedNow != _isYoutubeEnded) {
-      setState(() => _isYoutubeEnded = endedNow);
-    } else {
-      setState(() {});
+    final endedNow =
+        _youtubeController!.value.playerState == PlayerState.ended;
+    final controlsVisible = _youtubeController!.value.isControlsVisible;
+    if (endedNow == _isYoutubeEnded && controlsVisible == _lastControlsVisible) {
+      return;
     }
+    setState(() {
+      _isYoutubeEnded = endedNow;
+      _lastControlsVisible = controlsVisible;
+    });
   }
 
   @override
@@ -119,8 +126,9 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     final h = bounds.height / ratio;
     if (!mounted) return;
     if (w > h) {
-      if (!_isFullscreen && !_userDismissedFullscreen)
+      if (!_isFullscreen && !_userDismissedFullscreen) {
         _openFullscreen(byRotation: true);
+      }
     } else {
       _userDismissedFullscreen = false;
       if (_isFullscreen && _enteredFullscreenByRotation) _closeFullscreen();
@@ -365,7 +373,7 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
             if (_isYoutubeEnded)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black45,
+                  color: Colors.black,
                   child: Center(
                     child: IconButton(
                       iconSize: 96,
@@ -381,29 +389,32 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
                   ),
                 ),
               ),
-            Positioned.fill(
-              child: IgnorePointer(
-                ignoring: !_youtubeController!.value.isControlsVisible,
-                child: AnimatedOpacity(
-                  opacity: _youtubeController!.value.isControlsVisible ? 1 : 0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        YoutubeSeekBackButton(controller: _youtubeController!),
-                        const IgnorePointer(
-                          child: SizedBox(width: 100, height: 80),
-                        ),
-                        YoutubeSeekForwardButton(
-                          controller: _youtubeController!,
-                        ),
-                      ],
+            if (!_isYoutubeEnded)
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !_youtubeController!.value.isControlsVisible,
+                  child: AnimatedOpacity(
+                    opacity: _youtubeController!.value.isControlsVisible ? 1 : 0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          YoutubeSeekBackButton(
+                            controller: _youtubeController!,
+                          ),
+                          const IgnorePointer(
+                            child: SizedBox(width: 100, height: 80),
+                          ),
+                          YoutubeSeekForwardButton(
+                            controller: _youtubeController!,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       );
