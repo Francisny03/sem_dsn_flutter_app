@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/pages/splashscreen.dart';
 import 'package:sem_dsn/pages/webview/webview_page.dart';
+
+const String _keyHasSeenWelcome = 'sem_dsn_has_seen_welcome';
 
 /// Affiche le menu (Langues [caché] + Politique/CGU/Contact + Déconnexion) au clic sur les 3 points du header.
 void showHeaderMenu(BuildContext context) {
@@ -115,8 +118,12 @@ class _HeaderMenuContent extends StatelessWidget {
             child: SizedBox(
               height: 48,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
+                onPressed: () async {
+                  // Force l'affichage du WelcomeScreen après logout.
+                  // (SplashScreen saute Home tant que ce flag reste à true.)
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool(_keyHasSeenWelcome, false);
+
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute<void>(
                       builder: (_) => const SplashScreen(),

@@ -144,9 +144,15 @@ class _AppHeaderState extends State<AppHeader> with TickerProviderStateMixin {
           padding: const EdgeInsets.only(right: 8),
           child: _HeaderActionsRow(
             children: [
-              _HeaderIcon(
-                icon: Icons.notifications_outlined,
-                onPressed: widget.onNotificationsPressed ?? () {},
+              // Notifications désactivées temporairement (grisées + non cliquables).
+              Opacity(
+                opacity: 0.35,
+                child: AbsorbPointer(
+                  child: _HeaderIcon(
+                    icon: Icons.notifications_outlined,
+                    onPressed: widget.onNotificationsPressed ?? () {},
+                  ),
+                ),
               ),
               _HeaderIcon(
                 icon: Icons.search,
