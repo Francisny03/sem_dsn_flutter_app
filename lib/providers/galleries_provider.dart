@@ -11,6 +11,7 @@ class GalleriesProvider extends ChangeNotifier {
   bool _loadFailed = false;
   final Map<int, List<GalleryImage>> _imagesByGalleryId = {};
   final Map<int, bool> _loadingImages = {};
+  final Map<int, bool> _loadFailedImages = {};
   final Map<int, int> _totalByGalleryId = {};
 
   List<Gallery> get galleries => _galleries;
@@ -20,6 +21,8 @@ class GalleriesProvider extends ChangeNotifier {
   List<GalleryImage> imagesForGallery(int galleryId) =>
       _imagesByGalleryId[galleryId] ?? [];
   bool isLoadingImages(int galleryId) => _loadingImages[galleryId] ?? false;
+  bool isLoadFailedImages(int galleryId) =>
+      _loadFailedImages[galleryId] ?? false;
   int totalImagesForGallery(int galleryId) => _totalByGalleryId[galleryId] ?? 0;
 
   Future<void> loadIfNeeded() async {
@@ -51,6 +54,7 @@ class GalleriesProvider extends ChangeNotifier {
   Future<void> loadGalleryImages(int galleryId) async {
     if (_loadingImages[galleryId] == true) return;
     _loadingImages[galleryId] = true;
+    _loadFailedImages[galleryId] = false;
     notifyListeners();
     try {
       final res = await fetchGalleryImages(galleryId);
@@ -59,8 +63,9 @@ class GalleriesProvider extends ChangeNotifier {
       _imagesByGalleryId[galleryId] = list;
       _totalByGalleryId[galleryId] = res.total;
     } catch (_) {
-      _imagesByGalleryId[galleryId] = [];
-      _totalByGalleryId[galleryId] = 0;
+      // Ne pas vider le cache : si l'utilisateur était déjà chargé,
+      // on conserve l'affichage et on affiche un message de non-connexion.
+      _loadFailedImages[galleryId] = true;
     } finally {
       _loadingImages[galleryId] = false;
       notifyListeners();

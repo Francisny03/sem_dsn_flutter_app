@@ -85,11 +85,12 @@ class _BookDetailPageState extends State<BookDetailPage> {
                       color: AppColors.whiteTextColor,
                     ),
                     actions: [
-                      IconButton(
-                        icon: const Icon(Icons.share_outlined),
-                        onPressed: () => _share(context),
-                        color: AppColors.whiteTextColor,
-                      ),
+                      // Share désactivé temporairement (activer plus tard).
+                      // IconButton(
+                      //   icon: const Icon(Icons.share_outlined),
+                      //   onPressed: () => _share(context),
+                      //   color: AppColors.whiteTextColor,
+                      // ),
                     ],
                     title: _showTitleInAppBar
                         ? Text(
@@ -309,6 +310,7 @@ class _BookDetailPageState extends State<BookDetailPage> {
     );
   }
 
+  // ignore: unused_element
   void _share(BuildContext context) {
     if (_book.fileUrl.isNotEmpty) {
       Share.share(_book.fileUrl, subject: _book.name);

@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:sem_dsn/core/constants/app_assets.dart';
 import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/models/gallery.dart';
+import 'package:sem_dsn/models/gallery_image.dart';
 import 'package:sem_dsn/providers/galleries_provider.dart';
+import 'package:sem_dsn/widget/no_connection_view.dart';
 
 class PhotothequeFullscreenPage extends StatefulWidget {
   const PhotothequeFullscreenPage({
@@ -39,7 +41,7 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage>
 
   bool _isZooming = false;
 
-  late final List<PhotoViewController> _photoViewControllers;
+  late List<PhotoViewController> _photoViewControllers;
 
   @override
   void initState() {
@@ -94,6 +96,7 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage>
     _photoViewControllers[index].reset();
   }
 
+  // ignore: unused_element
   ImageProvider _imageProviderForPath(String path) {
     final effectivePath = path.trim().isEmpty
         ? AppAssets.defaultImageArticle
@@ -125,9 +128,58 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage>
     return list.isNotEmpty ? list.first.name : '';
   }
 
+  Future<void> _onRefreshBackend() async {
+    final galleryId = widget.galleryId;
+    if (galleryId == null) return;
+
+    await context.read<GalleriesProvider>().loadGalleryImages(galleryId);
+
+    final providerImages =
+        context.read<GalleriesProvider>().imagesForGallery(galleryId);
+
+    // Même logique que dans `build` : on utilise le provider seulement si non vide.
+    final effectiveCount =
+        providerImages.isNotEmpty ? providerImages.length : widget.imagePaths.length;
+
+    if (_photoViewControllers.length != effectiveCount) {
+      for (final c in _photoViewControllers) {
+        c.dispose();
+      }
+      _photoViewControllers =
+          List.generate(effectiveCount, (_) => PhotoViewController());
+    }
+
+    if (_currentIndex >= effectiveCount && effectiveCount > 0) {
+      setState(() {
+        _currentIndex = effectiveCount - 1;
+        _isZooming = false;
+      });
+    } else {
+      setState(() => _isZooming = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final total = widget.imagePaths.length;
+    final galleryId = widget.galleryId;
+    final galleriesProvider = context.watch<GalleriesProvider>();
+    final providerImages = galleryId != null
+        ? galleriesProvider.imagesForGallery(galleryId)
+        : <GalleryImage>[];
+    final loadFailedImages =
+        galleryId != null ? galleriesProvider.isLoadFailedImages(galleryId) : false;
+
+    // Si le provider est alimenté (après refresh), on reconstruit la liste à partir du backend.
+    // Sinon, on retombe sur la liste passée via le widget.
+    final imagePaths = (galleryId != null && providerImages.isNotEmpty)
+        ? providerImages.map((e) => AppAssets.imageOrDefault(e.url)).toList()
+        : widget.imagePaths;
+
+    final imageCaptions = (galleryId != null && providerImages.isNotEmpty)
+        ? providerImages.map((e) => e.name).toList()
+        : widget.imageCaptions;
+
+    final total = imagePaths.length;
     final title = _effectiveTitle(context);
 
     if (total == 0) {
@@ -140,7 +192,16 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage>
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: const Center(child: Text('Aucune image')),
+        body: loadFailedImages
+            ? NoConnectionView(
+                minHeight: 220,
+                onRetry: () {
+                  final id = widget.galleryId;
+                  if (id == null) return;
+                  context.read<GalleriesProvider>().loadGalleryImages(id);
+                },
+              )
+            : const Center(child: Text('Aucune image')),
       );
     }
 
@@ -179,101 +240,113 @@ class _PhotothequeFullscreenPageState extends State<PhotothequeFullscreenPage>
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final caption =
-              widget.imageCaptions != null &&
-                  _currentIndex < widget.imageCaptions!.length &&
-                  widget.imageCaptions![_currentIndex].isNotEmpty
-              ? widget.imageCaptions![_currentIndex]
-              : null;
+      body: RefreshIndicator(
+        onRefresh: _onRefreshBackend,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final caption = imageCaptions != null &&
+                    _currentIndex < imageCaptions.length &&
+                    imageCaptions[_currentIndex].isNotEmpty
+                ? imageCaptions[_currentIndex]
+                : null;
 
-          final captionHeight = constraints.maxHeight * 0.25;
+            final captionHeight = constraints.maxHeight * 0.25;
+            final effectiveCaptionHeight = _isZooming ? 0.0 : captionHeight;
+            final photoHeight = (constraints.maxHeight - effectiveCaptionHeight)
+                .clamp(0.0, double.infinity);
 
-          return Column(
-            children: [
-              Expanded(
-                child: PhotoViewGallery.builder(
-                  pageController: _pageController,
-                  itemCount: total,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentIndex = index;
-                      _isZooming = false;
-                    });
-                    _resetZoomFor(index);
-                  },
-                  backgroundDecoration: const BoxDecoration(
-                    color: AppColors.bg,
-                  ),
-                  scrollPhysics: const BouncingScrollPhysics(),
-                  enableRotation: false,
-
-                  /// 🔥 DETECTION ZOOM
-                  scaleStateChangedCallback: (scaleState) {
-                    final zooming = scaleState == PhotoViewScaleState.zoomedIn;
-
-                    if (zooming != _isZooming) {
-                      setState(() => _isZooming = zooming);
-
-                      if (!zooming) {
-                        _resetZoomFor(_currentIndex);
-                      }
-                    }
-                  },
-
-                  builder: (context, index) {
-                    return PhotoViewGalleryPageOptions.customChild(
-                      controller: _photoViewControllers[index],
-                      initialScale: PhotoViewComputedScale.contained,
-                      minScale: PhotoViewComputedScale.contained,
-                      maxScale: PhotoViewComputedScale.covered * 2.5,
-                      child: GestureDetector(
-                        onDoubleTap:
-                            _handleDoubleTap, // 🔥 Appelle la fonction fluide
-                        child: CachedNetworkImage(
-                          imageUrl: widget.imagePaths[index],
-                          fit: BoxFit.contain,
-                          // ... rest of your code ...
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: constraints.maxHeight,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: photoHeight,
+                      child: PhotoViewGallery.builder(
+                        pageController: _pageController,
+                        itemCount: total,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentIndex = index;
+                            _isZooming = false;
+                          });
+                          _resetZoomFor(index);
+                        },
+                        backgroundDecoration: const BoxDecoration(
+                          color: AppColors.bg,
                         ),
+                        scrollPhysics: const BouncingScrollPhysics(),
+                        enableRotation: false,
+
+                        /// 🔥 DETECTION ZOOM
+                        scaleStateChangedCallback: (scaleState) {
+                          final zooming =
+                              scaleState == PhotoViewScaleState.zoomedIn ||
+                                  scaleState == PhotoViewScaleState.zoomedOut;
+
+                          if (zooming != _isZooming) {
+                            setState(() => _isZooming = zooming);
+
+                            if (!zooming) {
+                              _resetZoomFor(_currentIndex);
+                            }
+                          }
+                        },
+
+                        builder: (context, index) {
+                          return PhotoViewGalleryPageOptions.customChild(
+                            controller: _photoViewControllers[index],
+                            initialScale: PhotoViewComputedScale.contained,
+                            minScale: PhotoViewComputedScale.contained,
+                            maxScale: PhotoViewComputedScale.covered * 2.5,
+                            child: GestureDetector(
+                              onDoubleTap: _handleDoubleTap,
+                              child: CachedNetworkImage(
+                                imageUrl: imagePaths[index],
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-              ),
+                    ),
 
-              /// 🔥 TEXTE QUI DISPARAIT AU ZOOM
-              if (caption != null && caption.isNotEmpty)
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 250),
-                  opacity: _isZooming ? 0 : 1,
-                  child: AnimatedSize(
-                    duration: const Duration(milliseconds: 250),
-                    child: SizedBox(
-                      height: _isZooming ? 0 : captionHeight,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: Text(
-                            caption,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.blackIcon,
-                              fontSize: 14,
+                    /// 🔥 TEXTE QUI DISPARAIT AU ZOOM
+                    if (caption != null && caption.isNotEmpty)
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 250),
+                        opacity: _isZooming ? 0 : 1,
+                        child: AnimatedSize(
+                          duration: const Duration(milliseconds: 250),
+                          child: SizedBox(
+                            height: _isZooming ? 0 : captionHeight,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                child: Text(
+                                  caption,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: AppColors.blackIcon,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                  ],
                 ),
-            ],
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }

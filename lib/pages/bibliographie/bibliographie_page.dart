@@ -10,6 +10,7 @@ import 'package:sem_dsn/pages/book_detail/book_detail_page.dart';
 import 'package:sem_dsn/providers/books_provider.dart';
 import 'package:sem_dsn/widget/bibliography_livre_tile.dart';
 import 'package:sem_dsn/widget/bibliography_revue_tile.dart';
+import 'package:sem_dsn/widget/no_connection_view.dart';
 
 /// Hauteur de la barre d’onglets sticky.
 const double _kTabBarHeight = 48;
@@ -46,6 +47,7 @@ class _BibliographiePageState extends State<BibliographiePage> {
         });
         final books = booksProvider.books;
         final loading = booksProvider.loading;
+        final loadFailed = booksProvider.loadFailed;
         final useApiBooks = books.isNotEmpty;
 
         return NestedScrollView(
@@ -70,6 +72,7 @@ class _BibliographiePageState extends State<BibliographiePage> {
             onRefresh: () => booksProvider.load(),
             child: _LivresTabContent(
               loading: loading,
+              loadFailed: loadFailed,
               useApiBooks: useApiBooks,
               books: books,
             ),
@@ -84,11 +87,13 @@ class _BibliographiePageState extends State<BibliographiePage> {
 class _LivresTabContent extends StatelessWidget {
   const _LivresTabContent({
     required this.loading,
+    required this.loadFailed,
     required this.useApiBooks,
     required this.books,
   });
 
   final bool loading;
+  final bool loadFailed;
   final bool useApiBooks;
   final List<Book> books;
 
@@ -96,6 +101,12 @@ class _LivresTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     if (loading && !useApiBooks) {
       return const Center(child: CircularProgressIndicator());
+    }
+    if (loadFailed && !useApiBooks) {
+      return NoConnectionView(
+        onRetry: () => context.read<BooksProvider>().load(),
+        minHeight: 220,
+      );
     }
     final count = useApiBooks ? books.length : bibliographyBooks.length;
     return ListView.builder(

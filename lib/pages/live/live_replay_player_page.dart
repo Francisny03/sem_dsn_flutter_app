@@ -102,10 +102,10 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
 
   void _onYoutubeUpdate() {
     if (!mounted || _youtubeController == null) return;
-    final endedNow =
-        _youtubeController!.value.playerState == PlayerState.ended;
+    final endedNow = _youtubeController!.value.playerState == PlayerState.ended;
     final controlsVisible = _youtubeController!.value.isControlsVisible;
-    if (endedNow == _isYoutubeEnded && controlsVisible == _lastControlsVisible) {
+    if (endedNow == _isYoutubeEnded &&
+        controlsVisible == _lastControlsVisible) {
       return;
     }
     setState(() {
@@ -146,6 +146,7 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
     super.dispose();
   }
 
+  // ignore: unused_element
   void _share() {
     if (widget.isLive && widget.streamUrl != null) {
       Share.share(widget.streamUrl!, subject: AppStrings.liveTitle);
@@ -279,11 +280,12 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
                 ),
                 centerTitle: true,
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.share, size: 22),
-                    color: AppColors.blackIcon,
-                    onPressed: _share,
-                  ),
+                  // Share désactivé temporairement (activer plus tard).
+                  // IconButton(
+                  //   icon: const Icon(Icons.share, size: 22),
+                  //   color: AppColors.blackIcon,
+                  //   onPressed: _share,
+                  // ),
                 ],
               ),
         body: _isPopping
@@ -394,7 +396,9 @@ class _LiveReplayPlayerPageState extends State<LiveReplayPlayerPage>
                 child: IgnorePointer(
                   ignoring: !_youtubeController!.value.isControlsVisible,
                   child: AnimatedOpacity(
-                    opacity: _youtubeController!.value.isControlsVisible ? 1 : 0,
+                    opacity: _youtubeController!.value.isControlsVisible
+                        ? 1
+                        : 0,
                     duration: const Duration(milliseconds: 300),
                     child: Center(
                       child: Row(

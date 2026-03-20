@@ -36,7 +36,6 @@ class BooksProvider extends ChangeNotifier {
       list.sort((a, b) => (a.position ?? 0).compareTo(b.position ?? 0));
       _books = list;
     } catch (_) {
-      _books = [];
       _loadFailed = true;
     } finally {
       _loading = false;

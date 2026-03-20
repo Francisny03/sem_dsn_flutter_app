@@ -6,6 +6,7 @@ import 'package:sem_dsn/core/theme/app_colors.dart';
 import 'package:sem_dsn/providers/galleries_provider.dart';
 import 'package:sem_dsn/pages/phototheque/phototheque_fullscreen_page.dart';
 import 'package:sem_dsn/core/constants/app_strings.dart';
+import 'package:sem_dsn/widget/no_connection_view.dart';
 import 'package:sem_dsn/widget/image_from_path.dart';
 
 /// Page détail d'une galerie Photothèque : titre + nombre d'images dans l'AppBar, grille d'images depuis l'API.
@@ -76,47 +77,63 @@ class _PhotothequeCategoryPageState extends State<PhotothequeCategoryPage> {
             centerTitle: true,
           ),
           body: SafeArea(
-            child: loading && images.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : images.isEmpty
-                ? const Center(child: Text('Aucune image'))
-                : GridView.builder(
-                    padding: const EdgeInsets.all(4),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          mainAxisSpacing: 4,
-                          crossAxisSpacing: 4,
-                          childAspectRatio: 1,
-                        ),
-                    itemCount: images.length,
-                    itemBuilder: (context, index) {
-                      final img = images[index];
-                      final imageUrl = AppAssets.imageOrDefault(img.url);
-                      return _PhotoGridTile(
-                        imageUrl: imageUrl,
-                        cacheKey: 'pt_${img.galleryId}_${img.id}',
-                        memCacheSize: 400,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => PhotothequeFullscreenPage(
-                                imagePaths: images
-                                    .map((e) => AppAssets.imageOrDefault(e.url))
-                                    .toList(),
-                                initialIndex: index,
-                                imageCaptions: images
-                                    .map((e) => e.name)
-                                    .toList(),
-                                albumTitle: widget.title,
-                                galleryId: widget.galleryId,
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await context.read<GalleriesProvider>().loadGalleryImages(
+                  widget.galleryId,
+                );
+              },
+              child: loading && images.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : images.isEmpty
+                  ? (galleriesProvider.isLoadFailedImages(widget.galleryId)
+                      ? NoConnectionView(
+                          onRetry: () => context
+                              .read<GalleriesProvider>()
+                              .loadGalleryImages(widget.galleryId),
+                        )
+                      : const Center(child: Text('Aucune image')))
+                  : GridView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(4),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 4,
+                            crossAxisSpacing: 4,
+                            childAspectRatio: 1,
+                          ),
+                      itemCount: images.length,
+                      itemBuilder: (context, index) {
+                        final img = images[index];
+                        final imageUrl = AppAssets.imageOrDefault(img.url);
+                        return _PhotoGridTile(
+                          imageUrl: imageUrl,
+                          cacheKey: 'pt_${img.galleryId}_${img.id}',
+                          memCacheSize: 400,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => PhotothequeFullscreenPage(
+                                  imagePaths: images
+                                      .map(
+                                        (e) => AppAssets.imageOrDefault(e.url),
+                                      )
+                                      .toList(),
+                                  initialIndex: index,
+                                  imageCaptions: images
+                                      .map((e) => e.name)
+                                      .toList(),
+                                  albumTitle: widget.title,
+                                  galleryId: widget.galleryId,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
           ),
         );
       },

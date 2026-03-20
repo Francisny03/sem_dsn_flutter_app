@@ -111,17 +111,18 @@ class _ArticleDetailHeroLayoutState extends State<ArticleDetailHeroLayout> {
                   onTap: widget.onStarTap,
                   iconColor: AppColors.blackIcon,
                 ),
-                Builder(
-                  builder: (buttonContext) => IconButton(
-                    icon: const Icon(Icons.share, size: 22),
-                    color: AppColors.blackIcon,
-                    onPressed: () => widget.onShare(buttonContext),
-                    style: IconButton.styleFrom(
-                      padding: const EdgeInsets.all(8),
-                      minimumSize: const Size(40, 40),
-                    ),
-                  ),
-                ),
+                // Share désactivé temporairement (activer plus tard).
+                // Builder(
+                //   builder: (buttonContext) => IconButton(
+                //     icon: const Icon(Icons.share, size: 22),
+                //     color: AppColors.blackIcon,
+                //     onPressed: () => widget.onShare(buttonContext),
+                //     style: IconButton.styleFrom(
+                //       padding: const EdgeInsets.all(8),
+                //       minimumSize: const Size(40, 40),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             body: CustomScrollView(
@@ -222,16 +223,18 @@ class _ArticleDetailHeroLayoutState extends State<ArticleDetailHeroLayout> {
                         iconColor: iconColor,
                       ),
                       const SizedBox(width: 4),
-                      Builder(
-                        builder: (buttonContext) => IconButton(
-                          icon: Icon(Icons.share, color: iconColor, size: 22),
-                          onPressed: () => widget.onShare(buttonContext),
-                          style: IconButton.styleFrom(
-                            padding: const EdgeInsets.all(8),
-                            minimumSize: const Size(40, 40),
-                          ),
-                        ),
-                      ),
+                      // Share désactivé temporairement (activer plus tard).
+                      // Builder(
+                      //   builder: (buttonContext) => IconButton(
+                      //     icon: Icon(Icons.share,
+                      //         color: iconColor, size: 22),
+                      //     onPressed: () => widget.onShare(buttonContext),
+                      //     style: IconButton.styleFrom(
+                      //       padding: const EdgeInsets.all(8),
+                      //       minimumSize: const Size(40, 40),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
