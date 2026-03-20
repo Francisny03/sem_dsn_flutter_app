@@ -79,42 +79,44 @@ class _PhotothequeCategoryPageState extends State<PhotothequeCategoryPage> {
             child: loading && images.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : images.isEmpty
-                    ? const Center(child: Text('Aucune image'))
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(4),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                ? const Center(child: Text('Aucune image'))
+                : GridView.builder(
+                    padding: const EdgeInsets.all(4),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           mainAxisSpacing: 4,
                           crossAxisSpacing: 4,
                           childAspectRatio: 1,
                         ),
-                        itemCount: images.length,
-                        itemBuilder: (context, index) {
-                          final img = images[index];
-                          final imageUrl = AppAssets.imageOrDefault(img.url);
-                          return _PhotoGridTile(
-                            imageUrl: imageUrl,
-                            cacheKey: 'pt_${img.galleryId}_${img.id}',
-                            memCacheSize: 400,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => PhotothequeFullscreenPage(
-                                    imagePaths: images
-                                        .map((e) => AppAssets.imageOrDefault(e.url))
-                                        .toList(),
-                                    initialIndex: index,
-                                    imageCaptions: images.map((e) => e.name).toList(),
-                                    albumTitle: widget.title,
-                                    galleryId: widget.galleryId,
-                                  ),
-                                ),
-                              );
-                            },
+                    itemCount: images.length,
+                    itemBuilder: (context, index) {
+                      final img = images[index];
+                      final imageUrl = AppAssets.imageOrDefault(img.url);
+                      return _PhotoGridTile(
+                        imageUrl: imageUrl,
+                        cacheKey: 'pt_${img.galleryId}_${img.id}',
+                        memCacheSize: 400,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => PhotothequeFullscreenPage(
+                                imagePaths: images
+                                    .map((e) => AppAssets.imageOrDefault(e.url))
+                                    .toList(),
+                                initialIndex: index,
+                                imageCaptions: images
+                                    .map((e) => e.name)
+                                    .toList(),
+                                albumTitle: widget.title,
+                                galleryId: widget.galleryId,
+                              ),
+                            ),
                           );
                         },
-                      ),
+                      );
+                    },
+                  ),
           ),
         );
       },
@@ -147,7 +149,7 @@ class _PhotoGridTile extends StatelessWidget {
             path: imageUrl,
             cacheKey: cacheKey,
             memCacheWidth: memCacheSize,
-            memCacheHeight: memCacheSize,
+
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
